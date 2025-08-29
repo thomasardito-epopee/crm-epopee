@@ -1,25 +1,41 @@
-// netlify/functions/api.mjs
+// netlify/functions/api.mjs (Functions v2 - Response API)
 import { neon } from '@neondatabase/serverless';
 
 const sql = neon(process.env.DATABASE_URL);
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "";
 
-export default async (event) => {
-  const { httpMethod, path, queryStringParameters, body, headers } = event;
-  const seg = (path || "").split("/").filter(Boolean);
-  const i = seg.indexOf("api");
-  const rest = seg.slice(i + 1); // e.g. ["spaces","batch"]
+// Utilitaires de réponse JSON/CORS
+const baseHeaders = {
+  "content-type": "application/json",
+  "access-control-allow-origin": "*",
+  "access-control-allow-headers": "authorization,content-type",
+  "access-control-allow-methods": "GET,POST,PUT,DELETE,OPTIONS"
+};
+const json = (data, status = 200) =>
+  new Response(JSON.stringify(data), { status, headers: baseHeaders });
+const cors = (status = 200) => new Response("", { status, headers: baseHeaders });
+
+const num = (v) => (v == null || isNaN(+v) ? null : +v);
+const int = (v) => (v == null || isNaN(parseInt(v)) ? null : parseInt(v));
+const safeParse = (b) => { try { return JSON.parse(b || "{}"); } catch { return {}; } };
+
+export default async (request, context) => {
+  const url = new URL(request.url);
+  const method = request.method;
+  const parts = url.pathname.split("/").filter(Boolean);
+  const i = parts.indexOf("api");
+  const rest = i >= 0 ? parts.slice(i + 1) : [];
+
+  // Pré-vol CORS
+  if (method === "OPTIONS") return cors(200);
 
   try {
-    // CORS (pré-vol)
-    if (httpMethod === "OPTIONS") return cors(200);
-
     if (rest[0] === "spaces") {
-      if (httpMethod === "GET") {
+      if (method === "GET") {
         // /api/spaces?building=A&floor=RDC
-        const building = queryStringParameters?.building;
-        const floor = queryStringParameters?.floor;
-        if (!building || !floor) return json(400, { error: "building and floor are required" });
+        const building = url.searchParams.get("building");
+        const floor = url.searchParams.get("floor");
+        if (!building || !floor) return json({ error: "building and floor are required" }, 400);
 
         const rows = await sql`
           select id, building, floor, geom, code, tenant, label, status, color,
@@ -28,19 +44,20 @@ export default async (event) => {
           where building = ${building} and floor = ${floor}
           order by updated_at desc;
         `;
-        return json(200, { items: rows });
+        return json({ items: rows }, 200);
       }
 
-      // --- Écriture : nécessite le jeton admin ---
-      const token = headers['authorization']?.replace(/^Bearer\s+/i, '') || "";
-      if (token !== ADMIN_TOKEN) return json(401, { error: "Unauthorized" });
+      // Écriture => besoin du token Admin
+      const auth = request.headers.get("authorization") || "";
+      const token = auth.replace(/^Bearer\s+/i, "");
+      if (token !== ADMIN_TOKEN) return json({ error: "Unauthorized" }, 401);
 
-      if (httpMethod === "POST" && rest[1] === "batch") {
+      if (method === "POST" && rest[1] === "batch") {
         // Body: { building, floor, features:[{type,latlngs,options:{ep:...}}] }
-        const payload = safeParse(body);
+        const payload = safeParse(await request.text());
         const { building, floor, features } = payload || {};
         if (!building || !floor || !Array.isArray(features))
-          return json(400, { error: "Invalid payload" });
+          return json({ error: "Invalid payload" }, 400);
 
         await sql`begin`;
         try {
@@ -63,12 +80,12 @@ export default async (event) => {
           await sql`rollback`;
           throw e;
         }
-        return json(200, { ok: true, count: features.length });
+        return json({ ok: true, count: features.length }, 200);
       }
 
-      if (httpMethod === "PUT" && rest[1]) {
+      if (method === "PUT" && rest[1]) {
         const id = rest[1];
-        const payload = safeParse(body);
+        const payload = safeParse(await request.text());
         const ep = payload?.options?.ep || {};
         const geom = payload?.geom || null;
 
@@ -82,44 +99,19 @@ export default async (event) => {
           where id=${id}
           returning *;
         `;
-        return json(200, { item: rows[0] || null });
+        return json({ item: rows[0] || null }, 200);
       }
 
-      if (httpMethod === "DELETE" && rest[1]) {
+      if (method === "DELETE" && rest[1]) {
         const id = rest[1];
         await sql`delete from spaces where id=${id}`;
-        return json(200, { ok: true });
+        return json({ ok: true }, 200);
       }
     }
 
-    return json(404, { error: "Not found" });
+    return json({ error: "Not found" }, 404);
   } catch (err) {
     console.error(err);
-    return json(500, { error: "Server error", detail: String(err?.message || err) });
+    return json({ error: "Server error", detail: String(err?.message || err) }, 500);
   }
 };
-
-// Helpers
-const json = (status, data) => ({
-  statusCode: status,
-  headers: {
-    "content-type": "application/json",
-    "access-control-allow-origin": "*",
-    "access-control-allow-headers": "authorization,content-type",
-    "access-control-allow-methods": "GET,POST,PUT,DELETE,OPTIONS"
-  },
-  body: JSON.stringify(data)
-});
-const cors = (status) => ({
-  statusCode: status,
-  headers: {
-    "access-control-allow-origin": "*",
-    "access-control-allow-headers": "authorization,content-type",
-    "access-control-allow-methods": "GET,POST,PUT,DELETE,OPTIONS"
-  },
-  body: ""
-});
-
-const num = (v) => (v==null || isNaN(+v) ? null : +v);
-const int = (v) => (v==null || isNaN(parseInt(v)) ? null : parseInt(v));
-const safeParse = (b) => { try { return JSON.parse(b||"{}"); } catch { return {}; } };
