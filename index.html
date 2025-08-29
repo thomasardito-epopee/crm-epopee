@@ -774,11 +774,21 @@ function syncMode(){
   document.body.classList.toggle('visitor', !isAdmin);
   document.body.classList.toggle('admin', isAdmin);
   const pmToolbar = document.querySelector(".leaflet-pm-toolbar");
-  if(pmToolbar){ pmToolbar.style.display = isAdmin ? "" : "none"; }
-  if(isAdmin){if (!sessionStorage.getItem('ADMIN_TOKEN')) {
-  const t = prompt("Entrez le jeton ADMIN (celui défini dans Netlify)", "");
-  if (t) sessionStorage.setItem('ADMIN_TOKEN', t.trim());
+  if (pmToolbar) pmToolbar.style.display = isAdmin ? "" : "none";
+
+  if (isAdmin){
+    document.getElementById("layout").classList.remove("collapsed");
+  } else {
+    document.getElementById("layout").classList.add("collapsed");
+    map.pm.disableGlobalEditMode();
+    map.pm.disableGlobalRemovalMode && map.pm.disableGlobalRemovalMode();
+    map.pm.disableDraw('Polygon');
+    map.pm.disableDraw('Rectangle');
+    drawn.eachLayer(l=>{ if(l.pm && l.pm.disable){ l.pm.disable(); } });
+    currentLayer = null;
+  }
 }
+
 
     document.getElementById("layout").classList.remove("collapsed");
   }else{
