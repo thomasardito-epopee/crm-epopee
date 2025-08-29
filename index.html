@@ -926,58 +926,73 @@ function getFeaturesForScope(scope){
 function aggStats(features){
   const total = features.length;
   let counts = { Loué:0, Vacant:0, Préavis:0, Réservé:0, Maintenance:0 };
-  let area = { Loué:0, Vacant:0, Préavis:0, Réservé:0, Maintenance:0 };
-  let posts = { Loué:0, Vacant:0, Préavis:0, Réservé:0, Maintenance:0 };
-  let rent = { Loué:0, Vacant:0, Préavis:0, Réservé:0, Maintenance:0 };
-  const byTenant = {}; // tenant -> {count, area, posts, rent}
+  let area   = { Loué:0, Vacant:0, Préavis:0, Réservé:0, Maintenance:0 };
+  let posts  = { Loué:0, Vacant:0, Préavis:0, Réservé:0, Maintenance:0 };
+  let rent   = { Loué:0, Vacant:0, Préavis:0, Réservé:0, Maintenance:0 };
+
+  const byTenant = {};
   const reservedList = [];
+  let reservedRentNonEvent = 0; // ← loyers des “Réservés” hors événementiel
+
   features.forEach(fe=>{
     const ep = (fe.options && fe.options.ep) || {};
     const st = ep.status || "Vacant";
-    const ar = Number(ep.area||0);
+    const isEvent = (ep.label === "Evenementiel");
+
+    const ar       = Number(ep.area||0);
+    const postsVal = parseInt(ep.posts||0,10)||0;
+    const rentVal  = parseFloat(String(ep.rent||0).toString().replace(",", "."))||0;
+
     counts[st] = (counts[st]||0)+1;
-    area[st] = (area[st]||0)+ar;
-    posts[st] = (posts[st]||0) + (parseInt(ep.posts||0,10)||0);
-    rent[st] = (rent[st]||0) + (parseFloat(String(ep.rent||0).toString().replace(",", "."))||0);
+    area[st]   = (area[st]  ||0)+ar;
+    posts[st]  = (posts[st] ||0)+postsVal;
+    rent[st]   = (rent[st]  ||0)+rentVal;
+
     const tenant = (ep.tenant||"").trim();
     if(tenant && tenant.toLowerCase()!=="vacant"){
       if(!byTenant[tenant]) byTenant[tenant]={count:0, area:0};
       byTenant[tenant].count += 1;
-      byTenant[tenant].area += ar;
-      byTenant[tenant].posts = (byTenant[tenant].posts||0) + (parseInt(ep.posts||0,10)||0);
-      byTenant[tenant].rent  = (byTenant[tenant].rent||0) + (parseFloat(String(ep.rent||0).toString().replace(",", "."))||0);
+      byTenant[tenant].area  += ar;
+      byTenant[tenant].posts = (byTenant[tenant].posts||0) + postsVal;
+      byTenant[tenant].rent  = (byTenant[tenant].rent  ||0) + rentVal;
     }
-    if(st==="Réservé"){
-      reservedList.push({code:ep.code||"—", label:ep.label||"Bureau", area:ar});
+
+    // “Réservé” mais pas événementiel → pris en compte
+    if(st === "Réservé" && !isEvent){
+      reservedList.push({code: ep.code||"—", label: ep.label||"Bureau", area: ar});
+      reservedRentNonEvent += rentVal;
     }
   });
-  const occupiedCount = counts["Loué"] + counts["Préavis"];
-  const vacantCount = counts["Vacant"];
-  const occupiedPct = total? Math.round(occupiedCount*1000/total)/10 : 0;
-  const vacantPct = total? Math.round(vacantCount*1000/total)/10 : 0;
+
+  const occupiedCount = (counts["Loué"]||0) + (counts["Préavis"]||0);
+  const vacantCount   = (counts["Vacant"]||0);
+  const occupiedPct   = total? Math.round(occupiedCount*1000/total)/10 : 0;
+  const vacantPct     = total? Math.round(vacantCount*1000/total)/10 : 0;
 
   const tenantsArr = Object.entries(byTenant).map(([k,v])=>({tenant:k, ...v})).sort((a,b)=> b.count - a.count).slice(0,5);
+  const tenantsAreaArr = Object.entries(byTenant).map(([k,v])=>({tenant:k, ...v})).sort((a,b)=> b.area - a.area).slice(0,5);
+  const tenantsRentArr = Object.entries(byTenant).map(([k,v])=>({tenant:k, ...v})).sort((a,b)=> (b.rent||0) - (a.rent||0)).slice(0,5);
 
-  const tenantsAreaArr = Object.entries(byTenant)
-    .map(([k,v])=>({tenant:k, ...v}))
-    .sort((a,b)=> b.area - a.area)
-    .slice(0,5);
+  const areaOcc = (area["Loué"]||0) + (area["Préavis"]||0);
+  const areaVac = (area["Vacant"]||0);
 
-  const tenantsRentArr = Object.entries(byTenant)
-    .map(([k,v])=>({tenant:k, ...v}))
-    .sort((a,b)=> (b.rent||0) - (a.rent||0))
-    .slice(0,5);
-  const areaOcc = area["Loué"] + area["Préavis"];
-  const areaVac = area["Vacant"];
   const totalPosts = Object.values(posts).reduce((a,b)=>a+b,0);
-  const occPosts = posts["Loué"] + posts["Préavis"]; // Préavis traité comme occupé
-  const vacPosts = Math.max(0, totalPosts - occPosts);
-  const rentFacture = rent["Loué"] + rent["Préavis"]; // facturé aujourd'hui
-  const rentPotentiel = rentFacture + rent["Réservé"]; // après validation réservés
-  const rentTotal = Object.values(rent).reduce((a,b)=>a+b,0);
-  const euroPerPost = totalPosts ? (rentFacture / totalPosts) : 0;
-  const totals = { totalSpaces: total, counts, area, posts, rent, occupiedCount, vacantCount, occupiedPct, vacantPct, tenantsArr, tenantsAreaArr, tenantsRentArr, areaOcc, areaVac, totalPosts, occPosts, vacPosts, rentFacture, rentPotentiel, rentTotal, euroPerPost, reservedList};
-  return totals;
+  const occPosts   = (posts["Loué"]||0) + (posts["Préavis"]||0);
+  const vacPosts   = Math.max(0, totalPosts - occPosts);
+
+  const rentFacture   = (rent["Loué"]||0) + (rent["Préavis"]||0);
+  const rentPotentiel = rentFacture + reservedRentNonEvent; // ← exclut l’événementiel
+  const rentTotal     = Object.values(rent).reduce((a,b)=>a+b,0);
+  const euroPerPost   = totalPosts ? (rentFacture / totalPosts) : 0;
+
+  return {
+    totalSpaces: total, counts, area, posts, rent,
+    occupiedCount, vacantCount, occupiedPct, vacantPct,
+    tenantsArr, tenantsAreaArr, tenantsRentArr,
+    areaOcc, areaVac, totalPosts, occPosts, vacPosts,
+    rentFacture, rentPotentiel, rentTotal, euroPerPost,
+    reservedList
+  };
 }
 
 // Minimal charts (canvas 2D)
