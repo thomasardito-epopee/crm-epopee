@@ -1163,7 +1163,18 @@ function renderDashboard(){
   $("kpiScope").onchange = ()=> renderDashboard();
 
   const feats = getFeaturesForScope($("kpiScope").value);
-  const S = aggStats(feats);
+// applique exactement les mêmes filtres que sur la carte
+const featsFiltered = feats.filter(fe=>{
+  const ep = (fe.options && fe.options.ep) || {};
+  const matchesStatus = activeStatuses.has(ep.status || "Vacant");
+  const isEvent = (ep.label === "Evenementiel");
+  const typeOk = !filterEventOnly || isEvent;
+  const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
+  const matchText = !searchText || text.includes(searchText);
+  return matchesStatus && typeOk && matchText;
+});
+const S = aggStats(featsFiltered);
+
 
   const kpisEl = $("kpis");
   kpisEl.innerHTML = `
