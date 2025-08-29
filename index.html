@@ -360,6 +360,12 @@ let filterEventOnly = false; // filtre Type: Evenementiel
 const $ = (id)=>document.getElementById(id);
 const keyFor = (b,f)=>`${b}|${f}`;
 const storageKey = (k)=>`epopee_plans_v177_${k}`;
+  // lecture synchronisée du cache local
+const loadFromCache = (k)=>{
+  try{ return JSON.parse(localStorage.getItem(storageKey(k))||"null"); }
+  catch(e){ return null; }
+};
+
 
 // ===== Map (CRS.Simple) + free panning
 map = L.map("map", { crs: L.CRS.Simple, zoomControl:false, minZoom:-4, maxZoom:4, zoomSnap:0.1, zoomDelta:0.5, inertia:true });
