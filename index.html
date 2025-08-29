@@ -822,11 +822,12 @@ function getFeaturesForScope(scope){
   const curB = buildingSelect.value;
   const curF = floorSelect.value;
   const curKey = keyFor(curB, curF);
-  function pushFromStore(k){
+    function pushFromStore(k){
     if(k===curKey){
       exportGeo().features.forEach(fe=> all.push(fe));
     }else{
-      const st = loadLocal(k);
+      // ici on lit le cache (synchrone), pas la base (asynchrone)
+      const st = loadFromCache(k);
       if(st && st.features){ st.features.forEach(fe=> all.push(fe)); }
     }
   }
