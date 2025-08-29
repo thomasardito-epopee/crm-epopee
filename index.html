@@ -538,7 +538,7 @@ function selectLayer(l, focusFirst=true){
   $("fTenant").value = ep.tenant||"";
   setLabelValue(ep.label || "Bureau");
   $("fStatus").value = ep.status||"Vacant";
-  setColor(ep.color || STATUS_STYLES[ep.status||"Vacant"].fill);
+  setColor(ep.color || defaultColorFor(ep)); // ✅ applique direct le rose pour Evenementiel
   $("fArea").value = ep.area||0;
   $("fPosts").value = ep.posts||0;
   $("fRent").value = ep.rent||0;
