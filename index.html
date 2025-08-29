@@ -302,12 +302,20 @@ canvas{width:100%; height:200px}
 // ===== Config
 const ADMIN_CODE = "1812";
 const STATUS_STYLES = {
-  "Loué":        { color:"#34c759", fill:"#34c759" },
-  "Préavis":     { color:"#ff9f0a", fill:"#ff9f0a" },
-  "Vacant":      { color:"#0a84ff", fill:"#0a84ff" },
-  "Réservé":     { color:"#bf5af2", fill:"#bf5af2" },
-  "Maintenance": { color:"#ff453a", fill:"#ff453a" }
+  "Loué":        { color:"#34c759", fill:"#34c759" }, // ✅ inchangé
+  "Préavis":     { color:"#ff9f0a", fill:"#ff9f0a" }, // (tu peux changer si besoin)
+  "Vacant":      { color:"#ff9f0a", fill:"#ff9f0a" }, // ✅ changé (#ff9f0a)
+  "Réservé":     { color:"#bf5af2", fill:"#bf5af2" }, // inchangé
+  "Maintenance": { color:"#ff453a", fill:"#ff453a" }  // ✅ confirmé
 };
+  const EVENT_DEFAULT_COLOR = "#ff7ab6"; // ✅ Evenementiel
+
+function defaultColorFor(ep){
+  if (ep.label === "Evenementiel") return EVENT_DEFAULT_COLOR;
+  const st = STATUS_STYLES[ep.status || "Vacant"];
+  return st ? st.fill : "#0a84ff";
+}
+
 const ALL_STATUSES = Object.keys(STATUS_STYLES);
 const BUILDING_FLOORS = { 
   "A":["RDJ","RDC","R+1","R+2","R+3"], 
