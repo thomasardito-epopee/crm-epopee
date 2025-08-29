@@ -184,6 +184,13 @@ aside.panel{background:var(--panel);border-right:1px solid var(--border);padding
 
 /* Hide Geoman in visitor mode */
 body.visitor .leaflet-pm-toolbar{display:none !important}
+  /* Force l’affichage en mode admin */
+body.admin .leaflet-pm-toolbar{
+  display:block !important;
+  top:128px !important;
+  right:16px !important;
+  z-index:1600 !important;
+}
 
 /* Mode switch */
 .mode-switch{position:absolute;bottom:16px;right:16px;z-index:1500;background:#fff;border:1px solid var(--border);border-radius:999px;padding:6px 10px;display:flex;align-items:center;gap:8px;box-shadow:0 8px 20px rgba(0,0,0,.08);font-size:12px;color:#1c1c1e}
