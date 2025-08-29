@@ -792,13 +792,28 @@ async function onKeyChange(){
 buildingSelect.onchange = async ()=>{ buildFloorOptions(buildingSelect.value); await onKeyChange(); };
 floorSelect.onchange = onKeyChange;
 
-// init
-buildFloorOptions("A"); buildingSelect.value="A"; floorSelect.value="RDJ"; onKeyChange();
-rebuildStatusChips();
-rebuildTypeChips();
-function fillStatusSelect(){ const sel=$("fStatus"); sel.innerHTML=""; ALL_STATUSES.forEach(s=>{ const o=document.createElement('option'); o.value=s; o.textContent=s; sel.appendChild(o); }); }
-fillStatusSelect();
-syncEventUI && syncEventUI();
+document.addEventListener('DOMContentLoaded', async () => {
+  buildFloorOptions("A");
+  buildingSelect.value = "A";
+  floorSelect.value = "RDJ";
+  await onKeyChange();           // ← attend la lecture distante/cache
+
+  rebuildStatusChips();
+  rebuildTypeChips();
+
+  function fillStatusSelect(){
+    const sel = $("fStatus");
+    sel.innerHTML = "";
+    ALL_STATUSES.forEach(s=>{
+      const o = document.createElement('option');
+      o.value = s; o.textContent = s;
+      sel.appendChild(o);
+    });
+  }
+  fillStatusSelect();
+  syncEventUI && syncEventUI();
+});
+
 
 // Save & Dashboard button
 $("btnSave").onclick = ()=>{ saveLocal(); };
