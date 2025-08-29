@@ -1232,7 +1232,8 @@ $("legendArea").innerHTML = `
   const topData = (mode==="area" ? (S.tenantsAreaArr||[]) : (S.tenantsArr||[]));
   const labels = topData.map(t=> t.tenant);
   const values = topData.map(t=> mode==="area" ? Math.round(t.area||0) : t.count);
-  drawBars($("chartTopTenants"), labels, values);
+  const barColorContext = filterEventOnly ? EVENT_DEFAULT_COLOR : STATUS_STYLES["Loué"].fill;
+drawBars($("chartTopTenants"), labels, values, [barColorContext]);
   
   // Posts donut
   // --- Postes occupés vs vacants
