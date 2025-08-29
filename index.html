@@ -399,6 +399,44 @@ const PALETTE = [
   "#d0021b","#2dce89","#ff7ab6","#7d7aff","#1abc9c"
 ];
 
+// ===== THEME (clair/sombre)
+const THEME_KEY = "ui_theme";
+const cssVar = (name)=> getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+function applyTheme(mode){
+  document.documentElement.setAttribute("data-theme", mode);
+  localStorage.setItem(THEME_KEY, mode);
+  const btn = $("themeToggle");
+  if(btn){
+    const dark = (mode === "dark");
+    btn.textContent = dark ? "☀️" : "🌙";
+    btn.setAttribute("aria-label", dark ? "Basculer en clair" : "Basculer en sombre");
+    btn.title = dark ? "Mode clair" : "Mode sombre";
+  }
+  // Redessiner le dashboard (couleurs canvas changent)
+  if(typeof updateBoard === "function") updateBoard();
+}
+
+// Applique la préférence (user > système > clair)
+function initTheme(){
+  const saved = localStorage.getItem(THEME_KEY);
+  const systemDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  applyTheme(saved || (systemDark ? "dark" : "light"));
+  // Si l'utilisateur n'a pas choisi, suivre les changements système
+  if(!saved && window.matchMedia){
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", e=>{
+      applyTheme(e.matches ? "dark" : "light");
+    });
+  }
+}
+
+document.addEventListener("DOMContentLoaded", ()=>{
+  initTheme();
+  const t = $("themeToggle");
+  if(t) t.onclick = ()=> applyTheme((document.documentElement.getAttribute("data-theme") === "dark") ? "light" : "dark");
+});
+
+
 // ===== State
 let map, baseImageLayer;
 let drawn = L.featureGroup();
