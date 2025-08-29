@@ -408,8 +408,54 @@ function toPlain(l){ return { type: l instanceof L.Rectangle ? "rect":"poly", la
 function fromPlain(o){ const l=o.type==="rect"?L.rectangle(o.latlngs,{pmIgnore:false}):L.polygon(o.latlngs,{pmIgnore:false}); l.options.ep=o.options.ep||{}; l.addTo(drawn); attachListeners(l); applyStyle(l); }
 function exportGeo(){ return { key: currentKey, features: drawn.getLayers().map(toPlain) }; }
 function importGeo(data){ drawn.clearLayers(); (data?.features||[]).forEach(fromPlain); }
-function saveLocal(){ localStorage.setItem(storageKey(currentKey), JSON.stringify(exportGeo())); const s=$("statusText"); s.textContent="Sauvegardé ✅"; setTimeout(()=> s.textContent=isAdmin?"Mode admin":"Mode visiteur",900); updateBoard(); }
-function loadLocal(k){ try{ return JSON.parse(localStorage.getItem(storageKey(k))||"null"); }catch(e){ return null; } }
+async function saveLocal(){
+  // 1) toujours garder un cache offline
+  localStorage.setItem(storageKey(currentKey), JSON.stringify(exportGeo()));
+
+  // 2) pousser vers la base (si admin + token saisi)
+  try{
+    const token = sessionStorage.getItem('ADMIN_TOKEN') || "";
+    const data = exportGeo(); // { key, features }
+    const [building, floor] = currentKey.split("|");
+
+    await fetch("/api/spaces/batch", {
+      method: "POST",
+      headers: { "content-type":"application/json", ...(token ? { "authorization": "Bearer " + token } : {}) },
+      body: JSON.stringify({ building, floor, features: data.features })
+    });
+
+    $("statusText").textContent = "Sauvegardé sur la base ✅";
+    setTimeout(()=> $("statusText").textContent = isAdmin ? "Mode admin" : "Mode visiteur", 900);
+  }catch(e){
+    console.warn("Sync distant KO → local OK", e);
+    $("statusText").textContent = "Sauvegardé en local (offline) ☁️";
+    setTimeout(()=> $("statusText").textContent = isAdmin ? "Mode admin" : "Mode visiteur", 1200);
+  }
+
+  // ton code existant garde l’écran à jour
+  updateBoard && updateBoard();
+}
+
+async function loadLocal(k){
+  // 1) tenter la lecture distante (base Neon via Netlify)
+  try{
+    const [building, floor] = k.split("|");
+    const res = await fetch(`/api/spaces?building=${encodeURIComponent(building)}&floor=${encodeURIComponent(floor)}`);
+    if(res.ok){
+      const { items } = await res.json();
+      const features = (items || []).map(row => row.geom); // même format que ton front consomme
+      const payload = { key: k, features };
+      // on garde aussi un cache local
+      localStorage.setItem(storageKey(k), JSON.stringify(payload));
+      return payload;
+    }
+  }catch(e){
+    console.warn("Lecture distante KO → fallback local", e);
+  }
+  // 2) si la base est inaccessible, on lit le cache
+  try{ return JSON.parse(localStorage.getItem(storageKey(k)) || "null"); }
+  catch(e){ return null; }
+}
 
 function setLabelValue(val){
   const sel = $("fLabel");
@@ -708,6 +754,11 @@ syncMode();
 
 // Drawer
 document.getElementById("drawerToggle").onclick = ()=>{ document.getElementById("layout").classList.toggle("collapsed"); };
+  if (!sessionStorage.getItem('ADMIN_TOKEN')) {
+  const t = prompt("Entrez le jeton ADMIN (celui défini dans Netlify)", "");
+  if (t) sessionStorage.setItem('ADMIN_TOKEN', t.trim());
+}
+
 
 // Building/floor
 const buildingSelect=$("buildingSelect"), floorSelect=$("floorSelect");
