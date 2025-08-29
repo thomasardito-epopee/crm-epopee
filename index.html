@@ -311,7 +311,10 @@ const STATUS_STYLES = {
   const EVENT_DEFAULT_COLOR = "#ff7ab6"; // ✅ Evenementiel
 
 function defaultColorFor(ep){
-  if (ep.label === "Evenementiel") return EVENT_DEFAULT_COLOR;
+  const lbl = String(ep.label || "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .toLowerCase();
+  if (lbl === "evenementiel") return "#ff7ab6";   // ← rose par défaut
   const st = STATUS_STYLES[ep.status || "Vacant"];
   return st ? st.fill : "#0a84ff";
 }
