@@ -1187,17 +1187,24 @@ const S = aggStats(featsFiltered);
     <div class="kpi"><div class="v">${Math.round(S.euroPerPost)} €</div><div class="l">€ / poste (moyenne)</div></div>
   `;
 
-  const statusLabels = ["Loué","Préavis","Vacant","Réservé","Maintenance"];
-  const statusParts = statusLabels.map(s=> S.counts[s]||0);
-  const statusColors = statusLabels.map(s=> STATUS_STYLES[s].fill);
-  drawDonut($("chartStatusCount"), statusParts, statusColors, String(S.totalSpaces||0));
-  const total = S.totalSpaces || 1;
-  $("legendStatus").innerHTML = statusLabels.map((lab,i)=>{
-    const v = statusParts[i]||0;
-    if(v===0) return "";
-    const pct = Math.round(v*1000/total)/10;
-    return `<div class="item"><span class="dot" style="background:${statusColors[i]}"></span>${lab} — ${v} (${pct}%)</div>`;
-  }).join("");
+ // --- Répartition par statut (nb espaces)
+const statusLabels = ["Loué","Préavis","Vacant","Réservé","Maintenance"];
+const statusParts  = statusLabels.map(s => S.counts[s] || 0);
+
+// Couleurs : statuts natifs ; si filtre Événementiel, "Réservé" en rose
+const statusColors = statusLabels.map(s =>
+  (s === "Réservé" && filterEventOnly) ? EVENT_DEFAULT_COLOR : STATUS_STYLES[s].fill
+);
+
+drawDonut($("chartStatusCount"), statusParts, statusColors, String(S.totalSpaces || 0));
+
+const total = S.totalSpaces || 1;
+$("legendStatus").innerHTML = statusLabels.map((lab,i)=>{
+  const v = statusParts[i] || 0;
+  if(!v) return "";
+  const pct = Math.round(v*1000/total)/10;
+  return `<div class="item"><span class="dot" style="background:${statusColors[i]}"></span>${lab} — ${v} (${pct}%)</div>`;
+}).join("");
 
   const occ = S.areaOcc||0, vac = S.areaVac||0, totA = (occ+vac)||1;
   const occPct = Math.round(occ*1000/totA)/10, vacPct = Math.round(vac*1000/totA)/10;
