@@ -1263,12 +1263,20 @@ if ((pOcc + pVac) > 0){
 
   // Top 5 loyers par résident
   const topRent = (S.tenantsRentArr||[]);
-  if(topRent.length){
-    drawBars($("chartTopRent"), topRent.map(t=>t.tenant), topRent.map(t=> Math.round(t.rent||0)));
-  }else{
-    $("chartTopRent").getContext("2d").clearRect(0,0,$("chartTopRent").width,$("chartTopRent").height);
-    const ctx=$("chartTopRent").getContext("2d"); ctx.font="14px Inter,system-ui"; ctx.fillStyle="#6e6e73"; ctx.textAlign="center"; ctx.fillText("Aucun loyer renseigné", $("chartTopRent").width/2, 24);
-  }
+  if (topRent.length){
+  const barColorContext = filterEventOnly ? EVENT_DEFAULT_COLOR : STATUS_STYLES["Loué"].fill;
+  drawBars(
+    $("chartTopRent"),
+    topRent.map(t => t.tenant),
+    topRent.map(t => Math.round(t.rent || 0)),
+    [barColorContext]
+  );
+} else {
+  const c = $("chartTopRent"); const ctx = c.getContext("2d");
+  ctx.clearRect(0,0,c.width,c.height);
+  ctx.font="14px Inter,system-ui"; ctx.fillStyle="#6e6e73"; ctx.textAlign="center";
+  ctx.fillText("Aucun loyer renseigné", c.width/2, 24);
+}
 
   const r = $("reservedList");
   if(!S.reservedList || S.reservedList.length===0){
