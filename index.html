@@ -1064,7 +1064,7 @@ function drawDonut(canvas, parts, colors, centerText){
   ctx.fillText(centerText, cx, cy);
 }
 
-function drawBars(canvas, labels, values){
+function drawBars(canvas, labels, values, barColors=null){
   const ctx = canvas.getContext('2d');
   const W = canvas.width = canvas.clientWidth * devicePixelRatio;
   const H = canvas.height = 200 * devicePixelRatio;
@@ -1082,7 +1082,7 @@ function drawBars(canvas, labels, values){
     const x = mL + gap + i*(bw+gap);
     const h = v/max * (plotH-6*devicePixelRatio);
     const y = baseY - h;
-    ctx.fillStyle = "#0a84ff";
+    ctx.fillStyle = barColors ? barColors[i % barColors.length] : "#0a84ff";
     const radius = 8*devicePixelRatio;
     const w=bw, r=Math.min(radius, w/2, h);
     ctx.beginPath();
@@ -1105,7 +1105,6 @@ function drawBars(canvas, labels, values){
     ctx.fillText(labels[i].slice(0,18), x+w/2, baseY + 14*devicePixelRatio);
   });
 }
-
 // Dashboard rendering
 function renderDashboard(){
     const board = $("visitorBoard");
