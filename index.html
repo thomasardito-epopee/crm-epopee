@@ -410,8 +410,43 @@ function applyStyle(l){
   l.bindTooltip(`${(ep.code||"—")} · ${(ep.label||"Bureau")}${ep.tenant ? " — "+ep.tenant : ""}${extra}`, {sticky:true});
   updateGreying();
 }
-function toPlain(l){ return { type: l instanceof L.Rectangle ? "rect":"poly", latlngs:l.getLatLngs(), options:{ep:layerProps(l)} }; }
-function fromPlain(o){ const l=o.type==="rect"?L.rectangle(o.latlngs,{pmIgnore:false}):L.polygon(o.latlngs,{pmIgnore:false}); l.options.ep=o.options.ep||{}; l.addTo(drawn); attachListeners(l); applyStyle(l); }
+function toPlain(l){
+  // On stocke les rectangles comme 2 coins pour être sûr de les relire partout
+  if (l instanceof L.Rectangle) {
+    const b = l.getBounds();
+    return {
+      type: 'rect',
+      bounds: [ b.getSouthWest(), b.getNorthEast() ],
+      options: { ep: layerProps(l) }
+    };
+  }
+  // Polygones standards
+  return { type: 'poly', latlngs: l.getLatLngs(), options: { ep: layerProps(l) } };
+}
+
+function fromPlain(o){
+  let l;
+  if (o.type === 'rect') {
+    // Rétro-compat :
+    // - si on a bounds -> on l’utilise
+    // - sinon on déduit bounds à partir d'un anneau de points (format ancien)
+    let bounds = o.bounds;
+    if (!bounds && Array.isArray(o.latlngs)) {
+      const pts = (o.latlngs[0] || o.latlngs).flat();
+      const lats = pts.map(p=>p.lat), lngs = pts.map(p=>p.lng);
+      bounds = [
+        L.latLng(Math.min(...lats), Math.min(...lngs)),
+        L.latLng(Math.max(...lats), Math.max(...lngs))
+      ];
+    }
+    l = L.rectangle(bounds, { pmIgnore:false });
+  } else {
+    l = L.polygon(o.latlngs, { pmIgnore:false });
+  }
+  l.options.ep = (o.options && o.options.ep) || {};
+  l.addTo(drawn); attachListeners(l); applyStyle(l);
+}
+
 function exportGeo(){ return { key: currentKey, features: drawn.getLayers().map(toPlain) }; }
 function importGeo(data){ drawn.clearLayers(); (data?.features||[]).forEach(fromPlain); }
 async function saveLocal(){
