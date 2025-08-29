@@ -765,7 +765,20 @@ document.getElementById("drawerToggle").onclick = ()=>{ document.getElementById(
 // Building/floor
 const buildingSelect=$("buildingSelect"), floorSelect=$("floorSelect");
 function buildFloorOptions(b){ floorSelect.innerHTML=""; (BUILDING_FLOORS[b]||[]).forEach(f=>{ const o=document.createElement('option'); o.value=f; o.textContent=f; floorSelect.appendChild(o); }); }
-async function onKeyChange(){ const b=buildingSelect.value, f=floorSelect.value; currentKey=keyFor(b,f); importGeo(loadLocal(currentKey)||{features:[]}); await tryPreload(b,f); updateBoard(); }
+async function onKeyChange(){
+  const b = buildingSelect.value, f = floorSelect.value;
+  currentKey = keyFor(b,f);
+
+  // on attend la lecture distante (qui met aussi à jour le cache)
+  const data = await loadLocal(currentKey);
+
+  // on importe la data distante si présente, sinon le cache local, sinon vide
+  importGeo(data || loadFromCache(currentKey) || { features: [] });
+
+  await tryPreload(b,f);
+  updateBoard();
+}
+
 buildingSelect.onchange = async ()=>{ buildFloorOptions(buildingSelect.value); await onKeyChange(); };
 floorSelect.onchange = onKeyChange;
 
