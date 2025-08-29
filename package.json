@@ -1,0 +1,10 @@
+{
+  "name": "epopee-crm",
+  "private": true,
+  "scripts": {
+    "build:functions": "echo 'no build needed'"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.0"
+  }
+}
