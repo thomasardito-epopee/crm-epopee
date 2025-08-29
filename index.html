@@ -767,42 +767,7 @@ padModal.addEventListener('click', (e)=>{ if(e.target===padModal){ closePad(); i
 $("adminToggle").checked=false;
 $("adminToggle").onchange = e=>{ if(e.target.checked){ if(!isAdmin) openPad(); else syncMode(); } else { isAdmin=false; syncMode(); } };
 
-function syncMode(){
-  $("statusText").textContent = isAdmin ? "Mode admin" : "Mode visiteur";
-  $("adminSection").style.display = isAdmin ? "block" : "none";
-  $("btnPlan") && ($("btnPlan").disabled = !isAdmin);
-  document.body.classList.toggle('visitor', !isAdmin);
-  document.body.classList.toggle('admin', isAdmin);
-  const pmToolbar = document.querySelector(".leaflet-pm-toolbar");
-  if (pmToolbar) pmToolbar.style.display = isAdmin ? "" : "none";
 
-  if (isAdmin){
-    document.getElementById("layout").classList.remove("collapsed");
-  } else {
-    document.getElementById("layout").classList.add("collapsed");
-    map.pm.disableGlobalEditMode();
-    map.pm.disableGlobalRemovalMode && map.pm.disableGlobalRemovalMode();
-    map.pm.disableDraw('Polygon');
-    map.pm.disableDraw('Rectangle');
-    drawn.eachLayer(l=>{ if(l.pm && l.pm.disable){ l.pm.disable(); } });
-    currentLayer = null;
-  }
-}
-
-
-    document.getElementById("layout").classList.remove("collapsed");
-  }else{
-    document.getElementById("layout").classList.add("collapsed"); // panneau replié en visiteur
-    // FULL lock in visitor mode
-    map.pm.disableGlobalEditMode();
-    map.pm.disableGlobalRemovalMode && map.pm.disableGlobalRemovalMode();
-    map.pm.disableDraw('Polygon');
-    map.pm.disableDraw('Rectangle');
-    drawn.eachLayer(l=>{ if(l.pm && l.pm.disable){ l.pm.disable(); } });
-    currentLayer = null;
-  }
-}
-syncMode();
 
 // Drawer
 document.getElementById("drawerToggle").onclick = ()=>{ document.getElementById("layout").classList.toggle("collapsed"); };
