@@ -1206,13 +1206,24 @@ $("legendStatus").innerHTML = statusLabels.map((lab,i)=>{
   return `<div class="item"><span class="dot" style="background:${statusColors[i]}"></span>${lab} — ${v} (${pct}%)</div>`;
 }).join("");
 
-  const occ = S.areaOcc||0, vac = S.areaVac||0, totA = (occ+vac)||1;
-  const occPct = Math.round(occ*1000/totA)/10, vacPct = Math.round(vac*1000/totA)/10;
-  drawDonut($("chartAreaOccVac"), [occ, vac], ["#34c759","#0a84ff"], `${Math.round(occPct)}%`);
-  $("legendArea").innerHTML = `
-    <div class="item"><span class="dot" style="background:#34c759"></span>Occupés — ${Math.round(occ)} m² (${occPct}%)</div>
-    ${vac>0 ? `<div class="item"><span class="dot" style="background:#0a84ff"></span>Vacants — ${Math.round(vac)} m² (${vacPct}%)</div>` : ""}
-  `;
+  // --- m² occupés vs vacants
+const occ = S.areaOcc || 0, vac = S.areaVac || 0, totA = (occ + vac) || 1;
+const occPct = Math.round(occ*1000/totA)/10, vacPct = Math.round(vac*1000/totA)/10;
+
+// Vert = Loué, Orange = Vacant (cohérent statuts/carte)
+drawDonut(
+  $("chartAreaOccVac"),
+  [occ, vac],
+  [STATUS_STYLES["Loué"].fill, STATUS_STYLES["Vacant"].fill],
+  `${Math.round(occPct)}%`
+);
+
+$("legendArea").innerHTML = `
+  <div class="item"><span class="dot" style="background:${STATUS_STYLES["Loué"].fill}"></span>
+    Occupés — ${Math.round(occ)} m² (${occPct}%)</div>
+  ${vac>0 ? `<div class="item"><span class="dot" style="background:${STATUS_STYLES["Vacant"].fill}"></span>
+    Vacants — ${Math.round(vac)} m² (${vacPct}%)</div>` : ""}
+`;
 
   const topSel = $("topMode");
   const savedMode = window.TOP_TENANTS_MODE || "count";
