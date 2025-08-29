@@ -476,6 +476,7 @@ const cssVar = (name)=> getComputedStyle(document.documentElement).getPropertyVa
 
 function applyTheme(mode){
   document.documentElement.setAttribute("data-theme", mode);
+  mountGeoman(); // garantit la présence/position de la barre Geoman
   localStorage.setItem(THEME_KEY, mode);
   const btn = $("themeToggle");
   if(btn){
