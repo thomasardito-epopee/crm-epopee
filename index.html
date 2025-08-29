@@ -314,6 +314,14 @@ const STATUS_STYLES = {
   "Maintenance": { color:"#ff453a", fill:"#ff453a" }
 };
   const EVENT_DEFAULT_COLOR = "#ff7ab6"; // ✅ Evenementiel
+const COLORS = {
+  occupied:   STATUS_STYLES["Loué"].fill,        // vert
+  vacant:     STATUS_STYLES["Vacant"].fill,      // orange
+  preavis:    STATUS_STYLES["Préavis"].fill,     // indigo
+  reserved:   STATUS_STYLES["Réservé"].fill,     // violet
+  maintenance:STATUS_STYLES["Maintenance"].fill, // rouge
+  event:      EVENT_DEFAULT_COLOR                // rose
+};
 
 function defaultColorFor(ep){
   const lbl = String(ep.label || "")
