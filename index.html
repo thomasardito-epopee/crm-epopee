@@ -1169,7 +1169,7 @@ function collectTenantStats(){
   }
   exportGeo().features.forEach(fe=> addName((fe.options&&fe.options.ep&&fe.options.ep.tenant)||""));
   Object.keys(BUILDING_FLOORS).forEach(b=> (BUILDING_FLOORS[b]||[]).forEach(f=>{
-    const st = loadLocal(keyFor(b,f));
+    const st = loadFromCache(keyFor(b,f));
     (st?.features||[]).forEach(fe=> addName((fe.options&&fe.options.ep&&fe.options.ep.tenant)||""));
   }));
   return mapCounts;
