@@ -517,6 +517,10 @@ function initTheme(){
     });
   }
 }
+document.addEventListener('DOMContentLoaded', () => {
+  const b = document.getElementById('visitorBoard');
+  if (b) { b.classList.remove('fullscreen'); b.style.display = 'none'; }
+});
 
 document.addEventListener("DOMContentLoaded", ()=>{
   initTheme();
