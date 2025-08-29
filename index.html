@@ -532,11 +532,23 @@ function setLabelValue(val){
 // Affiche/masque champs selon libellé "Evenementiel"
 function syncEventUI(){
   const isEvent = ($("fLabel").value === "Evenementiel");
+
+  // ✅ Écrire immédiatement le label sur la couche sélectionnée
+  if (currentLayer) setLayerProps(currentLayer, { label: $("fLabel").value });
+
   const statusField = $("statusField"); if(statusField) statusField.style.display = isEvent ? "none" : "block";
   const officeRow = $("officeRow"); if(officeRow) officeRow.style.display = isEvent ? "none" : "grid";
-  const eventRow = $("eventRow"); if(eventRow) eventRow.style.display = isEvent ? "grid" : "none";
-}
+  const eventRow  = $("eventRow");  if(eventRow)  eventRow.style.display  = isEvent ? "grid" : "none";
 
+  // (optionnel) mettre à jour l’aperçu de couleur du picker
+  if (currentLayer) {
+    if (isEvent) setColor("#ff7ab6");
+    else {
+      const st = layerProps(currentLayer).status || "Vacant";
+      setColor(layerProps(currentLayer).color || STATUS_STYLES[st].fill);
+    }
+  }
+}
 
  $("fLabel").addEventListener("change", syncEventUI);
 // ===== Select helper (auto-select on create)
