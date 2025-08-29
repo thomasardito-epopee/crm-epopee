@@ -158,6 +158,22 @@ aside.panel{background:var(--panel);border-right:1px solid var(--border);padding
 .row3 .field label{min-height:32px;display:flex;align-items:flex-end;white-space:nowrap}
 .number{height:40px}
 
+  /* Évite la “fausse” marge à droite */
+.layout { grid-template-columns: minmax(0,360px) minmax(0,1fr); }
+#map { min-width: 0; }  /* autorise l’élément à rétrécir dans la grille */
+
+/* Les éléments flottants restent dans la colonne carte */
+#visitorBoard,
+.controls-stack,
+.drawer-toggle {
+  grid-column: 2 / 3;
+  grid-row: 1 / 2;
+}
+
+/* On s’assure que le dashboard est bien caché au départ */
+#visitorBoard { display: none; }
+
+
 .section{border-top:1px solid var(--border);margin:12px -14px;padding:12px 14px}
 .section:first-of-type{border-top:0;margin-top:0}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
