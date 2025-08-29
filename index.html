@@ -1235,19 +1235,30 @@ $("legendArea").innerHTML = `
   drawBars($("chartTopTenants"), labels, values);
   
   // Posts donut
-  const pOcc = S.occPosts||0, pVac = S.vacPosts||0, pTot = (pOcc+pVac)||1;
-  const pOccPct = Math.round(pOcc*1000/pTot)/10, pVacPct = Math.round(pVac*1000/pTot)/10;
-  if((pOcc+pVac)>0){
-    drawDonut($("chartPostsOccVac"), [pOcc, pVac], ["#34c759","#0a84ff"], `${Math.round(pOccPct)}%`);
-    $("legendPosts").innerHTML = `
-      <div class="item"><span class="dot" style="background:#34c759"></span>Occupés — ${pOcc} (${pOccPct}%)</div>
-      ${pVac>0 ? `<div class="item"><span class="dot" style="background:#0a84ff"></span>Vacants — ${pVac} (${pVacPct}%)</div>` : ""}
-    `;
-  } else {
-    const cv = $("chartPostsOccVac"); const ctx = cv.getContext("2d"); ctx.clearRect(0,0,cv.width,cv.height);
-    ctx.font = "14px Inter,system-ui"; ctx.fillStyle="#6e6e73"; ctx.textAlign="center"; ctx.fillText("Aucune donnée de postes", cv.width/2, 24);
-    $("legendPosts").innerHTML = ``;
-  }
+  // --- Postes occupés vs vacants
+const pOcc = S.occPosts || 0, pVac = S.vacPosts || 0, pTot = (pOcc + pVac) || 1;
+const pOccPct = Math.round(pOcc*1000/pTot)/10, pVacPct = Math.round(pVac*1000/pTot)/10;
+
+if ((pOcc + pVac) > 0){
+  drawDonut(
+    $("chartPostsOccVac"),
+    [pOcc, pVac],
+    [STATUS_STYLES["Loué"].fill, STATUS_STYLES["Vacant"].fill],
+    `${Math.round(pOccPct)}%`
+  );
+  $("legendPosts").innerHTML = `
+    <div class="item"><span class="dot" style="background:${STATUS_STYLES["Loué"].fill}"></span>
+      Occupés — ${pOcc} (${pOccPct}%)</div>
+    ${pVac>0 ? `<div class="item"><span class="dot" style="background:${STATUS_STYLES["Vacant"].fill}"></span>
+      Vacants — ${pVac} (${pVacPct}%)</div>` : ""}
+  `;
+} else {
+  const cv = $("chartPostsOccVac"); const ctx = cv.getContext("2d");
+  ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.font = "14px Inter,system-ui"; ctx.fillStyle="#6e6e73"; ctx.textAlign="center";
+  ctx.fillText("Aucune donnée de postes", cv.width/2, 24);
+  $("legendPosts").innerHTML = ``;
+}
 
   // Top 5 loyers par résident
   const topRent = (S.tenantsRentArr||[]);
