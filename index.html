@@ -401,9 +401,11 @@ function normalStyleFor(l){
   const isEvent = String(ep.label||"")
     .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
     .toLowerCase() === "evenementiel";
+
   const fill = isEvent
-    ? "#ff7ab6"  // ← toujours rose si événementiel
-    : (ep.color || (STATUS_STYLES[ep.status||"Vacant"]?.fill || "#0a84ff"));
+    ? "#ff7ab6"  // ← toujours rose si Evenementiel
+    : (ep.color || (STATUS_STYLES[ep.status || "Vacant"]?.fill || "#0a84ff"));
+
   return { color: fill, opacity:1, fillColor: fill, fillOpacity:.35, weight:2 };
 }
 function greyStyle(){
