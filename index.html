@@ -766,6 +766,55 @@ padModal.addEventListener('click', (e)=>{ if(e.target===padModal){ closePad(); i
 
 $("adminToggle").checked=false;
 $("adminToggle").onchange = e=>{ if(e.target.checked){ if(!isAdmin) openPad(); else syncMode(); } else { isAdmin=false; syncMode(); } };
+// --- (ré)montage idempotent de la toolbar Geoman
+function mountGeoman(){
+  // Si la toolbar n'existe pas encore, on la crée
+  if (!document.querySelector('.leaflet-pm-toolbar')){
+    map.pm.addControls({
+      position:'topright',
+      drawMarker:false, drawCircle:false, drawPolyline:false, drawCircleMarker:false,
+      drawRectangle:true, drawPolygon:true, editMode:true, dragMode:false, removalMode:true, cutPolygon:false
+    });
+    map.pm.setLang('fr');
+    map.pm.setPathOptions({ snappable:true, snapDistance:10 });
+  }
+  // Afficher/cacher selon le mode
+  const bar = document.querySelector('.leaflet-pm-toolbar');
+  if (bar){
+    bar.style.top = '128px';
+    bar.style.right = '16px';
+    bar.style.transform = 'none';
+    bar.style.zIndex = '1400';
+    bar.style.display = isAdmin ? '' : 'none';
+  }
+}
+
+// --- bascule Visiteur/Admin
+function syncMode(){
+  $("statusText").textContent = isAdmin ? "Mode admin" : "Mode visiteur";
+  $("adminSection").style.display = isAdmin ? "block" : "none";
+  $("btnPlan") && ($("btnPlan").disabled = !isAdmin);
+
+  document.body.classList.toggle('visitor', !isAdmin);
+  document.body.classList.toggle('admin', isAdmin);
+
+  if (isAdmin){
+    $("layout").classList.remove("collapsed");
+  } else {
+    $("layout").classList.add("collapsed");
+    map.pm.disableGlobalEditMode();
+    map.pm.disableGlobalRemovalMode && map.pm.disableGlobalRemovalMode();
+    map.pm.disableDraw('Polygon');
+    map.pm.disableDraw('Rectangle');
+    drawn.eachLayer(l=>{ if(l.pm && l.pm.disable){ l.pm.disable(); } });
+    currentLayer = null;
+  }
+
+  mountGeoman();
+}
+
+// État initial
+syncMode();
 
 
 
