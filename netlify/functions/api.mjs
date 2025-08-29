@@ -62,12 +62,12 @@ export default async (request) => {
         return json({ items: rows }, 200);
       }
 
-      // Toutes les écritures exigent le token admin
-      const auth = request.headers.get("authorization") || "";
-      const token = auth.replace(/^Bearer\s+/i, "");
-      if (token !== ADMIN_TOKEN) {
-        return json({ error: "Unauthorized" }, 401);
-      }
+     // Écriture SANS token (attention: ouvert)
+// Optionnel: refuser si la requête ne vient pas du site Netlify
+const origin = request.headers.get("origin") || "";
+if (!origin.includes("crm-epopee.netlify.app")) {
+  return json({ error: "Forbidden" }, 403);
+}
 
       // POST /api/spaces/batch  -> remplace toutes les formes d'un (building,floor)
       if (method === "POST" && rest[1] === "batch") {
