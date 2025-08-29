@@ -408,8 +408,51 @@ function toPlain(l){ return { type: l instanceof L.Rectangle ? "rect":"poly", la
 function fromPlain(o){ const l=o.type==="rect"?L.rectangle(o.latlngs,{pmIgnore:false}):L.polygon(o.latlngs,{pmIgnore:false}); l.options.ep=o.options.ep||{}; l.addTo(drawn); attachListeners(l); applyStyle(l); }
 function exportGeo(){ return { key: currentKey, features: drawn.getLayers().map(toPlain) }; }
 function importGeo(data){ drawn.clearLayers(); (data?.features||[]).forEach(fromPlain); }
-function saveLocal(){ localStorage.setItem(storageKey(currentKey), JSON.stringify(exportGeo())); const s=$("statusText"); s.textContent="Sauvegardé ✅"; setTimeout(()=> s.textContent=isAdmin?"Mode admin":"Mode visiteur",900); updateBoard(); }
-function loadLocal(k){ try{ return JSON.parse(localStorage.getItem(storageKey(k))||"null"); }catch(e){ return null; } }
+async function saveLocal(){
+  // 1) cache offline
+  localStorage.setItem(storageKey(currentKey), JSON.stringify(exportGeo()));
+
+  // 2) sync BDD (si admin + token)
+  try{
+    const token = sessionStorage.getItem('ADMIN_TOKEN') || "";
+    const data = exportGeo(); // { key, features }
+    const [building, floor] = currentKey.split("|");
+
+    await fetch("/api/spaces/batch", {
+      method: "POST",
+      headers: { "content-type":"application/json", ...(token ? { "authorization": "Bearer " + token } : {}) },
+      body: JSON.stringify({ building, floor, features: data.features })
+    });
+
+    $("statusText").textContent = "Sauvegardé sur la base ✅";
+    setTimeout(()=> $("statusText").textContent = isAdmin ? "Mode admin" : "Mode visiteur", 900);
+  }catch(e){
+    console.warn("Sync distant KO → local OK", e);
+    $("statusText").textContent = "Sauvegardé en local (offline) ☁️";
+    setTimeout(()=> $("statusText").textContent = isAdmin ? "Mode admin" : "Mode visiteur", 1200);
+  }
+
+  updateBoard && updateBoard();
+}
+
+async function loadLocal(k){
+  try{
+    const [building, floor] = k.split("|");
+    const res = await fetch(`/api/spaces?building=${encodeURIComponent(building)}&floor=${encodeURIComponent(floor)}`);
+    if(res.ok){
+      const { items } = await res.json();
+      const features = (items||[]).map(row => row.geom);
+      const payload = { key:k, features };
+      localStorage.setItem(storageKey(k), JSON.stringify(payload));
+      return payload;
+    }
+  }catch(e){
+    console.warn("Lecture distante KO → fallback local", e);
+  }
+  try{ return JSON.parse(localStorage.getItem(storageKey(k))||"null"); }
+  catch(e){ return null; }
+}
+
 
 function setLabelValue(val){
   const sel = $("fLabel");
@@ -691,7 +734,11 @@ function syncMode(){
   document.body.classList.toggle('admin', isAdmin);
   const pmToolbar = document.querySelector(".leaflet-pm-toolbar");
   if(pmToolbar){ pmToolbar.style.display = isAdmin ? "" : "none"; }
-  if(isAdmin){
+  if(isAdmin){if (!sessionStorage.getItem('ADMIN_TOKEN')) {
+  const t = prompt("Entrez le jeton ADMIN (celui défini dans Netlify)", "");
+  if (t) sessionStorage.setItem('ADMIN_TOKEN', t.trim());
+}
+
     document.getElementById("layout").classList.remove("collapsed");
   }else{
     document.getElementById("layout").classList.add("collapsed"); // panneau replié en visiteur
