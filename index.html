@@ -395,20 +395,29 @@ function greyStyle(){
 }
 function applyStyle(l){
   l.setStyle(normalStyleFor(l));
-  const ep=layerProps(l);
+  const ep = layerProps(l);
   const isEvent = (ep.label === "Evenementiel");
   let extra = "";
-  if(isEvent){
-    if(ep.paxSit) extra += ` · ${ep.paxSit} pax assis`;
+
+  if (isEvent){
+    if(ep.paxSit)   extra += ` · ${ep.paxSit} pax assis`;
     if(ep.paxStand) extra += ` · ${ep.paxStand} pax debout`;
-    if(ep.dayPrice) extra += ` · ${Number(ep.dayPrice).toLocaleString('fr-FR')} €/jour`;
+    if(Number(ep.dayPrice)>0) extra += ` · ${Number(ep.dayPrice).toLocaleString('fr-FR')} €/jour`;
   } else {
     if(ep.posts) extra += ` · ${ep.posts} postes`;
-    if(ep.rent) {/* loyer gardé pour dashboard */}
+    if(Number(ep.rent)>0) extra += ` · ${euro(ep.rent)} €/mois`;
   }
+
   if(ep.area) extra += ` · ${ep.area} m²`;
-  l.bindTooltip(`${(ep.code||"—")} · ${(ep.label||"Bureau")}${ep.tenant ? " — "+ep.tenant : ""}${extra}`, {sticky:true});
+
+  l.bindTooltip(
+    `${(ep.code||"—")} · ${(ep.label||"Bureau")}${ep.tenant ? " — "+ep.tenant : ""}${extra}`,
+    { sticky:true }
+  );
+
   updateGreying();
+}
+
 }
 function toPlain(l){
   // On stocke les rectangles comme 2 coins pour être sûr de les relire partout
