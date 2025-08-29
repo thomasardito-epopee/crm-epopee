@@ -394,8 +394,8 @@ map.pm.setPathOptions({ snappable:true, snapDistance:10 });
 function layerProps(l){ return l?.options?.ep || {}; }
 function setLayerProps(l, props){ l.options.ep = { ...(l.options.ep||{}), ...props }; applyStyle(l); }
 function normalStyleFor(l){
-  const ep = layerProps(l); const st = STATUS_STYLES[ep.status || "Vacant"];
-  const fill = ep.color || st.fill;
+  const ep = layerProps(l);
+  const fill = ep.color || defaultColorFor(ep); // ✅ prend la couleur événementielle si label=Evenementiel
   return { color: fill, opacity:1, fillColor: fill, fillOpacity:.35, weight:2 };
 }
 function greyStyle(){
