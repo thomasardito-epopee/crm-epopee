@@ -1,68 +1,82 @@
 // netlify/functions/_lib/history.js
-// -> Version "propre" 100% Netlify Blobs (aucun createClient)
+import pkg from 'pg';
+const { Client } = pkg;
 
-import { getStore } from "@netlify/blobs";
+const CONN = process.env.NEON_DB_URL;
 
-// 2 “stores” (espaces de clés) : un pour les snapshots, un pour les compteurs de version
-const SNAPSHOTS = "snapshots";
-const VERSIONS  = "versions";
-
-// Si Blobs n’est pas “activé” côté projet, on le force via siteID + token
-// (sinon Netlify utilise la config auto)
-const opts =
-  process.env.NETLIFY_SITE_ID && process.env.NETLIFY_AUTH_TOKEN
-    ? { siteId: process.env.NETLIFY_SITE_ID, token: process.env.NETLIFY_AUTH_TOKEN }
-    : undefined;
-
-// Helpers de clés
-const vKey = (building, floor)        => `${building}|${floor}`;
-const sKey = (building, floor, atISO) => `${building}|${floor}|${atISO}`;
-
-// ---------- Versions ----------
-export async function getVersion(building, floor) {
-  const store = await getStore(VERSIONS, opts);
-  const raw = await store.get(vKey(building, floor));
-  const v = raw ? JSON.parse(raw) : { version_n: 0 };
-  if (typeof v.version_n !== "number") v.version_n = 0;
-  return v;
+async function withClient(run) {
+  const client = new Client({ connectionString: CONN });
+  await client.connect();
+  try { return await run(client); }
+  finally { await client.end(); }
 }
 
-export async function setVersion(building, floor, nextVersion) {
-  const store = await getStore(VERSIONS, opts);
-  await store.set(vKey(building, floor), JSON.stringify({ version_n: nextVersion }));
+export async function getVersion(building, floor) {
+  return withClient(async c => {
+    const r = await c.query(
+      'select coalesce(max(version_n),0) as v from floor_history where building=$1 and floor=$2',
+      [building, floor]
+    );
+    return { version_n: Number(r.rows?.[0]?.v ?? 0) };
+  });
+}
+
+// (gardé pour compat, on ne force rien côté DB)
+export async function setVersion(_b, _f, nextVersion) {
   return { version_n: nextVersion };
 }
 
-// ---------- Snapshots ----------
 export async function putSnapshot(building, floor, rec) {
-  const store = await getStore(SNAPSHOTS, opts);
-  const key = sKey(building, floor, rec.created_at);
-  await store.set(key, JSON.stringify(rec));
-  return key;
+  return withClient(async c => {
+    await c.query(
+      `insert into floor_history(building, floor, version_n, created_at, created_by, note, size, data)
+       values ($1,$2,$3,$4::timestamptz,$5,$6,$7,$8)`,
+      [
+        building, floor, rec.version_n, rec.created_at,
+        rec.created_by, rec.note ?? null, rec.size ?? 0, rec.data ?? {}
+      ]
+    );
+    return `${building}|${floor}|${rec.created_at}`;
+  });
 }
 
 export async function getSnapshot(building, floor, atISO) {
-  const store = await getStore(SNAPSHOTS, opts);
-  const raw = await store.get(sKey(building, floor, atISO));
-  return raw ? JSON.parse(raw) : null;
+  return withClient(async c => {
+    const r = await c.query(
+      `select building,floor,version_n,created_at,created_by,note,size,data
+         from floor_history
+        where building=$1 and floor=$2 and created_at=$3::timestamptz
+        limit 1`,
+      [building, floor, atISO]
+    );
+    return r.rows?.[0] ?? null;
+  });
 }
 
 export async function listSnapshots(building, floor) {
-  const store = await getStore(SNAPSHOTS, opts);
-  const prefix = `${building}|${floor}|`;
-  const keys = await store.list({ prefix }); // [{ key, size, uploaded_at }, ...] selon Netlify
-  const recs = [];
-  for (const k of keys) {
-    const raw = await store.get(k.key);
-    if (!raw) continue;
-    try { recs.push(JSON.parse(raw)); } catch {}
-  }
-  // tri du plus récent au plus ancien
-  recs.sort((a, b) => (new Date(b.created_at) - new Date(a.created_at)));
-  return recs;
+  return withClient(async c => {
+    const r = await c.query(
+      `select building,floor,version_n,created_at,created_by,note,size
+         from floor_history
+        where building=$1 and floor=$2
+        order by created_at desc
+        limit 200`,
+      [building, floor]
+    );
+    return r.rows || [];
+  });
 }
 
 export async function getLatestSnapshot(building, floor) {
-  const list = await listSnapshots(building, floor);
-  return list[0] || null;
+  return withClient(async c => {
+    const r = await c.query(
+      `select building,floor,version_n,created_at,created_by,note,size,data
+         from floor_history
+        where building=$1 and floor=$2
+        order by version_n desc, created_at desc
+        limit 1`,
+      [building, floor]
+    );
+    return r.rows?.[0] ?? null;
+  });
 }
