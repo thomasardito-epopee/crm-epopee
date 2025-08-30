@@ -1713,6 +1713,78 @@ document.addEventListener('keydown', (e)=>{
   }
   if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='s'){ e.preventDefault(); saveLocal(); }
 });
+  // ===== Auto-snapshots (Google Docs-like) =====
+let __lastSnapshotAt = 0;
+let __lastSnapshotHash = "";
+let __snapshotTimer = null;
+
+// Réglages
+const SNAPSHOT_DEBOUNCE_MS = 5000;   // attend 5s après la dernière modif
+const SNAPSHOT_MIN_INTERVAL_MS = 120000; // pas plus d'un snapshot toutes 2 min
+const SNAPSHOT_MAX_RETRY = 1;
+
+// Hash simple pour éviter les doublons (peut être remplacé par un vrai SHA1)
+function hashState(obj){
+  try { return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).slice(0,64); }
+  catch { return String(Math.random()); }
+}
+
+async function sendSnapshot(reason="auto"){
+  const now = Date.now();
+  if (now - __lastSnapshotAt < SNAPSHOT_MIN_INTERVAL_MS) return; // rate-limit
+
+  const data = exportGeo();
+  const h = hashState(data);
+  if (h === __lastSnapshotHash) return; // rien n'a changé
+
+  const [building, floor] = (currentKey || "").split("|");
+  if (!building || !floor) return;
+
+  // Assure une version à jour
+  try { await apiVersion(building, floor); } catch {}
+
+  const note = `${reason} @ ${new Date().toLocaleTimeString()}`;
+  const payload = { building, floor, features: data.features, note };
+
+  let tries = 0;
+  while (tries <= SNAPSHOT_MAX_RETRY){
+    try{
+      const r = await fetch(`/.netlify/functions/history-save`, {
+        method: "POST",
+        headers: {
+          "content-type":"application/json",
+          "X-User":"admin",
+          "If-Match-Version": String(__historyVersion || 0)
+        },
+        body: JSON.stringify(payload)
+      });
+      if (r.status === 409){
+        // Conflit de version -> on resynchronise et on retente une fois
+        tries++; 
+        await apiVersion(building, floor);
+        if (tries > SNAPSHOT_MAX_RETRY) throw new Error("409 after retry");
+        continue;
+      }
+      if (!r.ok) throw new Error(`history-save: ${r.status}`);
+      const j = await r.json();
+      __historyVersion = j.nextVersion ?? (__historyVersion + 1);
+      __lastSnapshotAt = now;
+      __lastSnapshotHash = h;
+      $("statusText").textContent = "Version enregistrée (auto) ✓";
+      setTimeout(()=> $("statusText").textContent = isAdmin ? "Mode admin" : "Mode visiteur", 900);
+      return;
+    }catch(err){
+      console.warn("history-save KO:", err);
+      break;
+    }
+  }
+}
+
+function planSnapshot(reason="auto"){
+  clearTimeout(__snapshotTimer);
+  __snapshotTimer = setTimeout(()=> sendSnapshot(reason), SNAPSHOT_DEBOUNCE_MS);
+}
+
 
 function updateBoard(){ if(board.style.display!=="none"){ renderDashboard(); } }
 
