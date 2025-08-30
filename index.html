@@ -1033,7 +1033,10 @@ syncMode();
 
 
 // Drawer
-document.getElementById("drawerToggle").onclick = ()=>{ document.getElementById("layout").classList.toggle("collapsed"); };
+document.getElementById("drawerToggle").onclick = ()=>{
+  document.getElementById("layout").classList.toggle("collapsed");
+  refreshMap();
+};
 
 // Building/floor
 const buildingSelect=$("buildingSelect"), floorSelect=$("floorSelect");
