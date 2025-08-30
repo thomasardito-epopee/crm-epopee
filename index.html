@@ -1111,14 +1111,16 @@ function wireBoardActions(){
   if(popBtn && !popBtn.__wired){
     popBtn.__wired = true;
     popBtn.onclick = ()=>{
-      const url = (location.href.replace(/#.*$/, "") + "#dashboard-full");
-      const win = window.open(url, "_blank");
-      if(!win || win.closed){
-        const b = $("visitorBoard"); b.classList.add("fullscreen"); b.style.display="block"; renderDashboard();
-      }
-    };
+  const url = (location.href.replace(/#.*$/, "") + "#dashboard-full");
+  const win = window.open(url, "_blank");
+  if(!win || win.closed){
+    const b = $("visitorBoard");
+    b.classList.add("fullscreen");
+    b.style.display = "block";
+    renderDashboard();
   }
-}
+  refreshMap();
+};
 
 // ===== Dashboard computations & charts
 function getFeaturesForScope(scope){
