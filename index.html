@@ -1100,29 +1100,33 @@ function euro(n){ const v=Number(n||0); const hasCents=Math.abs(v-Math.round(v))
 function wireBoardActions(){
   const closeBtn = $("boardClose");
   const popBtn = $("boardPop");
-  if(closeBtn && !closeBtn.__wired){
+
+  if (closeBtn && !closeBtn.__wired){
     closeBtn.__wired = true;
     closeBtn.onclick = ()=>{
-  const b = $("visitorBoard");
-  b.style.display = "none";
-  b.classList.remove("fullscreen");
-  refreshMap();
-};
-
+      const b = $("visitorBoard");
+      b.style.display = "none";
+      b.classList.remove("fullscreen");
+      refreshMap();
+    };
   }
-  if(popBtn && !popBtn.__wired){
+
+  if (popBtn && !popBtn.__wired){
     popBtn.__wired = true;
     popBtn.onclick = ()=>{
-  const url = (location.href.replace(/#.*$/, "") + "#dashboard-full");
-  const win = window.open(url, "_blank");
-  if(!win || win.closed){
-    const b = $("visitorBoard");
-    b.classList.add("fullscreen");
-    b.style.display = "block";
-    renderDashboard();
+      const url = (location.href.replace(/#.*$/, "") + "#dashboard-full");
+      const win = window.open(url, "_blank");
+      if(!win || win.closed){
+        const b = $("visitorBoard");
+        b.classList.add("fullscreen");
+        b.style.display = "block";
+        renderDashboard();
+      }
+      refreshMap();
+    };
   }
-  refreshMap();
-};
+}
+
 
 // ===== Dashboard computations & charts
 function getFeaturesForScope(scope){
