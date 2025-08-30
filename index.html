@@ -805,11 +805,13 @@ function setBaseImage(src, dim){
 function rebuildTypeChips(){
   const wrap = $("typeChips"); if(!wrap) return;
   wrap.innerHTML="";
-  const id="chip_event_type";
-  const lab=document.createElement("label"); lab.className="chip";
-  lab.innerHTML=`<input type="checkbox" id="${id}"> Événementiel`;
+  const id = "chip_event_type";
+  const lab = document.createElement("label"); lab.className = "chip";
+  // ✅ coché par défaut
+  lab.innerHTML = `<input type="checkbox" id="${id}" checked> Événementiel`;
   wrap.appendChild(lab);
-  $(id).onchange = (e)=>{ filterEventOnly = !!e.target.checked; updateGreying(); };
+  // ✅ quand décoché → on grise les Evenementiel
+  $(id).onchange = (e)=>{ showEvent = !!e.target.checked; updateGreying(); updateBoard && updateBoard(); };
 }
 
 function rebuildStatusChips(){
