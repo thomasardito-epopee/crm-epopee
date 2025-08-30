@@ -5,6 +5,7 @@
     "build:functions": "echo 'no build needed'"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^0.10.0"
+    "@neondatabase/serverless": "^0.10.0",
+    "pg": "^8.11.3"
   }
 }
