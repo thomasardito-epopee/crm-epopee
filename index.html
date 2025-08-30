@@ -503,6 +503,7 @@ function applyTheme(mode){
   }
   // Redessiner le dashboard (couleurs canvas changent)
   if(typeof updateBoard === "function") updateBoard();
+  refreshMap();
 }
 
 // Applique la préférence (user > système > clair)
