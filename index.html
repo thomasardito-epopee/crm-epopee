@@ -542,19 +542,16 @@ const loadFromCache = (k)=>{
   try{ return JSON.parse(localStorage.getItem(storageKey(k))||"null"); }
   catch(e){ return null; }
 };
-
-// ===== Map (CRS.Simple) + free panning
-function refreshMap(){ if(map) setTimeout(()=> map.invalidateSize(true), 0); } // reste global
-
-document.addEventListener('DOMContentLoaded', () => {
-  // Leaflet et Geoman (defer) sont prêts à ce moment
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  // --- création carte ---
   map = L.map("map", {
     crs: L.CRS.Simple, zoomControl:false, minZoom:-4, maxZoom:4,
     zoomSnap:0.1, zoomDelta:0.5, inertia:true
   });
   drawn.addTo(map);
 
-  $("zoomIn").onclick = ()=> map.zoomIn();
+  $("zoomIn").onclick  = ()=> map.zoomIn();
   $("zoomOut").onclick = ()=> map.zoomOut();
   window.addEventListener('resize', refreshMap);
   new ResizeObserver(refreshMap).observe(document.getElementById('layout'));
@@ -569,10 +566,7 @@ document.addEventListener('DOMContentLoaded', () => {
     map.pm.setPathOptions({ snappable:true, snapDistance:10 });
   }
 
-  // Premier sync une fois la carte créée
-  syncMode();
-
-  // ===== interactions (déplacé ici)
+  // listeners dessin
   map.on('pm:create', e=>{
     const l=e.layer.addTo(drawn);
     setLayerProps(l,{status:"Vacant",label:"Bureau"});
@@ -580,10 +574,32 @@ document.addEventListener('DOMContentLoaded', () => {
     selectLayer(l, true);
     saveLocal();
   });
-  map.on('pm:remove', ()=>{ saveLocal(); });
-  map.on('pm:edit',  ()=>{ saveLocal(); });
+  map.on('pm:remove', ()=> saveLocal());
+  map.on('pm:edit',  ()=> saveLocal());
 
-}); // ← ferme le DOMContentLoaded (manquait avant)
+  // --- mode & toolbar ---
+  syncMode();
+
+  // --- init Bâtiment / Étage + plan (ex-A/RDJ) ---
+  buildFloorOptions("A");
+  buildingSelect.value = "A";
+  floorSelect.value = "RDJ";
+  await onKeyChange();   // setBaseImage ne s’exécute que quand map est prête
+
+  // --- UI filtres / statuts ---
+  rebuildStatusChips();
+  rebuildTypeChips();
+  const sel = $("fStatus");
+  sel.innerHTML = "";
+  ALL_STATUSES.forEach(s=>{
+    const o = document.createElement('option');
+    o.value = s; o.textContent = s;
+    sel.appendChild(o);
+  });
+  syncEventUI && syncEventUI();
+});
+</script>
+
 
 // ===== Styling & data helpers
 function layerProps(l){ return l?.options?.ep || {}; }
