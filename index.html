@@ -887,9 +887,11 @@ function placeholder(b,f){
 
 function setBaseImage(src, dim){
   if(baseImageLayer){ map.removeLayer(baseImageLayer); }
-  const h=dim[0], w=dim[1]; const bounds=[[0,0],[h,w]];
+  const h = dim[0], w = dim[1];
+  const bounds = [[0,0],[h,w]];
   baseImageLayer = L.imageOverlay(src, bounds).addTo(map);
-  map.fitBounds(bounds, {padding:[20,20]});
+  refreshMap();
+  setTimeout(()=> map.fitBounds(bounds, { padding:[20,20] }), 0);
   wireBoardActions();
 }
 
