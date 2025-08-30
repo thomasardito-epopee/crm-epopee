@@ -761,8 +761,14 @@ $("btnApply").onclick = ()=>{
   setTimeout(()=>{ b.textContent=orig; b.classList.remove("success","flash"); }, 900);
 };
 
-$("btnDelete").onclick = ()=>{ if(currentLayer){ drawn.removeLayer(currentLayer); currentLayer=null; saveLocal(); } };
-$("btnDup").onclick = ()=>{ if(!currentLayer) return; const p=toPlain(currentLayer); p.latlngs=p.latlngs.map(r=> r.map(ll=> L.latLng(ll.lat+20,ll.lng+20))); fromPlain(p); saveLocal(); };
+$("btnDelete").onclick = ()=>{ 
+  if(currentLayer){ 
+    drawn.removeLayer(currentLayer); 
+    currentLayer=null; 
+    saveLocal(); 
+    planSnapshot("delete");   // ← ajoute cette ligne
+  } 
+};
 
 // ===== Plan loading (logic conservé mais UI masquée)
 const planFile = $("planFile");
