@@ -555,6 +555,10 @@ map = L.map("map", { crs: L.CRS.Simple, zoomControl:false, minZoom:-4, maxZoom:4
 drawn.addTo(map);
 $("zoomIn").onclick=()=> map.zoomIn();
 $("zoomOut").onclick=()=> map.zoomOut();
+  function refreshMap(){ if(map) setTimeout(()=> map.invalidateSize(true), 0); }
+window.addEventListener('resize', refreshMap);
+new ResizeObserver(refreshMap).observe(document.getElementById('layout'));
+
 
 // Geoman toolbar
 map.pm.addControls({
