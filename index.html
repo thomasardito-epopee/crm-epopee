@@ -758,17 +758,6 @@ if(isAdmin){ document.getElementById("layout").classList.remove("collapsed"); }
   $("colorPill").animate([{boxShadow:'inset 0 0 0 3px rgba(10,132,255,.12)'},{boxShadow:'inset 0 0 0 8px rgba(10,132,255,.2)'},{boxShadow:'inset 0 0 0 3px rgba(10,132,255,.12)'}],{duration:600});
 }
 
-// ===== interactions
-map.on('pm:create', e=>{
-  const l=e.layer.addTo(drawn);
-  setLayerProps(l,{status:"Vacant",label:"Bureau"});
-  attachListeners(l);
-  selectLayer(l, true);           // Auto-sélection immédiate
-  saveLocal();
-});
-map.on('pm:remove', ()=>{ saveLocal(); });
-map.on('pm:edit', ()=>{ saveLocal(); });
-
 function attachListeners(l){
   l.on('click', ()=>{
     if(!isAdmin) return;
