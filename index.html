@@ -1,203 +1,1894 @@
 <!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Épopée - Exploitation</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Épopée - Exploitation</title>
+  <!-- Favicon -->
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<link rel="icon" type="image/png" href="favicon.png"> <!-- fallback -->
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 
-  <!-- Favicon (évite les 404 : ne garder que ce qui existe réellement) -->
-  <link rel="icon" type="image/png" href="favicon.png">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+// Auto open full-screen dashboard via hash
+function __openDashboardFull(){ const b=$("visitorBoard"); if(!b) return; b.classList.add("fullscreen"); b.style.display="block"; renderDashboard(); }
+document.addEventListener("DOMContentLoaded", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
+window.addEventListener("hashchange", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
 
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous">
+</script>
 
-  <!-- Styles de base (facultatif) -->
-  <style>
-    :root { color-scheme: light dark; }
-    html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; }
-    .app { display: grid; grid-template-columns: 280px 1fr; grid-template-rows: auto 1fr; height: 100%; }
-    header { grid-column: 1 / -1; padding: 10px 16px; border-bottom: 1px solid #ddd; display: flex; align-items: center; gap: 12px; }
-    header h1 { font-size: 18px; margin: 0; font-weight: 600; }
-    .sidebar { padding: 12px; border-right: 1px solid #ddd; overflow: auto; }
-    .content { display: grid; grid-template-columns: 1fr 420px; gap: 12px; padding: 12px; overflow: auto; }
-    #map { width: 100%; height: calc(100vh - 120px); min-height: 420px; background: #f5f5f5; border-radius: 8px; }
-    .panel { background: rgba(0,0,0,0.02); border: 1px solid #ddd; border-radius: 8px; padding: 12px; }
-    .panel h4 { margin: 0 0 8px; font-size: 15px; }
-    .rowlist { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 0; border-bottom: 1px dashed #e6e6e6; }
-    .rowlist:last-child { border-bottom: none; }
-    .badge { font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid #ccc; }
-    .hint { color: #777; font-size: 13px; padding: 6px 0; }
-    select, button { padding: 6px 10px; border-radius: 6px; border: 1px solid #ccc; background: transparent; }
-    .grid-v { display: grid; gap: 8px; }
-    .grid-h { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
-  </style>
+<link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.14.1/dist/leaflet-geoman.css">
+<script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.14.1/dist/leaflet-geoman.min.js">
+// Auto open full-screen dashboard via hash
+function __openDashboardFull(){ const b=$("visitorBoard"); if(!b) return; b.classList.add("fullscreen"); b.style.display="block"; renderDashboard(); }
+document.addEventListener("DOMContentLoaded", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
+window.addEventListener("hashchange", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
+
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js">
+// Auto open full-screen dashboard via hash
+function __openDashboardFull(){ const b=$("visitorBoard"); if(!b) return; b.classList.add("fullscreen"); b.style.display="block"; renderDashboard(); }
+document.addEventListener("DOMContentLoaded", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
+window.addEventListener("hashchange", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
+
+</script>
+
+<style>
+:root{
+  --bg:#f5f5f7; --panel:#ffffff; --text:#1c1c1e; --muted:#6e6e73; --border:#e5e5ea;
+  --blue:#0a84ff; --green:#34c759; --red:#ff453a; --orange:#ff9f0a; --purple:#bf5af2; --grey:#8e8e93;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;color:var(--text);background:var(--bg)}
+.app{display:grid;grid-template-rows:auto 1fr;height:100%}
+.topbar{height:56px;background:var(--panel);display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:1500}
+.brand{font-weight:800}
+.btn{border:1px solid var(--border);border-radius:12px;padding:9px 13px;font-weight:600;cursor:pointer;background:var(--panel);transition:transform .06s ease, box-shadow .2s ease, background .2s ease}
+.btn:hover{box-shadow:0 6px 18px rgba(0,0,0,.06)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--blue);color:#fff;border-color:transparent}
+.btn.primary.flash{box-shadow:0 0 0 8px rgba(10,132,255,.15)}
+.btn.success{background:var(--green);color:#fff;border-color:transparent}
+.hint{font-size:12px;color:var(--muted)}
+  
+/* Cache le libellé d'état (Mode visiteur / Mode admin) dans la topbar */
+.topbar #statusText{ display:none !important; }
+  
+.layout{display:grid;grid-template-columns:360px 1fr;height:calc(100vh - 56px);transition:grid-template-columns .24s ease;position:relative}
+aside.panel{background:var(--panel);border-right:1px solid var(--border);padding:14px;overflow:auto;z-index:1400}
+.layout.collapsed{grid-template-columns:0 1fr}
+.layout.collapsed aside.panel{width:0;padding:0;border-right:0;overflow:hidden;pointer-events:none}
+.field{margin:10px 0} label{font-size:12px;color:#3a3a3c;display:block;margin-bottom:6px}
+.select,.input,.number{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:#fff}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:end}
+.row3 .field label{min-height:32px;display:flex;align-items:flex-end;white-space:nowrap}
+.number{height:40px}
+
+.section{border-top:1px solid var(--border);margin:12px -14px;padding:12px 14px}
+.section:first-of-type{border-top:0;margin-top:0}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.actions .btn{padding:8px 10px;border-radius:10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--border);border-radius:999px;padding:6px 10px;font-size:13px}
+.chip input{accent-color:var(--blue)}
+
+#map{width:100%;height:100%;position:relative;background:#fafafa;z-index:100}
+
+/* Drawer toggle */
+.drawer-toggle{position:absolute;top:72px;left:360px;transform:translateX(-50%);z-index:1600;background:#fff;border:1px solid var(--border);border-radius:999px;width:30px;height:44px;box-shadow:0 6px 16px rgba(0,0,0,.08);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:left .24s ease}
+.drawer-toggle span{font-weight:800;color:#2c2c2e font-size:18px; line-height:1; color:var(--text); }
+.layout.collapsed .drawer-toggle{left:12px}
+.layout.collapsed .drawer-toggle span{transform:rotate(180deg)}
+
+/* Déplace les contrôles de zoom et la toolbar Geoman sans changer le design */
+.controls-stack{
+  position:absolute;
+  top:120px;            /* ↓ étagé pour ne pas recouvrir le menu Historique */
+  right:16px;
+  z-index:1500;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  align-items:flex-end;
+}
+
+.zoom-strip{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:14px;
+  box-shadow:0 8px 20px rgba(0,0,0,.08);
+  display:flex;
+  overflow:hidden;
+}
+
+.zoom-btn{
+  user-select:none;
+  cursor:pointer;
+  font-weight:800;
+  min-width:44px;
+  text-align:center;
+  padding:10px 14px;
+  border-right:1px solid var(--border);
+}
+.zoom-btn:last-child{ border-right:0; }
+.zoom-btn:active{ background:#f2f2f7; }
+
+/* Position de la toolbar Geoman alignée sous le zoom */
+.leaflet-pm-toolbar{
+  top:176px !important;   /* 120 + hauteur du bloc zoom (~56) */
+  right:16px !important;
+  transform:none !important;
+  z-index:1400 !important;
+}
+
+/* Hide Geoman in visitor mode */
+body.visitor .leaflet-pm-toolbar{display:none !important}
+
+/* Mode switch */
+.mode-switch{position:absolute;bottom:16px;right:16px;z-index:1500;background:#fff;border:1px solid var(--border);border-radius:999px;padding:6px 10px;display:flex;align-items:center;gap:8px;box-shadow:0 8px 20px rgba(0,0,0,.08);font-size:12px;color:#1c1c1e}
+.switch{position:relative;width:52px;height:28px;border-radius:999px;background:#e5e5ea;cursor:pointer;flex:0 0 auto}
+.switch input{display:none}
+.knob{position:absolute;top:2px;left:2px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform .18s ease}
+.switch input:checked ~ .knob{transform:translateX(24px)}
+.track{position:absolute;inset:0;border-radius:999px;background:#e5e5ea;transition:background .18s ease}
+.switch input:checked ~ .track{background:var(--blue)}
+  /* Cacher le bouton & le menu Historique en mode visiteur */
+body.visitor #btnHistory,
+body.visitor #historyMenu{
+  display: none !important;
+}
+
+/* PIN modal */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;z-index:3000}
+.modal.open{display:flex}
+.pad{width:360px;max-width:calc(100vw - 32px);background:#fff;border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.25);padding:16px;border:1px solid var(--border)}
+.pad h4{margin:0 0 6px 0}
+.dots{display:flex;gap:8px;margin:6px 0 12px 0;justify-content:center}
+.dot{width:10px;height:10px;border-radius:50%;background:#e5e5ea}
+.dot.active{background:var(--blue)}
+.keygrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px}
+.key{padding:16px 0;background:#f8f8f9;border:1px solid var(--border);border-radius:16px;cursor:pointer;font-weight:800;text-align:center;font-size:18px;user-select:none}
+.key:active{background:#f1f1f4}
+.key.icon{font-size:16px}
+.key.primary{background:var(--blue);border-color:transparent;color:#fff}
+.key.primary:active{filter:brightness(.98)}
+.key[disabled]{opacity:.5;pointer-events:none}
+
+/* Dashboard */
+.board{position:absolute; top:72px; left:380px; z-index:1300; background:#fff; border:1px solid var(--border); border-radius:14px; padding:12px 14px; box-shadow:0 10px 30px rgba(0,0,0,.08); min-width:340px; max-width:720px; display:none}
+.board h4{margin:0 0 8px 0}
+.board .sub{color:var(--muted); font-size:12px; margin-bottom:10px; display:flex; align-items:center; gap:8px}
+.scope{display:flex; gap:8px; align-items:center}
+.scope select{padding:6px 10px; border:1px solid var(--border); border-radius:10px; background:#fff; font-size:12px}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.kpi{background:#f8f8f9;border:1px solid var(--border);border-radius:12px;padding:10px}
+.kpi .v{font-weight:800;font-size:18px}
+.kpi .l{font-size:12px;color:#3a3a3c}
+.kpi .subl{font-size:11px;color:var(--muted)}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:10px}
+.card{background:#fff; border:1px solid var(--border); border-radius:12px; padding:10px}
+.card h5{margin:0 0 6px 0; font-size:13px}
+.canvas-wrap{width:100%; height:220px; display:flex; align-items:center; justify-content:center}
+canvas{width:100%; height:200px}
+.board .board-actions{position:absolute;top:8px;right:8px;display:flex;gap:8px;z-index:5}
+.board .iconbtn{width:32px;height:32px;border-radius:999px;border:1px solid var(--border);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.08);font-size:16px;line-height:1}
+.board .iconbtn:hover{background:#f5f5f7}
+.board.fullscreen{position:fixed;inset:12px;max-width:none;min-width:unset;left:12px;right:12px;top:12px;bottom:12px;overflow:auto;z-index:3000}
+
+.table{margin-top:8px;max-height:200px;overflow:auto;border:1px solid var(--border);border-radius:12px}
+.table table{width:100%;border-collapse:collapse;font-size:12px}
+.table th,.table td{padding:6px 8px;border-bottom:1px solid #eee;text-align:left}
+.badge{display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; border:1px solid var(--border); background:#f8f8f9}
+.rowlist{display:grid; grid-template-columns:1fr auto auto; gap:6px; align-items:center; font-size:12px; padding:4px 0; border-bottom:1px dashed #eee}
+.rowlist:last-child{border-bottom:0}
+
+/* Legend */
+.legend{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px}
+.legend .item{display:flex; align-items:center; gap:6px; font-size:12px; background:#f8f8f9; border:1px solid var(--border); border-radius:999px; padding:4px 8px}
+.legend .dot{width:10px; height:10px; border-radius:50%}
+
+/* Color picker — v177 style */
+.color-field{display:flex;align-items:center;gap:12px}
+.color-pill{width:46px;height:24px;border-radius:999px;border:1px solid var(--border);box-shadow:inset 0 0 0 3px rgba(10,132,255,.12)}
+.palette{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.swatch{width:26px;height:26px;border-radius:999px;border:1px solid var(--border);cursor:pointer;box-shadow:inset 0 0 0 2px rgba(255,255,255,.6)}
+.swatch.selected{outline:2px solid var(--blue); outline-offset:2px}
+#fColor{display:none}
+
+@media (max-width:980px){
+  .layout{grid-template-columns:1fr}
+  .layout.collapsed{grid-template-columns:1fr}
+  aside.panel{position:absolute;z-index:1500;width:min(90vw,380px);inset:70px auto 16px 16px;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.15)}
+  .drawer-toggle{display:none}
+  .board{left:16px;right:16px}
+}
+
+.leaflet-control-attribution{display:none !important}
+
+/* Autocomplete dropdown for Nom entreprise (fixed to viewport to survive panel scroll) */
+.tenant-field{position:relative}
+.suggest{position:absolute;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.12);padding:6px;display:none;z-index:2000;max-height:240px;overflow:auto;min-width:100%;width:100%}
+.suggest .item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;cursor:pointer;font-size:13px}
+.suggest .item:hover,.suggest .item.active{background:#f5f5f7}
+.suggest .icon{opacity:.7}
+
+  /* Mini menu déroulant (Historique) */
+.menu{
+  position:absolute; top:100%; margin-top:6px; background:#fff; border:1px solid var(--border);
+  border-radius:12px; box-shadow:0 12px 30px rgba(0,0,0,.12); padding:6px; z-index:2000;
+}
+.menu button{
+  display:block; width:100%; text-align:left; border:0; background:#fff; padding:8px 10px;
+  border-radius:10px; cursor:pointer; font-size:14px;
+}
+.menu button:hover{ background:#f5f5f7; }
+  
+</style>
 </head>
-<body>
-  <div class="app">
-    <header>
-      <h1>Épopée – Exploitation</h1>
-      <div class="grid-h">
-        <label for="buildingSelect">Bâtiment :</label>
-        <select id="buildingSelect">
-          <option value="A">A</option>
-          <option value="B">B</option>
-          <option value="C">C</option>
-        </select>
-      </div>
-      <div class="grid-h">
-        <label for="floorSelect">Étage :</label>
-        <select id="floorSelect">
-          <option value="0">RDC</option>
-          <option value="1">+1</option>
-          <option value="2">+2</option>
-        </select>
-      </div>
-      <button id="btnRefresh">Rafraîchir</button>
-    </header>
+<body class="visitor">
+<div class="app">
+  <div class="topbar">
+    <div class="brand">Épopée — Exploitation</div>
+    <div class="hint" id="statusText">Mode visiteur</div>
 
-    <aside class="sidebar">
-      <div class="panel">
-        <h4>Liste “Réservés”</h4>
-        <div id="reservedList"></div>
-      </div>
-      <div class="panel" style="margin-top:12px">
-        <h4>Outils</h4>
-        <div class="grid-v">
-          <button id="btnSnapshot">Snapshot (save)</button>
-          <button id="btnHistory">Voir l’historique</button>
-          <button id="btnRestore">Restaurer (latest)</button>
+    <div style="position:relative">
+  <button class="btn primary" id="btnSave">💾 Enregistrer</button>
+  <button class="btn" id="btnAdminBoard">📊 Dashboard</button>
+
+  <!-- ▼ Nouveau : bouton + menu -->
+  <button class="btn" id="btnHistory">🗂️ Historique</button>
+  <div id="historyMenu" class="menu" style="display:none; right:0;">
+    <button type="button" data-action="version">Version actuelle</button>
+    <button type="button" data-action="list">Lister les snapshots</button>
+    <button type="button" data-action="restore-latest">Restaurer le dernier</button>
+  </div>
+</div>
+    </div><!-- .topbar -->
+
+  <div class="layout" id="layout">
+    <aside class="panel" id="leftPanel">
+      <h3>Panneau de contrôle</h3>
+
+      <div class="row">
+        <div class="field">
+          <label>Bâtiment</label>
+          <select id="buildingSelect" class="select">
+            <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option><option value="G">G</option><option value="H">H</option><option value="I">I</option><option value="R">R</option>
+          </select>
         </div>
+        <div class="field">
+          <label>Étage</label>
+          <select id="floorSelect" class="select"></select>
+        </div>
+      </div>
+
+      <!-- UI de chargement du plan masquée (plans pré-chargés) -->
+      <div class="field" style="display:none">
+        <button class="btn" id="btnPlan" title="Passe en mode Admin pour activer">Définir le plan (image/PDF)</button>
+        <input type="file" id="planFile" accept="image/*,.pdf" hidden>
+        <div id="planHint" class="hint" style="margin-top:6px;">Plan non chargé</div>
+      </div>
+
+      <div class="section">
+        <h4 style="margin:0 0 6px 0;">Filtres</h4>
+        <div class="field"><label>Statuts</label><div id="statusChips" class="chips"></div></div>
+<div class="field"><label>Type</label><div id="typeChips" class="chips"></div></div>
+        <div class="field"><label>Recherche résident</label><input id="searchInput" class="input" placeholder="Nom, code, libellé…"></div>
+      </div>
+
+      <div class="section" id="adminSection">
+        <h4 style="margin:0 0 6px 0;">Édition (Admin)</h4>
+        <div class="actions">
+          <button class="btn" id="btnPoly">Polygone</button>
+          <button class="btn" id="btnRect">Rectangle</button>
+          <button class="btn" id="btnEditToggle">Édition ON/OFF</button>
+        </div>
+        <div class="actions" style="margin-top:8px;">
+          <button class="btn" id="btnDup">Dupliquer</button>
+          <button class="btn" id="btnDelete">Supprimer</button>
+        </div>
+
+        <div class="field"><label>Code</label><input id="fCode" class="input" placeholder="ex. A-B7"></div>
+        <div class="field tenant-field"><label>Nom entreprise</label><input id="fTenant" class="input" placeholder="ex : Synergie Family"></div>
+        <div class="field">
+          <label>Libellé</label>
+          <select id="fLabel" class="select">
+            <option value="Bureau">Bureau</option>
+            <option value="Local">Local</option>
+            <option value="Terrasse">Terrasse</option>
+            <option value="Evenementiel">Evenementiel</option>
+          </select>
+        </div>
+        <div class="field" id="statusField"><label>Statut</label><select id="fStatus" class="select"></select></div>
+
+        <div class="field">
+          <label>Couleur</label>
+          <div class="color-field">
+            <div class="color-pill" id="colorPill" title="Aperçu"></div>
+            <input id="fColor" type="color" value="#0a84ff">
+          </div>
+          <div class="palette" id="colorPalette"></div>
+        </div>
+
+        <div class="row3" id="officeRow">
+          <div class="field"><label>Surface (m²)</label><input id="fArea" class="number" type="number" min="0" step="0.1" value="0"></div>
+          <div class="field"><label>Nombre de postes</label><input id="fPosts" class="number" type="number" min="0" step="1" value="0"></div>
+          <div class="field"><label>Loyer (€) / mois</label><input id="fRent" class="number" type="number" min="0" step="1" value="0"></div>
+        </div>
+        <div class="row3" id="eventRow" style="display:none">
+          <div class="field"><label>Nombre de PAX assis</label><input id="fPaxSit" class="number" type="number" min="0" step="1" value="0"></div>
+          <div class="field"><label>Nombre de PAX debout</label><input id="fPaxStand" class="number" type="number" min="0" step="1" value="0"></div>
+          <div class="field"><label>Prix (€) / jour</label><input id="fDayPrice" class="number" type="number" min="0" step="1" value="0"></div>
+        </div>
+    
+
+        <div class="actions"><button class="btn primary" id="btnApply">Appliquer</button></div>
       </div>
     </aside>
 
-    <main class="content">
-      <div id="map" class="panel"></div>
-      <div id="visitorBoard" class="panel">
-        <h4>Dashboard</h4>
-        <div class="grid-h" style="margin-bottom:8px">
-          <span>Vue :</span>
-          <select id="kpiScope">
-            <option value="building" selected>Bâtiment</option>
-            <option value="floor">Étage</option>
-          </select>
-        </div>
-        <div id="kpiContent" class="grid-v">
-          <!-- Rendu KPI -->
-        </div>
+    <div id="map"></div>
+
+    <div id="visitorBoard" class="board"></div>
+
+    <button id="drawerToggle" class="drawer-toggle" aria-label="Ouvrir/fermer le panneau"><span>‹</span></button>
+
+    <div class="controls-stack">
+      <div class="zoom-strip" id="zoomStrip">
+        <div class="zoom-btn" id="zoomOut">–</div>
+        <div class="zoom-btn" id="zoomIn">+</div>
       </div>
-    </main>
+    </div>
   </div>
+</div>
 
-  <!-- Librairies externes -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
+<div class="mode-switch" id="modeSwitch">
+  <span>Visiteur</span>
+  <label class="switch"><input type="checkbox" id="adminToggle"><span class="track"></span><span class="knob"></span></label>
+  <span>Admin</span>
+</div>
 
-  <!-- pdf.js (core) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" integrity="sha512-9Wz9p4Y0oFLSgYRX4oUPI8kYKmY5x9F9xwEoz4XcywZfVxB4fKCBzCRm8Yq5p3xGQ9rA2sM91b4A5Aq7JrZqJg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<!-- MODAL PIN -->
+<div class="modal" id="padModal" aria-hidden="true">
+  <div class="pad" role="dialog" aria-modal="true">
+    <h4>Code administrateur</h4>
+    <div class="dots" id="pinDots"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+    <div class="keygrid" id="keys"></div>
+    <div class="hint" id="padError" style="color:#b00020;min-height:18px;margin-top:6px"></div>
+  </div>
+</div>
 
-  <!-- Helpers + App -->
-  <script>
-    // ===== Helpers DOM (doivent être définis AVANT toute utilisation) =====
-    const $  = (id, root=document) => root.getElementById ? root.getElementById(id) : document.getElementById(id);
-    const qs = (sel, root=document) => root.querySelector(sel);
-    const qsa = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+<!-- Autocomplete container (now inside the tenant field) -->
+<div id="tenantSuggest" class="suggest" role="listbox" aria-label="Suggestions de résidents"></div>
+  <!-- ▼ Modale Historique -->
+<div class="modal" id="historyModal" aria-hidden="true">
+  <div class="pad" role="dialog" aria-modal="true" style="max-width:560px">
+    <h4>Historique de l’étage</h4>
+    <div id="historyList" class="table" style="margin-top:8px;max-height:340px;overflow:auto;border:1px solid var(--border);border-radius:12px"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+      <input id="restoreNote" class="input" placeholder="Note de restauration (optionnel)" style="flex:1">
+      <button class="btn" id="historyClose">Fermer</button>
+    </div>
+    <div id="historyToast" class="hint" style="margin-top:8px"></div>
+  </div>
+</div>
+<script>
+// ===== Config
+const ADMIN_CODE = "1812";
+const STATUS_STYLES = {
+  "Loué":        { color:"#34c759", fill:"#34c759" },
+  "Préavis":     { color:"#5856d6", fill:"#5856d6" }, // ← mis à jour
+  "Vacant":      { color:"#ff9f0a", fill:"#ff9f0a" },
+  "Réservé":     { color:"#bf5af2", fill:"#bf5af2" }, // ← confirmé
+  "Maintenance": { color:"#ff453a", fill:"#ff453a" }
+};
+  const EVENT_DEFAULT_COLOR = "#ff7ab6"; // ✅ Evenementiel
+const COLORS = {
+  occupied:   STATUS_STYLES["Loué"].fill,        // vert
+  vacant:     STATUS_STYLES["Vacant"].fill,      // orange
+  preavis:    STATUS_STYLES["Préavis"].fill,     // indigo
+  reserved:   STATUS_STYLES["Réservé"].fill,     // violet
+  maintenance:STATUS_STYLES["Maintenance"].fill, // rouge
+  event:      EVENT_DEFAULT_COLOR                // rose
+};
 
-    // ===== PDF.js worker (évite les erreurs de worker introuvable) =====
-    if (window.pdfjsLib) {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-    }
+function defaultColorFor(ep){
+  const lbl = String(ep.label || "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .toLowerCase();
+  if (lbl === "evenementiel") return "#ff7ab6";   // ← rose par défaut
+  const st = STATUS_STYLES[ep.status || "Vacant"];
+  return st ? st.fill : "#0a84ff";
+}
 
-    // ===== État minimal pour démo (remplace/étends avec ton vrai state) =====
-    const S = {
-      building: "A",
-      floor: "0",
-      reservedList: [
-        { code: "A-101", label: "Bureau 101", area: 22 },
-        { code: "A-205", label: "Open-space", area: 120 },
-        { code: "B-010", label: "Salle réunion", area: 18 },
-      ]
+const ALL_STATUSES = Object.keys(STATUS_STYLES);
+const BUILDING_FLOORS = { 
+  "A":["RDJ","RDC","R+1","R+2","R+3"], 
+  "B":["RDC","ENTRE SOL","R+1"], 
+  "C":["RDC","R+1","R+2"] , 
+  "D":["R+1","R+2"], 
+  "E":["RDC"], 
+  "F":["RDC","R+1"], 
+  "G":["RDC","R+1"], 
+  "H":["SOUS-SOL","RDC","R+1"], 
+  "I":["RDC"], 
+  "R":["RDC","R+1"]
+};
+const PRELOAD = {
+  "A|RDJ":"Bat-A-RDJ.pdf","A|RDC":"Bat-A-RDC.pdf","A|R+1":"Bat-A-R1.pdf","A|R+2":"Bat-A-R2.pdf","A|R+3":"Bat-A-R3.pdf",
+  "B|RDC":"Bat-B-RDC.pdf","B|ENTRE SOL":"BAT-B-ENTRE-SOL.pdf","B|R+1":"Bat-B-R1.pdf",
+  "C|RDC":"Bat-C-RDC.pdf","C|R+1":"Bat-C-R1.pdf","C|R+2":"Bat-C-R2.pdf",
+  "D|R+1":"Bat-D-R1.pdf",
+  "D|R+2":"Bat-D-R2.pdf",
+  "E|RDC":"Bat-E-RDC.pdf",
+  "F|RDC":"Bat-F-RDC.pdf",
+  "F|R+1":"Bat-F-R1.pdf",
+  "G|RDC":"Bat-G-RDC.pdf",
+  "G|R+1":"Bat-G-R1.pdf",
+  "H|SOUS-SOL":"Bat-H-SOUS-SOL.pdf",
+  "H|RDC":"Bat-H-RDC.pdf",
+  "H|R+1":"Bat-H-R1.pdf",
+  "I|RDC":"Bat-I-RDC.pdf",
+  "R|RDC":"Bat-R-RDC.pdf",
+  "R|R+1":"Bat-R-R1.pdf"
+};
+const PALETTE = [
+  "#0a84ff","#34c759","#ff9f0a","#ff453a","#bf5af2",
+  "#64d2ff","#30d158","#ffd60a","#ff375f","#00c7be",
+  "#5856d6","#8e8e93","#a2845e","#6c8ef5","#f0932b",
+  "#d0021b","#2dce89","#ff7ab6","#7d7aff","#1abc9c"
+];
+
+// ===== State
+let map, baseImageLayer;
+let drawn = L.featureGroup();
+let currentLayer = null;
+let isAdmin = false;
+let activeStatuses = new Set(ALL_STATUSES);
+let searchText = "";
+let currentKey = "";
+let showEvent = true; // Événementiel affiché (en couleur) par défaut
+
+// ===== Helpers
+const $ = (id)=>document.getElementById(id);
+const keyFor = (b,f)=>`${b}|${f}`;
+const storageKey = (k)=>`epopee_plans_v177_${k}`;
+  // lecture synchronisée du cache local
+const loadFromCache = (k)=>{
+  try{ return JSON.parse(localStorage.getItem(storageKey(k))||"null"); }
+  catch(e){ return null; }
+};
+
+
+// ===== Map (CRS.Simple) + free panning
+map = L.map("map", { crs: L.CRS.Simple, zoomControl:false, minZoom:-4, maxZoom:4, zoomSnap:0.1, zoomDelta:0.5, inertia:true });
+drawn.addTo(map);
+$("zoomIn").onclick=()=> map.zoomIn();
+$("zoomOut").onclick=()=> map.zoomOut();
+
+// Geoman toolbar
+map.pm.addControls({
+  position:'topright',
+  drawMarker:false, drawCircle:false, drawPolyline:false, drawCircleMarker:false,
+  drawRectangle:true, drawPolygon:true, editMode:true, dragMode:false, removalMode:true, cutPolygon:false
+});
+map.pm.setLang('fr');
+map.pm.setPathOptions({ snappable:true, snapDistance:10 });
+
+// ===== Styling & data helpers
+function layerProps(l){ return l?.options?.ep || {}; }
+function setLayerProps(l, props){ l.options.ep = { ...(l.options.ep||{}), ...props }; applyStyle(l); }
+function normalStyleFor(l){
+  const ep = layerProps(l);
+  const isEvent = String(ep.label||"")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .toLowerCase() === "evenementiel";
+
+  const fill = isEvent
+    ? "#ff7ab6"  // ← toujours rose si Evenementiel
+    : (ep.color || (STATUS_STYLES[ep.status || "Vacant"]?.fill || "#0a84ff"));
+
+  return { color: fill, opacity:1, fillColor: fill, fillOpacity:.35, weight:2 };
+}
+function greyStyle(){
+  return { color:"#8e8e93", opacity:1, fillColor:"#b1b2b5", fillOpacity:.35, weight:1 };
+}
+function applyStyle(l){
+  l.setStyle(normalStyleFor(l));
+  const ep = layerProps(l);
+  const isEvent = (ep.label === "Evenementiel");
+  let extra = "";
+
+  if (isEvent){
+    if(ep.paxSit)   extra += ` · ${ep.paxSit} pax assis`;
+    if(ep.paxStand) extra += ` · ${ep.paxStand} pax debout`;
+    if(Number(ep.dayPrice)>0) extra += ` · ${Number(ep.dayPrice).toLocaleString('fr-FR')} €/jour`;
+  } else {
+    if(ep.posts) extra += ` · ${ep.posts} postes`;
+    if(Number(ep.rent)>0) extra += ` · ${euro(ep.rent)} €/mois`;
+  }
+
+  if(ep.area) extra += ` · ${ep.area} m²`;
+
+  l.bindTooltip(
+    `${(ep.code||"—")} · ${(ep.label||"Bureau")}${ep.tenant ? " — "+ep.tenant : ""}${extra}`,
+    { sticky:true }
+  );
+
+  updateGreying();
+}
+  
+function toPlain(l){
+  // On stocke les rectangles comme 2 coins pour être sûr de les relire partout
+  if (l instanceof L.Rectangle) {
+    const b = l.getBounds();
+    return {
+      type: 'rect',
+      bounds: [ b.getSouthWest(), b.getNorthEast() ],
+      options: { ep: layerProps(l) }
     };
+  }
+  // Polygones standards
+  return { type: 'poly', latlngs: l.getLatLngs(), options: { ep: layerProps(l) } };
+}
 
-    // ===== Rendu UI minimal (exemples) =====
-    function renderReservedList() {
-      const r = $("reservedList");
-      if (!S.reservedList || S.reservedList.length === 0) {
-        r.innerHTML = '<div class="hint">Aucun espace réservé.</div>';
-        return;
-      }
-      r.innerHTML = S.reservedList
-        .slice().sort((a,b) => (b.area||0)-(a.area||0))
-        .map(v => `
-          <div class="rowlist">
-            <div>${v.code} — ${v.label}</div>
-            <div class="badge">${v.area||0} m²</div>
-            <div class="badge">Réservé</div>
-          </div>
-        `).join("");
+function fromPlain(o){
+  let l;
+  if (o.type === 'rect') {
+    // Rétro-compat :
+    // - si on a bounds -> on l’utilise
+    // - sinon on déduit bounds à partir d'un anneau de points (format ancien)
+    let bounds = o.bounds;
+    if (!bounds && Array.isArray(o.latlngs)) {
+      const pts = (o.latlngs[0] || o.latlngs).flat();
+      const lats = pts.map(p=>p.lat), lngs = pts.map(p=>p.lng);
+      bounds = [
+        L.latLng(Math.min(...lats), Math.min(...lngs)),
+        L.latLng(Math.max(...lats), Math.max(...lngs))
+      ];
     }
+    l = L.rectangle(bounds, { pmIgnore:false });
+  } else {
+    l = L.polygon(o.latlngs, { pmIgnore:false });
+  }
+  l.options.ep = (o.options && o.options.ep) || {};
+  l.addTo(drawn); attachListeners(l); applyStyle(l);
+}
 
-    function renderDashboard() {
-      const kpiScope = $("kpiScope")?.value || "building";
-      const el = $("kpiContent");
-      el.innerHTML = `
-        <div class="rowlist"><div>Total espaces</div><div class="badge">42</div></div>
-        <div class="rowlist"><div>Occupés (${kpiScope})</div><div class="badge">28</div></div>
-        <div class="rowlist"><div>Disponibles</div><div class="badge">14</div></div>
-        <div class="hint">Scope actuel : <b>${kpiScope}</b></div>
-      `;
-    }
+function exportGeo(){ return { key: currentKey, features: drawn.getLayers().map(toPlain) }; }
+function importGeo(data){ drawn.clearLayers(); (data?.features||[]).forEach(fromPlain); }
+async function saveLocal(){
+  // 1) cache offline
+  localStorage.setItem(storageKey(currentKey), JSON.stringify(exportGeo()));
 
-    // ===== Carte Leaflet (exemple simple) =====
-    let map;
-    function initMap() {
-      map = L.map('map', { zoomControl: true }).setView([43.310, 5.390], 13);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap'
-      }).addTo(map);
-      L.marker([43.310, 5.390]).addTo(map).bindPopup('Épopée Village');
-    }
+  // 2) sync BDD (si admin + token)
+  try{
+    const token = sessionStorage.getItem('ADMIN_TOKEN') || "";
+    const data = exportGeo(); // { key, features }
+    const [building, floor] = currentKey.split("|");
 
-    // ===== Listeners =====
-    function wireUI() {
-      $("buildingSelect").addEventListener("change", (e) => {
-        S.building = e.target.value;
-        renderDashboard();
-      });
-      $("floorSelect").addEventListener("change", (e) => {
-        S.floor = e.target.value;
-        renderDashboard();
-      });
-      $("kpiScope").addEventListener("change", renderDashboard);
-      $("btnRefresh").addEventListener("click", () => {
-        renderReservedList();
-        renderDashboard();
-      });
-      $("btnSnapshot").addEventListener("click", () => {
-        // TODO: appeler /functions/history-save en prod si dispo
-        alert("Snapshot local (démo).");
-      });
-      $("btnHistory").addEventListener("click", () => {
-        // TODO: ouvrir panneau/historique
-        alert("Historique (démo).");
-      });
-      $("btnRestore").addEventListener("click", () => {
-        // TODO: appeler /functions/history-restore
-        alert("Restore (démo).");
-      });
-    }
-
-    // ===== Boot =====
-    document.addEventListener("DOMContentLoaded", () => {
-      // === BEGIN APP LOGIC ===
-      // Si tu as un gros bloc de logique existant, colle-le ici,
-      // en gardant les helpers $, qs, qsa tout en haut.
-      // ========================================================
-
-      initMap();
-      renderReservedList();
-      renderDashboard();
-      wireUI();
+    await fetch("/api/spaces/batch", {
+      method: "POST",
+      headers: { "content-type":"application/json", ...(token ? { "authorization": "Bearer " + token } : {}) },
+      body: JSON.stringify({ building, floor, features: data.features })
     });
-  </script>
+
+    $("statusText").textContent = "Sauvegardé sur la base ✅";
+    setTimeout(()=> $("statusText").textContent = isAdmin ? "Mode admin" : "Mode visiteur", 900);
+  }catch(e){
+    console.warn("Sync distant KO → local OK", e);
+    $("statusText").textContent = "Sauvegardé en local (offline) ☁️";
+    setTimeout(()=> $("statusText").textContent = isAdmin ? "Mode admin" : "Mode visiteur", 1200);
+  }
+planSnapshot("auto"); // déclencheur d'un snapshot côté serveur
+  updateBoard && updateBoard();
+}
+
+async function loadLocal(k){
+  try{
+    const [building, floor] = k.split("|");
+    const res = await fetch(`/api/spaces?building=${encodeURIComponent(building)}&floor=${encodeURIComponent(floor)}`);
+    if(res.ok){
+      const { items } = await res.json();
+      const features = (items||[]).map(row => row.geom);
+      const payload = { key:k, features };
+      localStorage.setItem(storageKey(k), JSON.stringify(payload));
+      return payload;
+    }
+  }catch(e){
+    console.warn("Lecture distante KO → fallback local", e);
+  }
+  try{ return JSON.parse(localStorage.getItem(storageKey(k))||"null"); }
+  catch(e){ return null; }
+}
+
+
+function setLabelValue(val){
+  const sel = $("fLabel");
+  if(!sel) return;
+  let found = [...sel.options].some(o=> o.value===val);
+  if(!found && val){ const o=document.createElement('option'); o.value=val; o.textContent=val; sel.appendChild(o); }
+  sel.value = val || "Bureau";
+}
+
+// Affiche/masque champs selon libellé "Evenementiel"
+function syncEventUI(){
+  const isEvent = ($("fLabel").value === "Evenementiel");
+
+  // ✅ Écrire immédiatement le label sur la couche sélectionnée
+  if (currentLayer) setLayerProps(currentLayer, { label: $("fLabel").value });
+
+  const statusField = $("statusField"); if(statusField) statusField.style.display = isEvent ? "none" : "block";
+  const officeRow = $("officeRow"); if(officeRow) officeRow.style.display = isEvent ? "none" : "grid";
+  const eventRow  = $("eventRow");  if(eventRow)  eventRow.style.display  = isEvent ? "grid" : "none";
+
+  // (optionnel) mettre à jour l’aperçu de couleur du picker
+  if (currentLayer) {
+    if (isEvent) setColor("#ff7ab6");
+    else {
+      const st = layerProps(currentLayer).status || "Vacant";
+      setColor(layerProps(currentLayer).color || STATUS_STYLES[st].fill);
+    }
+  }
+}
+
+ $("fLabel").addEventListener("change", syncEventUI);
+// ===== Select helper (auto-select on create)
+function selectLayer(l, focusFirst=true){
+  if(!l) return;
+  currentLayer = l;
+  const ep = layerProps(l);
+  $("fCode").value = ep.code||"";
+  $("fTenant").value = ep.tenant||"";
+  setLabelValue(ep.label || "Bureau");
+  $("fStatus").value = ep.status||"Vacant";
+  setColor(ep.color || defaultColorFor(ep)); // ✅ applique direct le rose pour Evenementiel
+  $("fArea").value = ep.area||0;
+  $("fPosts").value = ep.posts||0;
+  $("fRent").value = ep.rent||0;
+  $("fPaxSit") && ($("fPaxSit").value = ep.paxSit||0);
+  $("fPaxStand") && ($("fPaxStand").value = ep.paxStand||0);
+  $("fDayPrice") && ($("fDayPrice").value = ep.dayPrice||0);
+  syncEventUI && syncEventUI();
+if(isAdmin){ document.getElementById("layout").classList.remove("collapsed"); }
+  if(focusFirst){ setTimeout(()=> $("fCode").focus(), 0); }
+  $("colorPill").animate([{boxShadow:'inset 0 0 0 3px rgba(10,132,255,.12)'},{boxShadow:'inset 0 0 0 8px rgba(10,132,255,.2)'},{boxShadow:'inset 0 0 0 3px rgba(10,132,255,.12)'}],{duration:600});
+}
+
+// ===== interactions
+map.on('pm:create', e=>{
+  const l=e.layer.addTo(drawn);
+  setLayerProps(l,{status:"Vacant",label:"Bureau"});
+  attachListeners(l);
+  selectLayer(l, true);           // Auto-sélection immédiate
+  saveLocal();
+});
+map.on('pm:remove', ()=>{ saveLocal(); });
+map.on('pm:edit', ()=>{ saveLocal(); });
+
+function attachListeners(l){
+  l.on('click', ()=>{
+    if(!isAdmin) return;
+    selectLayer(l, false);
+  });
+}
+
+// ===== Left panel actions
+$("btnPoly").onclick = ()=>{ if(!isAdmin) return; map.pm.enableDraw('Polygon'); };
+$("btnRect").onclick = ()=>{ if(!isAdmin) return; map.pm.enableDraw('Rectangle'); };
+$("btnEditToggle").onclick = ()=>{
+  if(!isAdmin) return;
+  if(map.pm.globalEditModeEnabled()){ map.pm.disableGlobalEditMode(); }
+  else { map.pm.enableGlobalEditMode(); }
+};
+
+// ===== Color selector (palette + preview)
+const colorPill = $("colorPill"), colorInput = $("fColor"), paletteEl = $("colorPalette");
+function setColor(val){
+  colorInput.value=val; colorPill.style.backgroundColor = val;
+  [...paletteEl.querySelectorAll('.swatch')].forEach(s=> s.classList.toggle('selected', s.dataset.color===val));
+  if(currentLayer){ currentLayer.setStyle({fillColor:val, color:val}); }
+}
+function buildPalette(){
+  paletteEl.innerHTML="";
+  PALETTE.forEach(hex=>{
+    const d=document.createElement('button');
+    d.type="button"; d.className="swatch"; d.style.background=hex; d.dataset.color=hex; d.title=hex;
+    d.onclick=()=> setColor(hex);
+    paletteEl.appendChild(d);
+  });
+}
+buildPalette();
+colorInput.oninput = ()=> setColor(colorInput.value);
+
+$("fStatus").addEventListener('change', ()=>{
+  if(!currentLayer) return;
+  const ep = layerProps(currentLayer);
+  const prevDefault = STATUS_STYLES[ep.status||"Vacant"].fill;
+  if(!ep.color || ep.color === prevDefault){
+    const hex = STATUS_STYLES[$("fStatus").value].fill;
+    setColor(hex);
+  } else {
+    setColor(ep.color);
+  }
+});
+
+$("btnApply").onclick = ()=>{
+  if(!currentLayer) return;
+  const __isEvent = ($("fLabel").value === "Evenementiel");
+  setLayerProps(currentLayer, {
+    code:$("fCode").value.trim(), tenant:$("fTenant").value.trim(), label:$("fLabel").value,
+    status: __isEvent ? "Réservé" : $("fStatus").value, color:colorInput.value, area: parseFloat($("fArea").value||"0")||0,
+    posts: __isEvent ? 0 : (parseInt(($("fPosts").value||"0"),10)||0),
+    rent: __isEvent ? 0 : (parseFloat(String($("fRent").value||"0").replace(",", "."))||0),
+    paxSit: __isEvent ? (parseInt(($("fPaxSit")?.value||"0"),10)||0) : 0,
+    paxStand: __isEvent ? (parseInt(($("fPaxStand")?.value||"0"),10)||0) : 0,
+    dayPrice: __isEvent ? (parseFloat(String($("fDayPrice")?.value||"0").replace(",", "."))||0) : 0
+  });
+  saveLocal();
+  const b=$("btnApply");
+  const orig=b.textContent;
+  b.textContent="Appliqué ✓"; b.classList.add("success","flash");
+  setTimeout(()=>{ b.textContent=orig; b.classList.remove("success","flash"); }, 900);
+};
+
+$("btnDelete").onclick = ()=>{ if(currentLayer){ drawn.removeLayer(currentLayer); currentLayer=null; saveLocal(); } };
+$("btnDup").onclick = ()=>{ if(!currentLayer) return; const p=toPlain(currentLayer); p.latlngs=p.latlngs.map(r=> r.map(ll=> L.latLng(ll.lat+20,ll.lng+20))); fromPlain(p); saveLocal(); };
+
+// ===== Plan loading (logic conservé mais UI masquée)
+const planFile = $("planFile");
+$("btnPlan") && ($("btnPlan").onclick = ()=> { if(isAdmin) planFile.click(); });
+planFile && (planFile.onchange = async (e)=>{ const file=e.target.files[0]; if(!file) return; await loadPlanFromFile(file); });
+async function loadPlanFromFile(file){
+  if(file.type==="application/pdf"){
+    const url = URL.createObjectURL(file);
+    const pdf = await pdfjsLib.getDocument(url).promise;
+    const page = await pdf.getPage(1);
+    const viewport = page.getViewport({scale:2});
+    const c = document.createElement('canvas'); const ctx=c.getContext('2d');
+    c.width = viewport.width; c.height = viewport.height;
+    await page.render({canvasContext:ctx, viewport}).promise;
+    setBaseImage(c.toDataURL('image/png'), [c.height, c.width]);
+    $("planHint").textContent = `${file.name} (page 1)`;
+  }else{
+    const reader = new FileReader();
+    reader.onload = ()=>{ const img=new Image(); img.onload=()=> setBaseImage(reader.result,[img.naturalHeight,img.naturalWidth]); img.src=reader.result; };
+    reader.readAsDataURL(file); $("planHint").textContent = file.name;
+  }
+}
+
+// Preload
+async function tryPreload(b,f){
+  const url = PRELOAD[keyFor(b,f)];
+  if(!url){ placeholder(b,f); return; }
+  try{
+    if(url.toLowerCase().endsWith(".pdf")){
+      const pdf = await pdfjsLib.getDocument(url).promise;
+      const page = await pdf.getPage(1);
+      const viewport = page.getViewport({scale:2});
+      const c = document.createElement('canvas'); const ctx=c.getContext('2d');
+      c.width = viewport.width; c.height = viewport.height;
+      await page.render({canvasContext:ctx, viewport}).promise;
+      setBaseImage(c.toDataURL('image/png'), [c.height, c.width]);
+    }else{
+      await new Promise((res,rej)=>{ const img=new Image(); img.onload=()=>{ setBaseImage(url,[img.naturalHeight,img.naturalWidth]); res(); }; img.onerror=rej; img.src=url; });
+    }
+    $("planHint").textContent = url;
+  }catch(err){
+    console.warn("Préchargement échoué:", err);
+    $("planHint").textContent = 'Plan introuvable. Placez les fichiers PDF à côté du HTML ou utilisez "Définir le plan".';
+    placeholder(b,f);
+  }
+}
+
+function placeholder(b,f){
+  const w=2480, h=1754; const c=document.createElement('canvas'); c.width=w; c.height=h; const ctx=c.getContext('2d');
+  ctx.fillStyle="#fff"; ctx.fillRect(0,0,w,h); ctx.strokeStyle="#e5e5ea";
+  for(let x=0;x<w;x+=40){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+  for(let y=0;y<h;y+=40){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+  ctx.fillStyle="#1c1c1e"; ctx.font="bold 28px Inter, system-ui, -apple-system"; ctx.fillText(`${b} ${f}`, 24, 48);
+  setBaseImage(c.toDataURL("image/png"), [h,w]);
+}
+
+function setBaseImage(src, dim){
+  if(baseImageLayer){ map.removeLayer(baseImageLayer); }
+  const h=dim[0], w=dim[1]; const bounds=[[0,0],[h,w]];
+  baseImageLayer = L.imageOverlay(src, bounds).addTo(map);
+  map.fitBounds(bounds, {padding:[20,20]});
+  wireBoardActions();
+}
+
+// ===== Filters — GREY non matching (darker)
+function rebuildTypeChips(){
+  const wrap = $("typeChips"); if(!wrap) return;
+  wrap.innerHTML="";
+  const id = "chip_event_type";
+  const lab = document.createElement("label"); lab.className = "chip";
+  // ✅ coché par défaut
+  lab.innerHTML = `<input type="checkbox" id="${id}" checked> Événementiel`;
+  wrap.appendChild(lab);
+  // ✅ quand décoché → on grise les Evenementiel
+  $(id).onchange = (e)=>{ showEvent = !!e.target.checked; updateGreying(); updateBoard && updateBoard(); };
+}
+
+function rebuildStatusChips(){
+  const wrap = $("statusChips"); wrap.innerHTML="";
+  ALL_STATUSES.forEach(s=>{
+    const id=`chip_${s}`;
+    const lab=document.createElement('label'); lab.className="chip";
+    lab.innerHTML=`<input type="checkbox" id="${id}" checked> ${s}`; wrap.appendChild(lab);
+    $(id).onchange = e=>{ if(e.target.checked) activeStatuses.add(s); else activeStatuses.delete(s); updateGreying(); };
+  });
+}
+$("searchInput").oninput = e=>{ searchText=e.target.value.trim().toLowerCase(); updateGreying(); };
+function updateGreying(){
+  drawn.getLayers().forEach(l=>{
+    const ep=layerProps(l);
+    const matches=activeStatuses.has(ep.status||"Vacant");
+    const text=`${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
+    const matchText = !searchText || text.includes(searchText);
+// ✅ si showEvent=false → on ne “colorise” pas les Evenementiel
+const typeOk = showEvent || (ep.label !== "Evenementiel");
+    const ok = matches && matchText && typeOk;
+    if(ok){ l.setStyle(normalStyleFor(l)); }
+    else{ l.setStyle(greyStyle()); }
+  });
+}
+
+// ===== Visitor/Admin
+const padModal=$("padModal"), pinDots=$("pinDots").querySelectorAll('.dot'), keysGrid=$("keys");
+let pin=""; function openPad(){ pin=""; syncPad(); padModal.classList.add('open'); keysGrid.querySelector('[data-key="1"]')?.focus(); }
+function closePad(){ padModal.classList.remove('open'); }
+function syncPad(){ pinDots.forEach((d,i)=> d.classList.toggle('active', i<pin.length)); const okBtn=keysGrid.querySelector('[data-role="ok"]'); if(okBtn){ okBtn.toggleAttribute('disabled', pin.length!==4); } $("padError").textContent=""; }
+
+// Build keypad 3x4 layout: 1-9 / ⌫ 0 Valider
+(function buildPad(){
+  const layout = ['1','2','3','4','5','6','7','8','9','back','0','ok'];
+  keysGrid.innerHTML="";
+  layout.forEach(key=>{
+    const b = document.createElement('button');
+    b.type="button";
+    b.className="key";
+    b.tabIndex=0;
+    if(key==='back'){
+      b.classList.add('icon');
+      b.setAttribute('aria-label','Effacer');
+      b.dataset.key='back';
+      b.innerHTML='⌫';
+      b.onclick=()=>{ if(pin.length){ pin=pin.slice(0,-1); syncPad(); } };
+    }else if(key==='ok'){
+      b.classList.add('primary');
+      b.dataset.role='ok';
+      b.dataset.key='ok';
+      b.textContent='Valider';
+      b.disabled=true;
+      b.onclick=()=>{ if(pin===ADMIN_CODE){ isAdmin=true; closePad(); $("adminToggle").checked=true; syncMode(); } else { $("padError").textContent="Code incorrect"; } };
+    }else {
+      b.dataset.key=key;
+      b.textContent=key;
+      b.onclick=()=>{ if(pin.length<4){ pin+=key; syncPad(); } };
+    }
+    keysGrid.appendChild(b);
+  });
+})();
+
+// Keyboard support inside modal
+
+document.addEventListener('keydown', (e)=>{
+  const isPadOpen = padModal.classList.contains('open');
+  if(isPadOpen){
+    const k = e.key;
+    if(/^[0-9]$/.test(k)){ e.preventDefault(); if(pin.length<4){ pin+=k; syncPad(); } return; }
+    if(k==='Backspace' || k==='Delete'){ e.preventDefault(); pin=pin.slice(0,-1); syncPad(); return; }
+    if(k==='Enter'){ e.preventDefault(); const okBtn=document.getElementById('btnValidate'); if(okBtn && !okBtn.disabled){ okBtn.click(); } return; }
+    if(k==='Escape'){ e.preventDefault(); closePad(); if(!isAdmin){ $("adminToggle").checked=false; } return; }
+  }
+});
+
+padModal.addEventListener('click', (e)=>{ if(e.target===padModal){ closePad(); if(!isAdmin){ $("adminToggle").checked=false; } } });
+
+$("adminToggle").checked=false;
+$("adminToggle").onchange = e=>{ if(e.target.checked){ if(!isAdmin) openPad(); else syncMode(); } else { isAdmin=false; syncMode(); } };
+// --- (ré)montage idempotent de la toolbar Geoman
+function mountGeoman(){
+  // Si la toolbar n'existe pas encore, on la crée
+  if (!document.querySelector('.leaflet-pm-toolbar')){
+    map.pm.addControls({
+      position:'topright',
+      drawMarker:false, drawCircle:false, drawPolyline:false, drawCircleMarker:false,
+      drawRectangle:true, drawPolygon:true, editMode:true, dragMode:false, removalMode:true, cutPolygon:false
+    });
+    map.pm.setLang('fr');
+    map.pm.setPathOptions({ snappable:true, snapDistance:10 });
+  }
+  // Afficher/cacher selon le mode
+  const bar = document.querySelector('.leaflet-pm-toolbar');
+  if (bar){
+    bar.style.top = '128px';
+    bar.style.right = '16px';
+    bar.style.transform = 'none';
+    bar.style.zIndex = '1400';
+    bar.style.display = isAdmin ? '' : 'none';
+  }
+}
+
+// --- bascule Visiteur/Admin
+function syncMode(){
+  $("statusText").textContent = isAdmin ? "Mode admin" : "Mode visiteur";
+  $("adminSection").style.display = isAdmin ? "block" : "none";
+  $("btnPlan") && ($("btnPlan").disabled = !isAdmin);
+// Afficher/masquer l'Historique selon le mode
+$("btnHistory") && ($("btnHistory").style.display = isAdmin ? "" : "none");
+$("historyMenu") && ( $("historyMenu").style.display = isAdmin ? $("historyMenu").style.display : "none");
+
+  document.body.classList.toggle('visitor', !isAdmin);
+  document.body.classList.toggle('admin', isAdmin);
+
+ if (isAdmin){
+  $("layout").classList.remove("collapsed");
+} else {
+  // ✅ en visiteur : panneau OUVERT par défaut
+  $("layout").classList.remove("collapsed");
+  map.pm.disableGlobalEditMode();
+  map.pm.disableGlobalRemovalMode && map.pm.disableGlobalRemovalMode();
+  map.pm.disableDraw('Polygon');
+  map.pm.disableDraw('Rectangle');
+  drawn.eachLayer(l=>{ if(l.pm && l.pm.disable){ l.pm.disable(); } });
+  currentLayer = null;
+}
+
+  mountGeoman();
+}
+
+// État initial
+syncMode();
+
+
+
+// Drawer
+document.getElementById("drawerToggle").onclick = ()=>{ document.getElementById("layout").classList.toggle("collapsed"); };
+
+// Building/floor
+const buildingSelect=$("buildingSelect"), floorSelect=$("floorSelect");
+function buildFloorOptions(b){ floorSelect.innerHTML=""; (BUILDING_FLOORS[b]||[]).forEach(f=>{ const o=document.createElement('option'); o.value=f; o.textContent=f; floorSelect.appendChild(o); }); }
+async function onKeyChange(){
+  const b = buildingSelect.value, f = floorSelect.value;
+  currentKey = keyFor(b,f);
+
+  // on attend la lecture distante (qui met aussi à jour le cache)
+  const data = await loadLocal(currentKey);
+
+  // on importe la data distante si présente, sinon le cache local, sinon vide
+  importGeo(data || loadFromCache(currentKey) || { features: [] });
+
+  await tryPreload(b,f);
+  updateBoard();
+}
+
+buildingSelect.onchange = async ()=>{ buildFloorOptions(buildingSelect.value); await onKeyChange(); };
+floorSelect.onchange = onKeyChange;
+
+document.addEventListener('DOMContentLoaded', async () => {
+  buildFloorOptions("A");
+  buildingSelect.value = "A";
+  floorSelect.value = "RDJ";
+  await onKeyChange();           // ← attend la lecture distante/cache
+
+  rebuildStatusChips();
+  rebuildTypeChips();
+
+  function fillStatusSelect(){
+    const sel = $("fStatus");
+    sel.innerHTML = "";
+    ALL_STATUSES.forEach(s=>{
+      const o = document.createElement('option');
+      o.value = s; o.textContent = s;
+      sel.appendChild(o);
+    });
+  }
+  fillStatusSelect();
+  syncEventUI && syncEventUI();
+});
+
+
+// Save & Dashboard button
+$("btnSave").onclick = ()=>{ saveLocal(); };
+$("btnAdminBoard").onclick = ()=>{ const b=$("visitorBoard"); b.style.display = (b.style.display==="none"||!b.style.display) ? "block":"none"; if(b.style.display!=="none"){ renderDashboard(); } };
+
+function euro(n){ const v=Number(n||0); const hasCents=Math.abs(v-Math.round(v))>1e-6; return v.toLocaleString('fr-FR',{minimumFractionDigits:hasCents?2:0, maximumFractionDigits:2}); }
+
+
+function wireBoardActions(){
+  const closeBtn = $("boardClose");
+  const popBtn = $("boardPop");
+  if(closeBtn && !closeBtn.__wired){
+    closeBtn.__wired = true;
+    closeBtn.onclick = ()=>{ const b=$("visitorBoard"); b.style.display="none"; b.classList.remove("fullscreen"); };
+  }
+  if(popBtn && !popBtn.__wired){
+    popBtn.__wired = true;
+    popBtn.onclick = ()=>{
+      const url = (location.href.replace(/#.*$/, "") + "#dashboard-full");
+      const win = window.open(url, "_blank");
+      if(!win || win.closed){
+        const b = $("visitorBoard"); b.classList.add("fullscreen"); b.style.display="block"; renderDashboard();
+      }
+    };
+  }
+}
+
+// ===== Dashboard computations & charts
+function getFeaturesForScope(scope){
+  const all = [];
+  const curB = buildingSelect.value;
+  const curF = floorSelect.value;
+  const curKey = keyFor(curB, curF);
+    function pushFromStore(k){
+    if(k===curKey){
+      exportGeo().features.forEach(fe=> all.push(fe));
+    }else{
+      // ici on lit le cache (synchrone), pas la base (asynchrone)
+      const st = loadFromCache(k);
+      if(st && st.features){ st.features.forEach(fe=> all.push(fe)); }
+    }
+  }
+  if(scope === "building"){
+    (BUILDING_FLOORS[curB]||[]).forEach(f => pushFromStore(keyFor(curB, f)));
+  }else if(scope === "all"){
+    Object.keys(BUILDING_FLOORS).forEach(b=> (BUILDING_FLOORS[b]||[]).forEach(f=> pushFromStore(keyFor(b,f)) ));
+  }else{ // floor
+    exportGeo().features.forEach(fe=> all.push(fe));
+  }
+  return all;
+}
+
+function aggStats(features){
+  const total = features.length;
+  let counts = { Loué:0, Vacant:0, Préavis:0, Réservé:0, Maintenance:0 };
+  let area   = { Loué:0, Vacant:0, Préavis:0, Réservé:0, Maintenance:0 };
+  let posts  = { Loué:0, Vacant:0, Préavis:0, Réservé:0, Maintenance:0 };
+  let rent   = { Loué:0, Vacant:0, Préavis:0, Réservé:0, Maintenance:0 };
+
+  const byTenant = {};
+  const reservedList = [];
+  let reservedRentNonEvent = 0; // ← loyers des “Réservés” hors événementiel
+
+  features.forEach(fe=>{
+    const ep = (fe.options && fe.options.ep) || {};
+    const st = ep.status || "Vacant";
+    const isEvent = (ep.label === "Evenementiel");
+
+    const ar       = Number(ep.area||0);
+    const postsVal = parseInt(ep.posts||0,10)||0;
+    const rentVal  = parseFloat(String(ep.rent||0).toString().replace(",", "."))||0;
+
+    counts[st] = (counts[st]||0)+1;
+    area[st]   = (area[st]  ||0)+ar;
+    posts[st]  = (posts[st] ||0)+postsVal;
+    rent[st]   = (rent[st]  ||0)+rentVal;
+
+    const tenant = (ep.tenant||"").trim();
+    if(tenant && tenant.toLowerCase()!=="vacant"){
+      if(!byTenant[tenant]) byTenant[tenant]={count:0, area:0};
+      byTenant[tenant].count += 1;
+      byTenant[tenant].area  += ar;
+      byTenant[tenant].posts = (byTenant[tenant].posts||0) + postsVal;
+      byTenant[tenant].rent  = (byTenant[tenant].rent  ||0) + rentVal;
+    }
+
+    // “Réservé” mais pas événementiel → pris en compte
+    if(st === "Réservé" && !isEvent){
+      reservedList.push({code: ep.code||"—", label: ep.label||"Bureau", area: ar});
+      reservedRentNonEvent += rentVal;
+    }
+  });
+
+  const occupiedCount = (counts["Loué"]||0) + (counts["Préavis"]||0);
+  const vacantCount   = (counts["Vacant"]||0);
+  const occupiedPct   = total? Math.round(occupiedCount*1000/total)/10 : 0;
+  const vacantPct     = total? Math.round(vacantCount*1000/total)/10 : 0;
+
+  const tenantsArr = Object.entries(byTenant).map(([k,v])=>({tenant:k, ...v})).sort((a,b)=> b.count - a.count).slice(0,5);
+  const tenantsAreaArr = Object.entries(byTenant).map(([k,v])=>({tenant:k, ...v})).sort((a,b)=> b.area - a.area).slice(0,5);
+  const tenantsRentArr = Object.entries(byTenant).map(([k,v])=>({tenant:k, ...v})).sort((a,b)=> (b.rent||0) - (a.rent||0)).slice(0,5);
+
+  const areaOcc = (area["Loué"]||0) + (area["Préavis"]||0);
+  const areaVac = (area["Vacant"]||0);
+
+  const totalPosts = Object.values(posts).reduce((a,b)=>a+b,0);
+  const occPosts   = (posts["Loué"]||0) + (posts["Préavis"]||0);
+  const vacPosts   = Math.max(0, totalPosts - occPosts);
+
+  const rentFacture   = (rent["Loué"]||0) + (rent["Préavis"]||0);
+  const rentPotentiel = rentFacture + reservedRentNonEvent; // ← exclut l’événementiel
+  const rentTotal     = Object.values(rent).reduce((a,b)=>a+b,0);
+  const euroPerPost   = totalPosts ? (rentFacture / totalPosts) : 0;
+
+  return {
+    totalSpaces: total, counts, area, posts, rent,
+    occupiedCount, vacantCount, occupiedPct, vacantPct,
+    tenantsArr, tenantsAreaArr, tenantsRentArr,
+    areaOcc, areaVac, totalPosts, occPosts, vacPosts,
+    rentFacture, rentPotentiel, rentTotal, euroPerPost,
+    reservedList
+  };
+}
+
+// Minimal charts (canvas 2D)
+function drawDonut(canvas, parts, colors, centerText){
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width = canvas.clientWidth * devicePixelRatio;
+  const H = canvas.height = 200 * devicePixelRatio;
+  const cx=W/2, cy=H/2, r=Math.min(W,H)*0.36, r2=r*0.66;
+  const total = parts.reduce((a,b)=>a+b,0) || 1;
+  let a0 = -Math.PI/2;
+  ctx.clearRect(0,0,W,H);
+  parts.forEach((v,i)=>{
+    const ang = v/total * Math.PI*2;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,a0,a0+ang);
+    ctx.closePath();
+    ctx.fillStyle = colors[i%colors.length];
+    ctx.fill();
+    a0 += ang;
+  });
+  ctx.globalCompositeOperation='destination-out';
+  ctx.beginPath(); ctx.arc(cx,cy,r2,0,Math.PI*2); ctx.fill();
+  ctx.globalCompositeOperation='source-over';
+  ctx.fillStyle = "#1c1c1e"; ctx.font = `${Math.round(r*0.28)}px SF Pro, Inter, system-ui`; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(centerText, cx, cy);
+}
+
+function drawBars(canvas, labels, values, colors = ["#0a84ff"]){
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width = canvas.clientWidth * devicePixelRatio;
+  const H = canvas.height = 200 * devicePixelRatio;
+  ctx.clearRect(0,0,W,H);
+  const max = Math.max(...values, 1);
+  const mL = 10*devicePixelRatio, mR = 10*devicePixelRatio, mT = 10*devicePixelRatio, mB = 24*devicePixelRatio;
+  const plotW = W - mL - mR;
+  const plotH = H - mT - mB;
+  const n = values.length;
+  const gap = plotW*0.08/(n||1);
+  const bw = (plotW - gap*(n+1)) / (n||1);
+  const baseY = mT + plotH;
+  ctx.fillStyle = "#e5e5ea"; ctx.fillRect(mL, baseY, plotW, 1*devicePixelRatio);
+  values.forEach((v,i)=>{
+    const x = mL + gap + i*(bw+gap);
+    const h = v/max * (plotH-6*devicePixelRatio);
+    const y = baseY - h;
+    ctx.fillStyle = colors[i % colors.length];
+    const radius = 8*devicePixelRatio;
+    const w=bw, r=Math.min(radius, w/2, h);
+    ctx.beginPath();
+    ctx.moveTo(x, y+r);
+    ctx.arcTo(x, y, x+r, y, r);
+    ctx.lineTo(x+w-r, y);
+    ctx.arcTo(x+w, y, x+w, y+r, r);
+    ctx.lineTo(x+w, y+h);
+    ctx.lineTo(x, y+h);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#1c1c1e";
+    ctx.font = `${12*devicePixelRatio}px Inter, system-ui`;
+    ctx.textAlign='center';
+    let ty = y - 6*devicePixelRatio;
+    if (ty < mT + 10*devicePixelRatio) ty = y + 14*devicePixelRatio;
+    ctx.fillText(String(v), x+w/2, ty);
+    ctx.fillStyle = "#3a3a3c"; 
+    ctx.font = `${11*devicePixelRatio}px Inter, system-ui`;
+    ctx.fillText(labels[i].slice(0,18), x+w/2, baseY + 14*devicePixelRatio);
+  });
+}
+
+// Dashboard rendering
+function renderDashboard(){
+  const board = $("visitorBoard");
+  let scopeSel = board.querySelector('#kpiScope');
+  const curB = buildingSelect.value;
+  const scope = scopeSel ? scopeSel.value : 'building';
+  board.innerHTML = `
+    <h4>Dashboard</h4>
+    <div class="sub">
+      <div class="scope">
+        <span>Vue :</span>
+        <select id="kpiScope">
+          <option value="building"${scope==='building'?' selected':''}>Bâtiment ${curB}</option>
+          <option value="all"${scope==='all'?' selected':''}>Tous bâtiments</option>
+        </select>
+      </div>
+    </div>
+    <div class="board-actions"><button class="iconbtn" id="boardPop" title="Ouvrir dans un nouvel onglet">↗</button><button class="iconbtn" id="boardClose" title="Fermer">✕</button></div>
+    <div class="kpis" id="kpis"></div>
+
+    <div class="grid2">
+      <div class="card">
+        <h5>Répartition par statut (nb espaces)</h5>
+        <div class="canvas-wrap"><canvas id="chartStatusCount"></canvas></div>
+        <div id="legendStatus" class="legend"></div>
+      </div>
+      <div class="card">
+        <h5>m² occupés vs vacants</h5>
+        <div class="canvas-wrap"><canvas id="chartAreaOccVac"></canvas></div>
+        <div id="legendArea" class="legend"></div>
+      </div>
+    </div>
+    <div class="grid2" style="margin-top:10px">
+      <div class="card">
+        <h5>Postes occupés vs vacants</h5>
+        <div class="canvas-wrap"><canvas id="chartPostsOccVac"></canvas></div>
+        <div id="legendPosts" class="legend"></div>
+      </div>
+      <div class="card">
+        <h5>Top 5 loyers par résident</h5>
+        <div class="canvas-wrap"><canvas id="chartTopRent"></canvas></div>
+      </div>
+    </div>
+
+    <div class="grid2" style="margin-top:10px">
+      <div class="card">
+        <h5>Top 5 résidents <select id="topMode" style="margin-left:8px;padding:4px 8px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--panel);"><option value="count">par nombre d'espaces</option><option value="area">par m² occupés</option></select></h5>
+        <div class="canvas-wrap"><canvas id="chartTopTenants"></canvas></div>
+      </div>
+      <div class="card">
+        <h5>Réservés (à venir)</h5>
+        <div id="reservedList"></div>
+      </div>
+    </div>
+  `;
+  $("kpiScope").onchange = ()=> renderDashboard();
+
+  const feats = getFeaturesForScope($("kpiScope").value);
+
+  // applique exactement les mêmes filtres que sur la carte
+  const featsFiltered = feats.filter(fe=>{
+    const ep = (fe.options && fe.options.ep) || {};
+    const matchesStatus = activeStatuses.has(ep.status || "Vacant");
+    const isEvent = (ep.label === "Evenementiel");
+    const typeOk = showEvent || !isEvent;  // si showEvent=false, on exclut Evenementiel
+    const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
+    const matchText = !searchText || text.includes(searchText);
+    return matchesStatus && typeOk && matchText;
+  });
+  const S = aggStats(featsFiltered);
+
+  // KPIs
+  const kpisEl = $("kpis");
+  kpisEl.innerHTML = `
+    <div class="kpi"><div class="v">${S.occupiedCount} <span class="subl">(${S.occupiedPct}%)</span></div><div class="l">Bureaux occupés</div></div>
+    <div class="kpi"><div class="v">${S.vacantCount} <span class="subl">(${S.vacantPct}%)</span></div><div class="l">Bureaux vacants</div></div>
+    <div class="kpi"><div class="v">${Math.round(S.areaOcc)} m²</div><div class="l">m² occupés</div></div>
+    <div class="kpi"><div class="v">${Math.round(S.areaVac)} m²</div><div class="l">m² vacants</div></div>
+    <div class="kpi"><div class="v">${euro(S.rentFacture)} €</div><div class="l">Loyer facturé (occupés)</div></div>
+    <div class="kpi"><div class="v">${euro(S.rentPotentiel)} €</div><div class="l">Loyer potentiel (après réservés)</div></div>
+    <div class="kpi"><div class="v">${Math.round(S.euroPerPost)} €</div><div class="l">€ / poste (moyenne)</div></div>
+  `;
+
+  // Donut statuts
+  const statusLabels = ["Loué","Préavis","Vacant","Réservé","Maintenance"];
+  const statusParts  = statusLabels.map(s => S.counts[s] || 0);
+  const statusColors = statusLabels.map(s => STATUS_STYLES[s].fill);
+  drawDonut($("chartStatusCount"), statusParts, statusColors, String(S.totalSpaces || 0));
+  const total = S.totalSpaces || 1;
+  $("legendStatus").innerHTML = statusLabels.map((lab,i)=>{
+    const v = statusParts[i] || 0;
+    if(!v) return "";
+    const pct = Math.round(v*1000/total)/10;
+    return `<div class="item"><span class="dot" style="background:${statusColors[i]}"></span>${lab} — ${v} (${pct}%)</div>`;
+  }).join("");
+
+  // m² occupés vs vacants
+  const occ = S.areaOcc || 0, vac = S.areaVac || 0, totA = (occ + vac) || 1;
+  const occPct = Math.round(occ*1000/totA)/10;
+  drawDonut(
+    $("chartAreaOccVac"),
+    [occ, vac],
+    [STATUS_STYLES["Loué"].fill, STATUS_STYLES["Vacant"].fill],
+    `${Math.round(occPct)}%`
+  );
+  $("legendArea").innerHTML = `
+    <div class="item"><span class="dot" style="background:${STATUS_STYLES["Loué"].fill}"></span>
+      Occupés — ${Math.round(occ)} m² (${occPct}%)</div>
+    ${vac>0 ? `<div class="item"><span class="dot" style="background:${STATUS_STYLES["Vacant"].fill}"></span>
+      Vacants — ${Math.round(vac)} m² (${Math.round(vac*1000/totA)/10}%)</div>` : ""}
+  `;
+
+  // Top 5 résidents (barres)
+  const topSel = $("topMode");
+  const savedMode = window.TOP_TENANTS_MODE || "count";
+  if(topSel){ topSel.value = savedMode; topSel.onchange = (e)=>{ window.TOP_TENANTS_MODE = e.target.value; renderDashboard(); }; }
+  const mode = window.TOP_TENANTS_MODE || (topSel ? topSel.value : "count");
+  const topData = (mode==="area" ? (S.tenantsAreaArr||[]) : (S.tenantsArr||[]));
+  const labels = topData.map(t=> t.tenant);
+  const values = topData.map(t=> mode==="area" ? Math.round(t.area||0) : t.count);
+  const barColorContext = STATUS_STYLES["Loué"].fill;
+  drawBars($("chartTopTenants"), labels, values, [barColorContext]);
+
+  // Postes occupés vs vacants
+  const pOcc = S.occPosts || 0, pVac = S.vacPosts || 0, pTot = (pOcc + pVac) || 1;
+  const pOccPct = Math.round(pOcc*1000/pTot)/10;
+  if ((pOcc + pVac) > 0){
+    drawDonut(
+      $("chartPostsOccVac"),
+      [pOcc, pVac],
+      [STATUS_STYLES["Loué"].fill, STATUS_STYLES["Vacant"].fill],
+      `${Math.round(pOccPct)}%`
+    );
+    $("legendPosts").innerHTML = `
+      <div class="item"><span class="dot" style="background:${STATUS_STYLES["Loué"].fill}"></span>
+        Occupés — ${pOcc} (${pOccPct}%)</div>
+      ${pVac>0 ? `<div class="item"><span class="dot" style="background:${STATUS_STYLES["Vacant"].fill}"></span>
+        Vacants — ${pVac} (${Math.round(pVac*1000/pTot)/10}%)</div>` : ""}
+    `;
+  } else {
+    const cv = $("chartPostsOccVac"); const ctx = cv.getContext("2d");
+    ctx.clearRect(0,0,cv.width,cv.height);
+    ctx.font = "14px Inter,system-ui"; ctx.fillStyle="#6e6e73"; ctx.textAlign="center";
+    ctx.fillText("Aucune donnée de postes", cv.width/2, 24);
+    $("legendPosts").innerHTML = ``;
+  }
+
+  // Top loyers par résident
+  const topRent = (S.tenantsRentArr||[]);
+  if (topRent.length){
+    const barColorContext = STATUS_STYLES["Loué"].fill;
+    drawBars(
+      $("chartTopRent"),
+      topRent.map(t => t.tenant),
+      topRent.map(t => Math.round(t.rent || 0)),
+      [barColorContext]
+    );
+  } else {
+    const c = $("chartTopRent"); const ctx = c.getContext("2d");
+    ctx.clearRect(0,0,c.width,c.height);
+    ctx.font="14px Inter,system-ui"; ctx.fillStyle="#6e6e73"; ctx.textAlign="center";
+    ctx.fillText("Aucun loyer renseigné", c.width/2, 24);
+  }
+
+  // Liste “Réservés”
+  const r = $("reservedList");
+  if(!S.reservedList || S.reservedList.length===0){
+    r.innerHTML = '<div class="hint">Aucun espace réservé.</div>';
+  }else{
+    r.innerHTML = S.reservedList
+      .sort((a,b)=> b.area-a.area)
+      .map(v=> `<div class="rowlist"><div>${v.code} — ${v.label}</div><div class="badge">${v.area||0} m²</div><div class="badge">Réservé</div></div>`)
+      .join('');
+  }
+
+  wireBoardActions();
+}
+function renderDashboard(){
+  const board = $("visitorBoard");
+  let scopeSel = board.querySelector('#kpiScope');
+  const curB = buildingSelect.value;
+  const scope = scopeSel ? scopeSel.value : 'building';
+  board.innerHTML = `
+    <h4>Dashboard</h4>
+    <div class="sub">
+      <div class="scope">
+        <span>Vue :</span>
+        <select id="kpiScope">
+          <option value="building"${scope==='building'?' selected':''}>Bâtiment ${curB}</option>
+          <option value="all"${scope==='all'?' selected':''}>Tous bâtiments</option>
+        </select>
+      </div>
+    </div>
+    <div class="board-actions"><button class="iconbtn" id="boardPop" title="Ouvrir dans un nouvel onglet">↗</button><button class="iconbtn" id="boardClose" title="Fermer">✕</button></div>
+    <div class="kpis" id="kpis"></div>
+
+    <div class="grid2">
+      <div class="card">
+        <h5>Répartition par statut (nb espaces)</h5>
+        <div class="canvas-wrap"><canvas id="chartStatusCount"></canvas></div>
+        <div id="legendStatus" class="legend"></div>
+      </div>
+      <div class="card">
+        <h5>m² occupés vs vacants</h5>
+        <div class="canvas-wrap"><canvas id="chartAreaOccVac"></canvas></div>
+        <div id="legendArea" class="legend"></div>
+      </div>
+    </div>
+    <div class="grid2" style="margin-top:10px">
+      <div class="card">
+        <h5>Postes occupés vs vacants</h5>
+        <div class="canvas-wrap"><canvas id="chartPostsOccVac"></canvas></div>
+        <div id="legendPosts" class="legend"></div>
+      </div>
+      <div class="card">
+        <h5>Top 5 loyers par résident</h5>
+        <div class="canvas-wrap"><canvas id="chartTopRent"></canvas></div>
+      </div>
+    </div>
+
+    <div class="grid2" style="margin-top:10px">
+      <div class="card">
+        <h5>Top 5 résidents <select id="topMode" style="margin-left:8px;padding:4px 8px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--panel);"><option value="count">par nombre d'espaces</option><option value="area">par m² occupés</option></select></h5>
+        <div class="canvas-wrap"><canvas id="chartTopTenants"></canvas></div>
+      </div>
+      <div class="card">
+        <h5>Réservés (à venir)</h5>
+        <div id="reservedList"></div>
+      </div>
+    </div>
+  `;
+  $("kpiScope").onchange = ()=> renderDashboard();
+
+  const feats = getFeaturesForScope($("kpiScope").value);
+
+  // applique exactement les mêmes filtres que sur la carte
+  const featsFiltered = feats.filter(fe=>{
+    const ep = (fe.options && fe.options.ep) || {};
+    const matchesStatus = activeStatuses.has(ep.status || "Vacant");
+    const isEvent = (ep.label === "Evenementiel");
+    const typeOk = showEvent || !isEvent;  // si showEvent=false, on exclut Evenementiel
+    const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
+    const matchText = !searchText || text.includes(searchText);
+    return matchesStatus && typeOk && matchText;
+  });
+  const S = aggStats(featsFiltered);
+
+  // KPIs
+  const kpisEl = $("kpis");
+  kpisEl.innerHTML = `
+    <div class="kpi"><div class="v">${S.occupiedCount} <span class="subl">(${S.occupiedPct}%)</span></div><div class="l">Bureaux occupés</div></div>
+    <div class="kpi"><div class="v">${S.vacantCount} <span class="subl">(${S.vacantPct}%)</span></div><div class="l">Bureaux vacants</div></div>
+    <div class="kpi"><div class="v">${Math.round(S.areaOcc)} m²</div><div class="l">m² occupés</div></div>
+    <div class="kpi"><div class="v">${Math.round(S.areaVac)} m²</div><div class="l">m² vacants</div></div>
+    <div class="kpi"><div class="v">${euro(S.rentFacture)} €</div><div class="l">Loyer facturé (occupés)</div></div>
+    <div class="kpi"><div class="v">${euro(S.rentPotentiel)} €</div><div class="l">Loyer potentiel (après réservés)</div></div>
+    <div class="kpi"><div class="v">${Math.round(S.euroPerPost)} €</div><div class="l">€ / poste (moyenne)</div></div>
+  `;
+
+  // Donut statuts
+  const statusLabels = ["Loué","Préavis","Vacant","Réservé","Maintenance"];
+  const statusParts  = statusLabels.map(s => S.counts[s] || 0);
+  const statusColors = statusLabels.map(s => STATUS_STYLES[s].fill);
+  drawDonut($("chartStatusCount"), statusParts, statusColors, String(S.totalSpaces || 0));
+  const total = S.totalSpaces || 1;
+  $("legendStatus").innerHTML = statusLabels.map((lab,i)=>{
+    const v = statusParts[i] || 0;
+    if(!v) return "";
+    const pct = Math.round(v*1000/total)/10;
+    return `<div class="item"><span class="dot" style="background:${statusColors[i]}"></span>${lab} — ${v} (${pct}%)</div>`;
+  }).join("");
+
+  // m² occupés vs vacants
+  const occ = S.areaOcc || 0, vac = S.areaVac || 0, totA = (occ + vac) || 1;
+  const occPct = Math.round(occ*1000/totA)/10;
+  drawDonut(
+    $("chartAreaOccVac"),
+    [occ, vac],
+    [STATUS_STYLES["Loué"].fill, STATUS_STYLES["Vacant"].fill],
+    `${Math.round(occPct)}%`
+  );
+  $("legendArea").innerHTML = `
+    <div class="item"><span class="dot" style="background:${STATUS_STYLES["Loué"].fill}"></span>
+      Occupés — ${Math.round(occ)} m² (${occPct}%)</div>
+    ${vac>0 ? `<div class="item"><span class="dot" style="background:${STATUS_STYLES["Vacant"].fill}"></span>
+      Vacants — ${Math.round(vac)} m² (${Math.round(vac*1000/totA)/10}%)</div>` : ""}
+  `;
+
+  // Top 5 résidents (barres)
+  const topSel = $("topMode");
+  const savedMode = window.TOP_TENANTS_MODE || "count";
+  if(topSel){ topSel.value = savedMode; topSel.onchange = (e)=>{ window.TOP_TENANTS_MODE = e.target.value; renderDashboard(); }; }
+  const mode = window.TOP_TENANTS_MODE || (topSel ? topSel.value : "count");
+  const topData = (mode==="area" ? (S.tenantsAreaArr||[]) : (S.tenantsArr||[]));
+  const labels = topData.map(t=> t.tenant);
+  const values = topData.map(t=> mode==="area" ? Math.round(t.area||0) : t.count);
+  const barColorContext = STATUS_STYLES["Loué"].fill;
+  drawBars($("chartTopTenants"), labels, values, [barColorContext]);
+
+  // Postes occupés vs vacants
+  const pOcc = S.occPosts || 0, pVac = S.vacPosts || 0, pTot = (pOcc + pVac) || 1;
+  const pOccPct = Math.round(pOcc*1000/pTot)/10;
+  if ((pOcc + pVac) > 0){
+    drawDonut(
+      $("chartPostsOccVac"),
+      [pOcc, pVac],
+      [STATUS_STYLES["Loué"].fill, STATUS_STYLES["Vacant"].fill],
+      `${Math.round(pOccPct)}%`
+    );
+    $("legendPosts").innerHTML = `
+      <div class="item"><span class="dot" style="background:${STATUS_STYLES["Loué"].fill}"></span>
+        Occupés — ${pOcc} (${pOccPct}%)</div>
+      ${pVac>0 ? `<div class="item"><span class="dot" style="background:${STATUS_STYLES["Vacant"].fill}"></span>
+        Vacants — ${pVac} (${Math.round(pVac*1000/pTot)/10}%)</div>` : ""}
+    `;
+  } else {
+    const cv = $("chartPostsOccVac"); const ctx = cv.getContext("2d");
+    ctx.clearRect(0,0,cv.width,cv.height);
+    ctx.font = "14px Inter,system-ui"; ctx.fillStyle="#6e6e73"; ctx.textAlign="center";
+    ctx.fillText("Aucune donnée de postes", cv.width/2, 24);
+    $("legendPosts").innerHTML = ``;
+  }
+
+  // Top loyers par résident
+  const topRent = (S.tenantsRentArr||[]);
+  if (topRent.length){
+    const barColorContext = STATUS_STYLES["Loué"].fill;
+    drawBars(
+      $("chartTopRent"),
+      topRent.map(t => t.tenant),
+      topRent.map(t => Math.round(t.rent || 0)),
+      [barColorContext]
+    );
+  } else {
+    const c = $("chartTopRent"); const ctx = c.getContext("2d");
+    ctx.clearRect(0,0,c.width,c.height);
+    ctx.font="14px Inter,system-ui"; ctx.fillStyle="#6e6e73"; ctx.textAlign="center";
+    ctx.fillText("Aucun loyer renseigné", c.width/2, 24);
+  }
+
+  // Liste “Réservés”
+  const r = $("reservedList");
+  if(!S.reservedList || S.reservedList.length===0){
+    r.innerHTML = '<div class="hint">Aucun espace réservé.</div>';
+  }else{
+    r.innerHTML = S.reservedList
+      .sort((a,b)=> b.area-a.area)
+      .map(v=> `<div class="rowlist"><div>${v.code} — ${v.label}</div><div class="badge">${v.area||0} m²</div><div class="badge">Réservé</div></div>`)
+      .join('');
+  }
+
+  wireBoardActions();
+}
+
+// initial hidden dashboard
+const board=$("visitorBoard");
+board.style.display="none";
+// ===== Historique — Netlify Functions bindings =====
+let __historyVersion = 0; // version courante (mise à jour via floor-version)
+
+function currentBF(){ return { b: buildingSelect.value, f: floorSelect.value }; }
+function hxToast(msg, ok=true){
+  const t = $("historyToast"); if(!t) return;
+  t.textContent = msg;
+  t.style.color = ok ? "#075985" : "#991b1b";
+}
+
+/** API wrappers */
+async function apiVersion(b,f){
+  const r = await fetch(`/.netlify/functions/floor-version?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f)}`, {
+    headers: { "X-User":"admin" }
+  });
+  if(!r.ok) throw new Error(`floor-version: ${r.status}`);
+  const j = await r.json();
+  __historyVersion = j.version_n ?? 0;
+  return __historyVersion;
+}
+async function apiList(b,f){
+  const r = await fetch(`/.netlify/functions/history-list?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f)}`, {
+    headers: { "X-User":"admin" }
+  });
+  if(!r.ok) throw new Error(`history-list: ${r.status}`);
+  return r.json();
+}
+async function apiGet(b,f, atISO){
+  const r = await fetch(`/.netlify/functions/history-get?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f)}&at=${encodeURIComponent(atISO)}`, {
+    headers: { "X-User":"admin" }
+  });
+  if(!r.ok) throw new Error(`history-get: ${r.status}`);
+  return r.json();
+}
+async function apiRestoreAt(b,f, atISO, note){
+  const r = await fetch(`/.netlify/functions/history-restore?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f)}&at=${encodeURIComponent(atISO)}`, {
+    method: "POST",
+    headers: {
+      "X-User": "admin",
+      "If-Match-Version": String(__historyVersion || 0),
+      "X-Commit-Note": note || `restore @ ${atISO}`
+    }
+  });
+  if (r.status === 409) throw new Error("409: version a changé entre-temps");
+  if (!r.ok){ const txt = await r.text().catch(()=> ""); throw new Error(`restore: ${r.status} ${txt}`); }
+  const j = await r.json();
+  __historyVersion = j.nextVersion || (__historyVersion + 1);
+  return j;
+}
+
+/** UI: bouton + menu */
+(function wireHistoryMenu(){
+  const btn = $("btnHistory"), menu = $("historyMenu");
+  if(!btn || !menu) return;
+
+  function closeMenu(){ menu.style.display = "none"; }
+  btn.addEventListener("click", (e)=>{
+    e.stopPropagation();
+    menu.style.display = (menu.style.display === "block" ? "none" : "block");
+    menu.style.right = "0";
+  });
+  document.addEventListener("click", (e)=>{ if(!menu.contains(e.target) && e.target!==btn) closeMenu(); });
+
+  menu.addEventListener("click", async (e)=>{
+    const it = e.target.closest("button"); if(!it) return;
+    const act = it.dataset.action;
+    closeMenu();
+
+    const { b, f } = currentBF();
+    try{
+      if(act === "version"){
+        const n = await apiVersion(b,f);
+        alert(`Version actuelle de ${b} / ${f} : v${n}`);
+      }
+      if(act === "list"){
+        await apiVersion(b,f);
+        const arr = await apiList(b,f);
+        openHistoryModal(arr, b, f);
+      }
+     if (act === "restore"){
+  if(!confirm(`Restaurer le snapshot du ${new Date(at).toLocaleString()} ?\n(une nouvelle version sera créée)`)) return;
+  const note = $("restoreNote")?.value || `restore @ ${at}`;
+  await apiVersion(b,f);
+  const j = await apiRestoreAt(b,f, at, note);
+  hxToast(`Restauré → version v${j.nextVersion}`);
+  // recharge l'étage si souhaité:
+  // await onKeyChange();
+}
+    }catch(err){ alert("Erreur: " + String(err.message || err)); }
+  });
+})();
+
+/** Modale “Historique” */
+function openHistoryModal(list, b, f){
+  const modal = $("historyModal"), box = $("historyList"), closeBtn = $("historyClose");
+  if(!modal || !box) return;
+
+  if(!Array.isArray(list) || list.length===0){
+    box.innerHTML = `<div class="hint" style="padding:12px">Aucun snapshot pour ${b} / ${f}.</div>`;
+  }else{
+    const rows = list.map(it=>{
+      const date = new Date(it.created_at).toLocaleString();
+      const note = it.note ? ` — ${it.note}` : "";
+      return `
+        <div class="rowlist">
+          <div><strong>${date}</strong><div class="hint">par ${it.created_by} • ${it.size} éléments${note}</div></div>
+          <button class="btn" data-at="${it.created_at}" data-act="view">Voir</button>
+          <button class="btn success" data-at="${it.created_at}" data-act="restore">Restaurer</button>
+        </div>
+      `;
+    }).join("");
+    box.innerHTML = rows;
+  }
+
+  box.onclick = async (e)=>{
+    const btn = e.target.closest("button"); if(!btn) return;
+    const at = btn.dataset.at; const act = btn.dataset.act;
+    if(!at) return;
+    try{
+      await apiVersion(b,f);
+      if(act === "view"){
+        const snap = await apiGet(b,f, at);
+        console.log("Snapshot @", at, snap);
+        hxToast(`Snapshot du ${new Date(at).toLocaleString()} — ${snap.size} éléments.`);
+      }
+      if(act === "restore"){
+        if(!confirm(`Restaurer le snapshot du ${new Date(at).toLocaleString()} ?\n(une nouvelle version sera créée)`)) return;
+        const note = $("restoreNote")?.value || "restore from UI";
+        const j = await apiRestoreLatest(b,f, note);
+        hxToast(`Restauré → version v${j.nextVersion}`);
+        // Optionnel : recharger
+        // await onKeyChange();
+      }
+    }catch(err){
+      if(String(err).includes("409")) hxToast("Conflit: l’étage a changé entre-temps. Rouvre la liste et réessaie.", false);
+      else hxToast("Erreur: " + String(err.message || err), false);
+    }
+  };
+
+  modal.classList.add("open");
+  $("historyClose").onclick = ()=> modal.classList.remove("open");
+  modal.addEventListener("click", (e)=>{ if(e.target===modal) modal.classList.remove("open"); });
+}
+
+/** Suivre le changement d'étage pour garder la version à jour */
+async function refreshHistoryVersion(){
+  const { b, f } = currentBF();
+  try{ await apiVersion(b,f); }catch{}
+}
+document.addEventListener('DOMContentLoaded', refreshHistoryVersion);
+buildingSelect.addEventListener('change', refreshHistoryVersion);
+floorSelect.addEventListener('change', refreshHistoryVersion);
+
+  
+// ===== Shortcuts — suppression clavier sans interférer avec les champs
+document.addEventListener('keydown', (e)=>{
+  const tag = (e.target && e.target.tagName || "").toLowerCase();
+  const typing = ['input','textarea','select'].includes(tag) || (e.target && e.target.isContentEditable);
+  const isPadOpen = padModal.classList.contains('open');
+  if(isPadOpen) return; // déjà géré plus haut pour le modal
+
+  if ((e.key === 'Delete' || e.key === 'Backspace') && !typing){
+    if(currentLayer && isAdmin){
+      e.preventDefault();
+      drawn.removeLayer(currentLayer);
+      currentLayer = null;
+      saveLocal();
+      const s=$("statusText"); const old=s.textContent; s.textContent="Élément supprimé 🗑️"; setTimeout(()=> s.textContent=old, 900);
+    }
+  }
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='s'){ e.preventDefault(); saveLocal(); }
+});
+  // ===== Auto-snapshots (Google Docs-like) =====
+let __lastSnapshotAt = 0;
+let __lastSnapshotHash = "";
+let __snapshotTimer = null;
+
+// Réglages
+const SNAPSHOT_DEBOUNCE_MS      = 5000;      // attend 5 s après la dernière modif
+const SNAPSHOT_MIN_INTERVAL_MS  = 300000;    // 5 min = 5 * 60 * 1000
+
+
+// Hash simple pour éviter les doublons (peut être remplacé par un vrai SHA1)
+function hashState(obj){
+  try { return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).slice(0,64); }
+  catch { return String(Math.random()); }
+}
+
+async function sendSnapshot(reason="auto"){
+  const now = Date.now();
+  if (now - __lastSnapshotAt < SNAPSHOT_MIN_INTERVAL_MS) return; // rate-limit
+
+  const data = exportGeo();
+  const h = hashState(data);
+  if (h === __lastSnapshotHash) return; // rien n'a changé
+
+  const [building, floor] = (currentKey || "").split("|");
+  if (!building || !floor) return;
+
+  // Assure une version à jour
+  try { await apiVersion(building, floor); } catch {}
+
+  const note = `${reason} @ ${new Date().toLocaleTimeString()}`;
+  const payload = { building, floor, features: data.features, note };
+
+  let tries = 0;
+  while (tries <= SNAPSHOT_MAX_RETRY){
+    try{
+      const r = await fetch(`/.netlify/functions/history-save`, {
+        method: "POST",
+        headers: {
+          "content-type":"application/json",
+          "X-User":"admin",
+          "If-Match-Version": String(__historyVersion || 0)
+        },
+        body: JSON.stringify(payload)
+      });
+      if (r.status === 409){
+        // Conflit de version -> on resynchronise et on retente une fois
+        tries++; 
+        await apiVersion(building, floor);
+        if (tries > SNAPSHOT_MAX_RETRY) throw new Error("409 after retry");
+        continue;
+      }
+      if (!r.ok) throw new Error(`history-save: ${r.status}`);
+      const j = await r.json();
+      __historyVersion = j.nextVersion ?? (__historyVersion + 1);
+      __lastSnapshotAt = now;
+      __lastSnapshotHash = h;
+      $("statusText").textContent = "Version enregistrée (auto) ✓";
+      setTimeout(()=> $("statusText").textContent = isAdmin ? "Mode admin" : "Mode visiteur", 900);
+      return;
+    }catch(err){
+      console.warn("history-save KO:", err);
+      break;
+    }
+  }
+}
+
+function planSnapshot(reason="auto"){
+  clearTimeout(__snapshotTimer);
+  __snapshotTimer = setTimeout(()=> sendSnapshot(reason), SNAPSHOT_DEBOUNCE_MS);
+}
+
+
+function updateBoard(){ if(board.style.display!=="none"){ renderDashboard(); } }
+
+// ===== Tenant autocomplete =====
+
+// Ensure suggest is inside the tenant field wrapper so it anchors correctly
+try{
+  const wrap = tnInput.closest('.tenant-field') || tnInput.parentElement;
+  if(wrap && suggest.parentElement !== wrap){ wrap.style.position='relative'; wrap.appendChild(suggest); }
+}catch(e){}
+
+const tnInput = $("fTenant");
+const suggest = $("tenantSuggest");
+// Anchor dropdown under the tenant field wrapper
+(function(){
+  const wrap = tnInput.closest('.tenant-field') || tnInput.parentElement;
+  if(wrap && suggest.parentElement !== wrap){
+    wrap.style.position = 'relative';
+    wrap.appendChild(suggest);
+  }
+})();
+
+
+function norm(s){
+  return (s||"")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .toLowerCase()
+    .replace(/\s+/g," ")
+    .trim();
+}
+
+function collectTenantStats(){
+  const mapCounts = new Map();
+  function addName(name){
+    const t = (name||"").trim();
+    if(!t || norm(t)==="vacant") return;
+    const n = norm(t);
+    const cur = mapCounts.get(n) || {name:t, count:0};
+    cur.count += 1;
+    if(t.length > cur.name.length) cur.name = t;
+    mapCounts.set(n, cur);
+  }
+  exportGeo().features.forEach(fe=> addName((fe.options&&fe.options.ep&&fe.options.ep.tenant)||""));
+  Object.keys(BUILDING_FLOORS).forEach(b=> (BUILDING_FLOORS[b]||[]).forEach(f=>{
+    const st = loadFromCache(keyFor(b,f));
+    (st?.features||[]).forEach(fe=> addName((fe.options&&fe.options.ep&&fe.options.ep.tenant)||""));
+  }));
+  return mapCounts;
+}
+
+function suggestionsFor(q, limit=6){
+  const qn = norm(q);
+  if(qn.length<2) return [];
+  const stats = collectTenantStats();
+  const arr = [...stats.values()]
+    .filter(o=> norm(o.name).includes(qn))
+    .sort((a,b)=> b.count - a.count)
+    .slice(0,limit);
+  return arr;
+}
+
+function positionSuggest(el){
+  // anchor directly under the input inside its field wrapper
+  suggest.style.left = '0px';
+  suggest.style.right = '0px';
+  suggest.style.width = '100%';
+  suggest.style.top  = (el.offsetTop + el.offsetHeight + 6 - (tnInput.offsetTop)) + 'px';
+}
+
+function showSuggest(items){
+  if(items.length===0){ suggest.style.display="none"; return; }
+  suggest.innerHTML = items.map(it=> `<div class="item" role="option"><span class="icon">🏷️</span>${it.name}</div>`).join("");
+  positionSuggest(tnInput);
+  suggest.style.display="block";
+  [...suggest.querySelectorAll(".item")].forEach((node)=>{
+    node.onmousedown = (e)=>{
+      e.preventDefault();
+      tnInput.value = node.textContent.replace("🏷️","").trim();
+      suggest.style.display="none";
+    };
+  });
+}
+
+tnInput.addEventListener("input", ()=>{
+  const items = suggestionsFor(tnInput.value);
+  showSuggest(items);
+});
+tnInput.addEventListener("focus", ()=>{
+  const items = suggestionsFor(tnInput.value);
+  showSuggest(items);
+});
+
+document.addEventListener("click", (e)=>{
+  if(e.target!==tnInput && !suggest.contains(e.target)){
+    suggest.style.display="none";
+  }
+});
+
+// Auto open full-screen dashboard via hash
+function __openDashboardFull(){ const b=$("visitorBoard"); if(!b) return; b.classList.add("fullscreen"); b.style.display="block"; renderDashboard(); }
+document.addEventListener("DOMContentLoaded", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
+window.addEventListener("hashchange", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
+</script>
 </body>
 </html>
