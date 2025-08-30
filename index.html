@@ -1720,9 +1720,9 @@ let __lastSnapshotHash = "";
 let __snapshotTimer = null;
 
 // Réglages
-const SNAPSHOT_DEBOUNCE_MS = 5000;   // attend 5s après la dernière modif
-const SNAPSHOT_MIN_INTERVAL_MS = 10000; // 10 s (juste pour tester)
-const SNAPSHOT_MAX_RETRY = 1;
+const SNAPSHOT_DEBOUNCE_MS      = 5000;      // attend 5 s après la dernière modif
+const SNAPSHOT_MIN_INTERVAL_MS  = 300000;    // 5 min = 5 * 60 * 1000
+
 
 // Hash simple pour éviter les doublons (peut être remplacé par un vrai SHA1)
 function hashState(obj){
