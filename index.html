@@ -1606,12 +1606,12 @@ async function apiRestoreAt(b,f, atISO, note){
   return j;
 }
 
-/** UI: bouton + menu */
 (function wireHistoryMenu(){
   const btn = $("btnHistory"), menu = $("historyMenu");
   if(!btn || !menu) return;
 
   function closeMenu(){ menu.style.display = "none"; }
+
   btn.addEventListener("click", (e)=>{
     e.stopPropagation();
     menu.style.display = (menu.style.display === "block" ? "none" : "block");
@@ -1619,34 +1619,20 @@ async function apiRestoreAt(b,f, atISO, note){
   });
   document.addEventListener("click", (e)=>{ if(!menu.contains(e.target) && e.target!==btn) closeMenu(); });
 
-  menu.addEventListener("click", async (e)=>{
-    const it = e.target.closest("button"); if(!it) return;
-    const act = it.dataset.action;
+  // Only one option: open list modal
+  menu.addEventListener("click", async ()=>{
     closeMenu();
-
     const { b, f } = currentBF();
     try{
-      if(act === "version"){
-        const n = await apiVersion(b,f);
-        alert(`Version actuelle de ${b} / ${f} : v${n}`);
-      }
-      if(act === "list"){
-        await apiVersion(b,f);
-        const arr = await apiList(b,f);
-        openHistoryModal(arr, b, f);
-      }
-     if (act === "restore"){
-  if(!confirm(`Restaurer le snapshot du ${new Date(at).toLocaleString()} ?\n(une nouvelle version sera créée)`)) return;
-  const note = $("restoreNote")?.value || `restore @ ${at}`;
-  await apiVersion(b,f);
-  const j = await apiRestoreAt(b,f, at, note);
-  hxToast(`Restauré → version v${j.nextVersion}`);
-  // recharge l'étage si souhaité:
-  // await onKeyChange();
-}
-    }catch(err){ alert("Erreur: " + String(err.message || err)); }
+      await apiVersion(b,f);           // refresh __historyVersion
+      const arr = await apiList(b,f);  // list snapshots
+      openHistoryModal(arr, b, f);
+    }catch(err){
+      alert("Erreur: " + String(err.message || err));
+    }
   });
 })();
+
 
 /** Modale “Historique” */
 function openHistoryModal(list, b, f){
