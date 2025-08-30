@@ -1721,7 +1721,7 @@ let __snapshotTimer = null;
 
 // Réglages
 const SNAPSHOT_DEBOUNCE_MS = 5000;   // attend 5s après la dernière modif
-const SNAPSHOT_MIN_INTERVAL_MS = 120000; // pas plus d'un snapshot toutes 2 min
+const SNAPSHOT_MIN_INTERVAL_MS = 10000; // 10 s (juste pour tester)
 const SNAPSHOT_MAX_RETRY = 1;
 
 // Hash simple pour éviter les doublons (peut être remplacé par un vrai SHA1)
