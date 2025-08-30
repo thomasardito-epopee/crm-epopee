@@ -1085,7 +1085,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Save & Dashboard button
 $("btnSave").onclick = ()=>{ saveLocal(); };
-$("btnAdminBoard").onclick = ()=>{ const b=$("visitorBoard"); b.style.display = (b.style.display==="none"||!b.style.display) ? "block":"none"; if(b.style.display!=="none"){ renderDashboard(); } };
+$("btnAdminBoard").onclick = ()=>{
+  const b = $("visitorBoard");
+  b.style.display = (b.style.display==="none"||!b.style.display) ? "block" : "none";
+  if (b.style.display !== "none") renderDashboard();
+  refreshMap();
+};
 
 function euro(n){ const v=Number(n||0); const hasCents=Math.abs(v-Math.round(v))>1e-6; return v.toLocaleString('fr-FR',{minimumFractionDigits:hasCents?2:0, maximumFractionDigits:2}); }
 
