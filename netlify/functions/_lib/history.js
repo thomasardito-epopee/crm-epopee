@@ -1,5 +1,5 @@
 // netlify/functions/_lib/history.js
-import { getStore } from "netlify/blobs";
+import { getStore } from "@netlify/blobs";
 
 const SNAPSHOTS = "snapshots"; // blob store for snapshots
 const VERSIONS  = "versions";  // blob store for per-floor version counters
