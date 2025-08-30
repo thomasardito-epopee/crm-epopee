@@ -924,17 +924,18 @@ $("historyMenu") && ( $("historyMenu").style.display = isAdmin ? $("historyMenu"
   document.body.classList.toggle('visitor', !isAdmin);
   document.body.classList.toggle('admin', isAdmin);
 
-  if (isAdmin){
-    $("layout").classList.remove("collapsed");
-  } else {
-    $("layout").classList.add("collapsed");
-    map.pm.disableGlobalEditMode();
-    map.pm.disableGlobalRemovalMode && map.pm.disableGlobalRemovalMode();
-    map.pm.disableDraw('Polygon');
-    map.pm.disableDraw('Rectangle');
-    drawn.eachLayer(l=>{ if(l.pm && l.pm.disable){ l.pm.disable(); } });
-    currentLayer = null;
-  }
+ if (isAdmin){
+  $("layout").classList.remove("collapsed");
+} else {
+  // ✅ en visiteur : panneau OUVERT par défaut
+  $("layout").classList.remove("collapsed");
+  map.pm.disableGlobalEditMode();
+  map.pm.disableGlobalRemovalMode && map.pm.disableGlobalRemovalMode();
+  map.pm.disableDraw('Polygon');
+  map.pm.disableDraw('Rectangle');
+  drawn.eachLayer(l=>{ if(l.pm && l.pm.disable){ l.pm.disable(); } });
+  currentLayer = null;
+}
 
   mountGeoman();
 }
