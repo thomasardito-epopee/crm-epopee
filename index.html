@@ -1248,7 +1248,8 @@ const featsFiltered = feats.filter(fe=>{
   const ep = (fe.options && fe.options.ep) || {};
   const matchesStatus = activeStatuses.has(ep.status || "Vacant");
   const isEvent = (ep.label === "Evenementiel");
-  const typeOk = !filterEventOnly || isEvent;
+  // ✅ si showEvent=false, on exclut les Evenementiel des agrégats “colorisés”
+const typeOk = showEvent || !isEvent;
   const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
   const matchText = !searchText || text.includes(searchText);
   return matchesStatus && typeOk && matchText;
