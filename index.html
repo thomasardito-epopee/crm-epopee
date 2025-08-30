@@ -542,7 +542,7 @@ const loadFromCache = (k)=>{
   try{ return JSON.parse(localStorage.getItem(storageKey(k))||"null"); }
   catch(e){ return null; }
 };
-<script>
+
 document.addEventListener('DOMContentLoaded', async () => {
   // --- création carte ---
   map = L.map("map", {
