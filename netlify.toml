@@ -1,14 +1,11 @@
-# --- Build: pas de build front, juste un echo ---
 [build]
   command = "echo 'no build'"
   publish = "."
 
-# --- Functions: dossier et bundler ---
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
 
-# --- (Optionnel) URLs jolies en /api/... ---
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
