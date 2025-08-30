@@ -974,6 +974,7 @@ function syncPad(){ pinDots.forEach((d,i)=> d.classList.toggle('active', i<pin.l
       b.classList.add('primary');
       b.dataset.role='ok';
       b.dataset.key='ok';
+  b.id = 'btnValidate'; 
       b.textContent='Valider';
       b.disabled=true;
       b.onclick=()=>{ if(pin===ADMIN_CODE){ isAdmin=true; closePad(); $("adminToggle").checked=true; syncMode(); } else { $("padError").textContent="Code incorrect"; } };
