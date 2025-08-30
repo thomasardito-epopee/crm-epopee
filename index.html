@@ -133,6 +133,11 @@ body.visitor .leaflet-pm-toolbar{display:none !important}
 .switch input:checked ~ .knob{transform:translateX(24px)}
 .track{position:absolute;inset:0;border-radius:999px;background:#e5e5ea;transition:background .18s ease}
 .switch input:checked ~ .track{background:var(--blue)}
+  /* Cacher le bouton & le menu Historique en mode visiteur */
+body.visitor #btnHistory,
+body.visitor #historyMenu{
+  display: none !important;
+}
 
 /* PIN modal */
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;z-index:3000}
