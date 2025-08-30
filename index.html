@@ -574,7 +574,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Premier sync une fois la carte créée
-  syncMode();
+  syncMode();// ===== interactions
+map.on('pm:create', e=>{
+  const l=e.layer.addTo(drawn);
+  setLayerProps(l,{status:"Vacant",label:"Bureau"});
+  attachListeners(l);
+  selectLayer(l, true);           // Auto-sélection immédiate
+  saveLocal();
+});
+map.on('pm:remove', ()=>{ saveLocal(); });
+map.on('pm:edit', ()=>{ saveLocal();
 });
 
 
