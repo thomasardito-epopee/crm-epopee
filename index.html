@@ -556,11 +556,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   $("zoomIn").onclick = ()=> map.zoomIn();
   $("zoomOut").onclick = ()=> map.zoomOut();
-
   window.addEventListener('resize', refreshMap);
   new ResizeObserver(refreshMap).observe(document.getElementById('layout'));
 
-  // Geoman (défensif)
   if (map.pm) {
     map.pm.addControls({
       position:'topright',
@@ -569,23 +567,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     map.pm.setLang('fr');
     map.pm.setPathOptions({ snappable:true, snapDistance:10 });
-  } else {
-    console.warn('Leaflet-Geoman pas encore prêt (map.pm undefined).');
   }
 
   // Premier sync une fois la carte créée
-  syncMode();// ===== interactions
-map.on('pm:create', e=>{
-  const l=e.layer.addTo(drawn);
-  setLayerProps(l,{status:"Vacant",label:"Bureau"});
-  attachListeners(l);
-  selectLayer(l, true);           // Auto-sélection immédiate
-  saveLocal();
-});
-map.on('pm:remove', ()=>{ saveLocal(); });
-map.on('pm:edit', ()=>{ saveLocal();
-});
+  syncMode();
 
+  // ===== interactions (déplacé ici)
+  map.on('pm:create', e=>{
+    const l=e.layer.addTo(drawn);
+    setLayerProps(l,{status:"Vacant",label:"Bureau"});
+    attachListeners(l);
+    selectLayer(l, true);
+    saveLocal();
+  });
+  map.on('pm:remove', ()=>{ saveLocal(); });
+  map.on('pm:edit',  ()=>{ saveLocal(); });
+
+}); // ← ferme le DOMContentLoaded (manquait avant)
 
 // ===== Styling & data helpers
 function layerProps(l){ return l?.options?.ep || {}; }
