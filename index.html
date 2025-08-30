@@ -1187,7 +1187,7 @@ function drawBars(canvas, labels, values, colors = ["#0a84ff"]){
 
 // Dashboard rendering
 function renderDashboard(){
-    const board = $("visitorBoard");
+  const board = $("visitorBoard");
   let scopeSel = board.querySelector('#kpiScope');
   const curB = buildingSelect.value;
   const scope = scopeSel ? scopeSel.value : 'building';
@@ -1203,7 +1203,7 @@ function renderDashboard(){
       </div>
     </div>
     <div class="board-actions"><button class="iconbtn" id="boardPop" title="Ouvrir dans un nouvel onglet">↗</button><button class="iconbtn" id="boardClose" title="Fermer">✕</button></div>
-        <div class="kpis" id="kpis"></div>
+    <div class="kpis" id="kpis"></div>
 
     <div class="grid2">
       <div class="card">
@@ -1243,20 +1243,20 @@ function renderDashboard(){
   $("kpiScope").onchange = ()=> renderDashboard();
 
   const feats = getFeaturesForScope($("kpiScope").value);
-// applique exactement les mêmes filtres que sur la carte
-const featsFiltered = feats.filter(fe=>{
-  const ep = (fe.options && fe.options.ep) || {};
-  const matchesStatus = activeStatuses.has(ep.status || "Vacant");
-  const isEvent = (ep.label === "Evenementiel");
-  // ✅ si showEvent=false, on exclut les Evenementiel des agrégats “colorisés”
-const typeOk = showEvent || !isEvent;
-  const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
-  const matchText = !searchText || text.includes(searchText);
-  return matchesStatus && typeOk && matchText;
-});
-const S = aggStats(featsFiltered);
 
+  // applique exactement les mêmes filtres que sur la carte
+  const featsFiltered = feats.filter(fe=>{
+    const ep = (fe.options && fe.options.ep) || {};
+    const matchesStatus = activeStatuses.has(ep.status || "Vacant");
+    const isEvent = (ep.label === "Evenementiel");
+    const typeOk = showEvent || !isEvent;  // si showEvent=false, on exclut Evenementiel
+    const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
+    const matchText = !searchText || text.includes(searchText);
+    return matchesStatus && typeOk && matchText;
+  });
+  const S = aggStats(featsFiltered);
 
+  // KPIs
   const kpisEl = $("kpis");
   kpisEl.innerHTML = `
     <div class="kpi"><div class="v">${S.occupiedCount} <span class="subl">(${S.occupiedPct}%)</span></div><div class="l">Bureaux occupés</div></div>
@@ -1268,44 +1268,36 @@ const S = aggStats(featsFiltered);
     <div class="kpi"><div class="v">${Math.round(S.euroPerPost)} €</div><div class="l">€ / poste (moyenne)</div></div>
   `;
 
- // --- Répartition par statut (nb espaces)
-const statusLabels = ["Loué","Préavis","Vacant","Réservé","Maintenance"];
-const statusParts  = statusLabels.map(s => S.counts[s] || 0);
+  // Donut statuts
+  const statusLabels = ["Loué","Préavis","Vacant","Réservé","Maintenance"];
+  const statusParts  = statusLabels.map(s => S.counts[s] || 0);
+  const statusColors = statusLabels.map(s => STATUS_STYLES[s].fill);
+  drawDonut($("chartStatusCount"), statusParts, statusColors, String(S.totalSpaces || 0));
+  const total = S.totalSpaces || 1;
+  $("legendStatus").innerHTML = statusLabels.map((lab,i)=>{
+    const v = statusParts[i] || 0;
+    if(!v) return "";
+    const pct = Math.round(v*1000/total)/10;
+    return `<div class="item"><span class="dot" style="background:${statusColors[i]}"></span>${lab} — ${v} (${pct}%)</div>`;
+  }).join("");
 
-- const statusColors = statusLabels.map(s =>
--   (s === "Réservé" && filterEventOnly) ? EVENT_DEFAULT_COLOR : STATUS_STYLES[s].fill
-- );
-+ const statusColors = statusLabels.map(s => STATUS_STYLES[s].fill);
+  // m² occupés vs vacants
+  const occ = S.areaOcc || 0, vac = S.areaVac || 0, totA = (occ + vac) || 1;
+  const occPct = Math.round(occ*1000/totA)/10;
+  drawDonut(
+    $("chartAreaOccVac"),
+    [occ, vac],
+    [STATUS_STYLES["Loué"].fill, STATUS_STYLES["Vacant"].fill],
+    `${Math.round(occPct)}%`
+  );
+  $("legendArea").innerHTML = `
+    <div class="item"><span class="dot" style="background:${STATUS_STYLES["Loué"].fill}"></span>
+      Occupés — ${Math.round(occ)} m² (${occPct}%)</div>
+    ${vac>0 ? `<div class="item"><span class="dot" style="background:${STATUS_STYLES["Vacant"].fill}"></span>
+      Vacants — ${Math.round(vac)} m² (${Math.round(vac*1000/totA)/10}%)</div>` : ""}
+  `;
 
-drawDonut($("chartStatusCount"), statusParts, statusColors, String(S.totalSpaces || 0));
-
-const total = S.totalSpaces || 1;
-$("legendStatus").innerHTML = statusLabels.map((lab,i)=>{
-  const v = statusParts[i] || 0;
-  if(!v) return "";
-  const pct = Math.round(v*1000/total)/10;
-  return `<div class="item"><span class="dot" style="background:${statusColors[i]}"></span>${lab} — ${v} (${pct}%)</div>`;
-}).join("");
-
-  // --- m² occupés vs vacants
-const occ = S.areaOcc || 0, vac = S.areaVac || 0, totA = (occ + vac) || 1;
-const occPct = Math.round(occ*1000/totA)/10, vacPct = Math.round(vac*1000/totA)/10;
-
-// Vert = Loué, Orange = Vacant (cohérent statuts/carte)
-drawDonut(
-  $("chartAreaOccVac"),
-  [occ, vac],
-  [STATUS_STYLES["Loué"].fill, STATUS_STYLES["Vacant"].fill],
-  `${Math.round(occPct)}%`
-);
-
-$("legendArea").innerHTML = `
-  <div class="item"><span class="dot" style="background:${STATUS_STYLES["Loué"].fill}"></span>
-    Occupés — ${Math.round(occ)} m² (${occPct}%)</div>
-  ${vac>0 ? `<div class="item"><span class="dot" style="background:${STATUS_STYLES["Vacant"].fill}"></span>
-    Vacants — ${Math.round(vac)} m² (${vacPct}%)</div>` : ""}
-`;
-
+  // Top 5 résidents (barres)
   const topSel = $("topMode");
   const savedMode = window.TOP_TENANTS_MODE || "count";
   if(topSel){ topSel.value = savedMode; topSel.onchange = (e)=>{ window.TOP_TENANTS_MODE = e.target.value; renderDashboard(); }; }
@@ -1313,48 +1305,51 @@ $("legendArea").innerHTML = `
   const topData = (mode==="area" ? (S.tenantsAreaArr||[]) : (S.tenantsArr||[]));
   const labels = topData.map(t=> t.tenant);
   const values = topData.map(t=> mode==="area" ? Math.round(t.area||0) : t.count);
-  - const barColorContext = filterEventOnly ? EVENT_DEFAULT_COLOR : STATUS_STYLES["Loué"].fill;
-+ const barColorContext = STATUS_STYLES["Loué"].fill;
-  
-  // Posts donut
-  // --- Postes occupés vs vacants
-const pOcc = S.occPosts || 0, pVac = S.vacPosts || 0, pTot = (pOcc + pVac) || 1;
-const pOccPct = Math.round(pOcc*1000/pTot)/10, pVacPct = Math.round(pVac*1000/pTot)/10;
+  const barColorContext = STATUS_STYLES["Loué"].fill;
+  drawBars($("chartTopTenants"), labels, values, [barColorContext]);
 
-if ((pOcc + pVac) > 0){
-  drawDonut(
-    $("chartPostsOccVac"),
-    [pOcc, pVac],
-    [STATUS_STYLES["Loué"].fill, STATUS_STYLES["Vacant"].fill],
-    `${Math.round(pOccPct)}%`
-  );
-  $("legendPosts").innerHTML = `
-    <div class="item"><span class="dot" style="background:${STATUS_STYLES["Loué"].fill}"></span>
-      Occupés — ${pOcc} (${pOccPct}%)</div>
-    ${pVac>0 ? `<div class="item"><span class="dot" style="background:${STATUS_STYLES["Vacant"].fill}"></span>
-      Vacants — ${pVac} (${pVacPct}%)</div>` : ""}
-  `;
-} else {
-  const cv = $("chartPostsOccVac"); const ctx = cv.getContext("2d");
-  ctx.clearRect(0,0,cv.width,cv.height);
-  ctx.font = "14px Inter,system-ui"; ctx.fillStyle="#6e6e73"; ctx.textAlign="center";
-  ctx.fillText("Aucune donnée de postes", cv.width/2, 24);
-  $("legendPosts").innerHTML = ``;
-}
+  // Postes occupés vs vacants
+  const pOcc = S.occPosts || 0, pVac = S.vacPosts || 0, pTot = (pOcc + pVac) || 1;
+  const pOccPct = Math.round(pOcc*1000/pTot)/10;
+  if ((pOcc + pVac) > 0){
+    drawDonut(
+      $("chartPostsOccVac"),
+      [pOcc, pVac],
+      [STATUS_STYLES["Loué"].fill, STATUS_STYLES["Vacant"].fill],
+      `${Math.round(pOccPct)}%`
+    );
+    $("legendPosts").innerHTML = `
+      <div class="item"><span class="dot" style="background:${STATUS_STYLES["Loué"].fill}"></span>
+        Occupés — ${pOcc} (${pOccPct}%)</div>
+      ${pVac>0 ? `<div class="item"><span class="dot" style="background:${STATUS_STYLES["Vacant"].fill}"></span>
+        Vacants — ${pVac} (${Math.round(pVac*1000/pTot)/10}%)</div>` : ""}
+    `;
+  } else {
+    const cv = $("chartPostsOccVac"); const ctx = cv.getContext("2d");
+    ctx.clearRect(0,0,cv.width,cv.height);
+    ctx.font = "14px Inter,system-ui"; ctx.fillStyle="#6e6e73"; ctx.textAlign="center";
+    ctx.fillText("Aucune donnée de postes", cv.width/2, 24);
+    $("legendPosts").innerHTML = ``;
+  }
 
-  // Top 5 loyers par résident
+  // Top loyers par résident
   const topRent = (S.tenantsRentArr||[]);
   if (topRent.length){
-  - const barColorContext = filterEventOnly ? EVENT_DEFAULT_COLOR : STATUS_STYLES["Loué"].fill;
-+ const barColorContext = STATUS_STYLES["Loué"].fill;
+    const barColorContext = STATUS_STYLES["Loué"].fill;
+    drawBars(
+      $("chartTopRent"),
+      topRent.map(t => t.tenant),
+      topRent.map(t => Math.round(t.rent || 0)),
+      [barColorContext]
+    );
+  } else {
+    const c = $("chartTopRent"); const ctx = c.getContext("2d");
+    ctx.clearRect(0,0,c.width,c.height);
+    ctx.font="14px Inter,system-ui"; ctx.fillStyle="#6e6e73"; ctx.textAlign="center";
+    ctx.fillText("Aucun loyer renseigné", c.width/2, 24);
+  }
 
-} else {
-  const c = $("chartTopRent"); const ctx = c.getContext("2d");
-  ctx.clearRect(0,0,c.width,c.height);
-  ctx.font="14px Inter,system-ui"; ctx.fillStyle="#6e6e73"; ctx.textAlign="center";
-  ctx.fillText("Aucun loyer renseigné", c.width/2, 24);
-}
-
+  // Liste “Réservés”
   const r = $("reservedList");
   if(!S.reservedList || S.reservedList.length===0){
     r.innerHTML = '<div class="hint">Aucun espace réservé.</div>';
@@ -1364,6 +1359,183 @@ if ((pOcc + pVac) > 0){
       .map(v=> `<div class="rowlist"><div>${v.code} — ${v.label}</div><div class="badge">${v.area||0} m²</div><div class="badge">Réservé</div></div>`)
       .join('');
   }
+
+  wireBoardActions();
+}
+function renderDashboard(){
+  const board = $("visitorBoard");
+  let scopeSel = board.querySelector('#kpiScope');
+  const curB = buildingSelect.value;
+  const scope = scopeSel ? scopeSel.value : 'building';
+  board.innerHTML = `
+    <h4>Dashboard</h4>
+    <div class="sub">
+      <div class="scope">
+        <span>Vue :</span>
+        <select id="kpiScope">
+          <option value="building"${scope==='building'?' selected':''}>Bâtiment ${curB}</option>
+          <option value="all"${scope==='all'?' selected':''}>Tous bâtiments</option>
+        </select>
+      </div>
+    </div>
+    <div class="board-actions"><button class="iconbtn" id="boardPop" title="Ouvrir dans un nouvel onglet">↗</button><button class="iconbtn" id="boardClose" title="Fermer">✕</button></div>
+    <div class="kpis" id="kpis"></div>
+
+    <div class="grid2">
+      <div class="card">
+        <h5>Répartition par statut (nb espaces)</h5>
+        <div class="canvas-wrap"><canvas id="chartStatusCount"></canvas></div>
+        <div id="legendStatus" class="legend"></div>
+      </div>
+      <div class="card">
+        <h5>m² occupés vs vacants</h5>
+        <div class="canvas-wrap"><canvas id="chartAreaOccVac"></canvas></div>
+        <div id="legendArea" class="legend"></div>
+      </div>
+    </div>
+    <div class="grid2" style="margin-top:10px">
+      <div class="card">
+        <h5>Postes occupés vs vacants</h5>
+        <div class="canvas-wrap"><canvas id="chartPostsOccVac"></canvas></div>
+        <div id="legendPosts" class="legend"></div>
+      </div>
+      <div class="card">
+        <h5>Top 5 loyers par résident</h5>
+        <div class="canvas-wrap"><canvas id="chartTopRent"></canvas></div>
+      </div>
+    </div>
+
+    <div class="grid2" style="margin-top:10px">
+      <div class="card">
+        <h5>Top 5 résidents <select id="topMode" style="margin-left:8px;padding:4px 8px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--panel);"><option value="count">par nombre d'espaces</option><option value="area">par m² occupés</option></select></h5>
+        <div class="canvas-wrap"><canvas id="chartTopTenants"></canvas></div>
+      </div>
+      <div class="card">
+        <h5>Réservés (à venir)</h5>
+        <div id="reservedList"></div>
+      </div>
+    </div>
+  `;
+  $("kpiScope").onchange = ()=> renderDashboard();
+
+  const feats = getFeaturesForScope($("kpiScope").value);
+
+  // applique exactement les mêmes filtres que sur la carte
+  const featsFiltered = feats.filter(fe=>{
+    const ep = (fe.options && fe.options.ep) || {};
+    const matchesStatus = activeStatuses.has(ep.status || "Vacant");
+    const isEvent = (ep.label === "Evenementiel");
+    const typeOk = showEvent || !isEvent;  // si showEvent=false, on exclut Evenementiel
+    const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
+    const matchText = !searchText || text.includes(searchText);
+    return matchesStatus && typeOk && matchText;
+  });
+  const S = aggStats(featsFiltered);
+
+  // KPIs
+  const kpisEl = $("kpis");
+  kpisEl.innerHTML = `
+    <div class="kpi"><div class="v">${S.occupiedCount} <span class="subl">(${S.occupiedPct}%)</span></div><div class="l">Bureaux occupés</div></div>
+    <div class="kpi"><div class="v">${S.vacantCount} <span class="subl">(${S.vacantPct}%)</span></div><div class="l">Bureaux vacants</div></div>
+    <div class="kpi"><div class="v">${Math.round(S.areaOcc)} m²</div><div class="l">m² occupés</div></div>
+    <div class="kpi"><div class="v">${Math.round(S.areaVac)} m²</div><div class="l">m² vacants</div></div>
+    <div class="kpi"><div class="v">${euro(S.rentFacture)} €</div><div class="l">Loyer facturé (occupés)</div></div>
+    <div class="kpi"><div class="v">${euro(S.rentPotentiel)} €</div><div class="l">Loyer potentiel (après réservés)</div></div>
+    <div class="kpi"><div class="v">${Math.round(S.euroPerPost)} €</div><div class="l">€ / poste (moyenne)</div></div>
+  `;
+
+  // Donut statuts
+  const statusLabels = ["Loué","Préavis","Vacant","Réservé","Maintenance"];
+  const statusParts  = statusLabels.map(s => S.counts[s] || 0);
+  const statusColors = statusLabels.map(s => STATUS_STYLES[s].fill);
+  drawDonut($("chartStatusCount"), statusParts, statusColors, String(S.totalSpaces || 0));
+  const total = S.totalSpaces || 1;
+  $("legendStatus").innerHTML = statusLabels.map((lab,i)=>{
+    const v = statusParts[i] || 0;
+    if(!v) return "";
+    const pct = Math.round(v*1000/total)/10;
+    return `<div class="item"><span class="dot" style="background:${statusColors[i]}"></span>${lab} — ${v} (${pct}%)</div>`;
+  }).join("");
+
+  // m² occupés vs vacants
+  const occ = S.areaOcc || 0, vac = S.areaVac || 0, totA = (occ + vac) || 1;
+  const occPct = Math.round(occ*1000/totA)/10;
+  drawDonut(
+    $("chartAreaOccVac"),
+    [occ, vac],
+    [STATUS_STYLES["Loué"].fill, STATUS_STYLES["Vacant"].fill],
+    `${Math.round(occPct)}%`
+  );
+  $("legendArea").innerHTML = `
+    <div class="item"><span class="dot" style="background:${STATUS_STYLES["Loué"].fill}"></span>
+      Occupés — ${Math.round(occ)} m² (${occPct}%)</div>
+    ${vac>0 ? `<div class="item"><span class="dot" style="background:${STATUS_STYLES["Vacant"].fill}"></span>
+      Vacants — ${Math.round(vac)} m² (${Math.round(vac*1000/totA)/10}%)</div>` : ""}
+  `;
+
+  // Top 5 résidents (barres)
+  const topSel = $("topMode");
+  const savedMode = window.TOP_TENANTS_MODE || "count";
+  if(topSel){ topSel.value = savedMode; topSel.onchange = (e)=>{ window.TOP_TENANTS_MODE = e.target.value; renderDashboard(); }; }
+  const mode = window.TOP_TENANTS_MODE || (topSel ? topSel.value : "count");
+  const topData = (mode==="area" ? (S.tenantsAreaArr||[]) : (S.tenantsArr||[]));
+  const labels = topData.map(t=> t.tenant);
+  const values = topData.map(t=> mode==="area" ? Math.round(t.area||0) : t.count);
+  const barColorContext = STATUS_STYLES["Loué"].fill;
+  drawBars($("chartTopTenants"), labels, values, [barColorContext]);
+
+  // Postes occupés vs vacants
+  const pOcc = S.occPosts || 0, pVac = S.vacPosts || 0, pTot = (pOcc + pVac) || 1;
+  const pOccPct = Math.round(pOcc*1000/pTot)/10;
+  if ((pOcc + pVac) > 0){
+    drawDonut(
+      $("chartPostsOccVac"),
+      [pOcc, pVac],
+      [STATUS_STYLES["Loué"].fill, STATUS_STYLES["Vacant"].fill],
+      `${Math.round(pOccPct)}%`
+    );
+    $("legendPosts").innerHTML = `
+      <div class="item"><span class="dot" style="background:${STATUS_STYLES["Loué"].fill}"></span>
+        Occupés — ${pOcc} (${pOccPct}%)</div>
+      ${pVac>0 ? `<div class="item"><span class="dot" style="background:${STATUS_STYLES["Vacant"].fill}"></span>
+        Vacants — ${pVac} (${Math.round(pVac*1000/pTot)/10}%)</div>` : ""}
+    `;
+  } else {
+    const cv = $("chartPostsOccVac"); const ctx = cv.getContext("2d");
+    ctx.clearRect(0,0,cv.width,cv.height);
+    ctx.font = "14px Inter,system-ui"; ctx.fillStyle="#6e6e73"; ctx.textAlign="center";
+    ctx.fillText("Aucune donnée de postes", cv.width/2, 24);
+    $("legendPosts").innerHTML = ``;
+  }
+
+  // Top loyers par résident
+  const topRent = (S.tenantsRentArr||[]);
+  if (topRent.length){
+    const barColorContext = STATUS_STYLES["Loué"].fill;
+    drawBars(
+      $("chartTopRent"),
+      topRent.map(t => t.tenant),
+      topRent.map(t => Math.round(t.rent || 0)),
+      [barColorContext]
+    );
+  } else {
+    const c = $("chartTopRent"); const ctx = c.getContext("2d");
+    ctx.clearRect(0,0,c.width,c.height);
+    ctx.font="14px Inter,system-ui"; ctx.fillStyle="#6e6e73"; ctx.textAlign="center";
+    ctx.fillText("Aucun loyer renseigné", c.width/2, 24);
+  }
+
+  // Liste “Réservés”
+  const r = $("reservedList");
+  if(!S.reservedList || S.reservedList.length===0){
+    r.innerHTML = '<div class="hint">Aucun espace réservé.</div>';
+  }else{
+    r.innerHTML = S.reservedList
+      .sort((a,b)=> b.area-a.area)
+      .map(v=> `<div class="rowlist"><div>${v.code} — ${v.label}</div><div class="badge">${v.area||0} m²</div><div class="badge">Réservé</div></div>`)
+      .join('');
+  }
+
   wireBoardActions();
 }
 
