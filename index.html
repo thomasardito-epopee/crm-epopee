@@ -393,6 +393,21 @@ const COLORS = {
   maintenance:STATUS_STYLES["Maintenance"].fill, // rouge
   event:      EVENT_DEFAULT_COLOR                // rose
 };
+  // Ask PIN before a destructive action
+async function confirmAdminPin() {
+  const code = window.prompt("Saisis le code admin pour confirmer la restauration :");
+  return code === ADMIN_CODE;
+}
+
+// Full snapshot fetch (includes features)
+async function apiGetFull(b,f, atISO){
+  const r = await fetch(`/.netlify/functions/history-get?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f)}&at=${encodeURIComponent(atISO)}&full=1`, {
+    headers: { "X-User":"admin" }
+  });
+  if(!r.ok) throw new Error(`history-get(full): ${r.status}`);
+  return r.json(); // { at, note, size, data:{key, features:[...] } }
+}
+
 
 function defaultColorFor(ep){
   const lbl = String(ep.label || "")
