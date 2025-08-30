@@ -830,7 +830,8 @@ function updateGreying(){
     const matches=activeStatuses.has(ep.status||"Vacant");
     const text=`${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
     const matchText = !searchText || text.includes(searchText);
-    const typeOk = !filterEventOnly || (ep.label === "Evenementiel");
+// ✅ si showEvent=false → on ne “colorise” pas les Evenementiel
+const typeOk = showEvent || (ep.label !== "Evenementiel");
     const ok = matches && matchText && typeOk;
     if(ok){ l.setStyle(normalStyleFor(l)); }
     else{ l.setStyle(greyStyle()); }
