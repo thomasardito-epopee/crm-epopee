@@ -7,20 +7,34 @@
   <!-- Favicon -->
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
-<link rel="icon" type="image/png" href="favicon.png">
+<link rel="icon" type="image/png" href="favicon.png"> <!-- fallback -->
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.14.1/dist/leaflet-geoman.css">
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.14.1/dist/leaflet-geoman.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script>
-  pdfjsLib.GlobalWorkerOptions.workerSrc =
-    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+// Auto open full-screen dashboard via hash
+function __openDashboardFull(){ const b=$("visitorBoard"); if(!b) return; b.classList.add("fullscreen"); b.style.display="block"; renderDashboard(); }
+document.addEventListener("DOMContentLoaded", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
+window.addEventListener("hashchange", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
+
 </script>
 
+<link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.14.1/dist/leaflet-geoman.css">
+<script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.14.1/dist/leaflet-geoman.min.js">
+// Auto open full-screen dashboard via hash
+function __openDashboardFull(){ const b=$("visitorBoard"); if(!b) return; b.classList.add("fullscreen"); b.style.display="block"; renderDashboard(); }
+document.addEventListener("DOMContentLoaded", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
+window.addEventListener("hashchange", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
 
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js">
+// Auto open full-screen dashboard via hash
+function __openDashboardFull(){ const b=$("visitorBoard"); if(!b) return; b.classList.add("fullscreen"); b.style.display="block"; renderDashboard(); }
+document.addEventListener("DOMContentLoaded", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
+window.addEventListener("hashchange", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
+
+</script>
 
 <style>
 :root{
@@ -379,21 +393,6 @@ const COLORS = {
   maintenance:STATUS_STYLES["Maintenance"].fill, // rouge
   event:      EVENT_DEFAULT_COLOR                // rose
 };
-  // Ask PIN before a destructive action
-async function confirmAdminPin() {
-  const code = window.prompt("Saisis le code admin pour confirmer la restauration :");
-  return code === ADMIN_CODE;
-}
-
-// Full snapshot fetch (includes features)
-async function apiGetFull(b,f, atISO){
-  const r = await fetch(`/.netlify/functions/history-get?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f)}&at=${encodeURIComponent(atISO)}&full=1`, {
-    headers: { "X-User":"admin" }
-  });
-  if(!r.ok) throw new Error(`history-get(full): ${r.status}`);
-  return r.json(); // { at, note, size, data:{key, features:[...] } }
-}
-
 
 function defaultColorFor(ep){
   const lbl = String(ep.label || "")
@@ -1592,12 +1591,12 @@ async function apiRestoreAt(b,f, atISO, note){
   return j;
 }
 
+/** UI: bouton + menu */
 (function wireHistoryMenu(){
   const btn = $("btnHistory"), menu = $("historyMenu");
   if(!btn || !menu) return;
 
   function closeMenu(){ menu.style.display = "none"; }
-
   btn.addEventListener("click", (e)=>{
     e.stopPropagation();
     menu.style.display = (menu.style.display === "block" ? "none" : "block");
@@ -1605,20 +1604,34 @@ async function apiRestoreAt(b,f, atISO, note){
   });
   document.addEventListener("click", (e)=>{ if(!menu.contains(e.target) && e.target!==btn) closeMenu(); });
 
-  // Only one option: open list modal
-  menu.addEventListener("click", async ()=>{
+  menu.addEventListener("click", async (e)=>{
+    const it = e.target.closest("button"); if(!it) return;
+    const act = it.dataset.action;
     closeMenu();
+
     const { b, f } = currentBF();
     try{
-      await apiVersion(b,f);           // refresh __historyVersion
-      const arr = await apiList(b,f);  // list snapshots
-      openHistoryModal(arr, b, f);
-    }catch(err){
-      alert("Erreur: " + String(err.message || err));
-    }
+      if(act === "version"){
+        const n = await apiVersion(b,f);
+        alert(`Version actuelle de ${b} / ${f} : v${n}`);
+      }
+      if(act === "list"){
+        await apiVersion(b,f);
+        const arr = await apiList(b,f);
+        openHistoryModal(arr, b, f);
+      }
+     if (act === "restore"){
+  if(!confirm(`Restaurer le snapshot du ${new Date(at).toLocaleString()} ?\n(une nouvelle version sera créée)`)) return;
+  const note = $("restoreNote")?.value || `restore @ ${at}`;
+  await apiVersion(b,f);
+  const j = await apiRestoreAt(b,f, at, note);
+  hxToast(`Restauré → version v${j.nextVersion}`);
+  // recharge l'étage si souhaité:
+  // await onKeyChange();
+}
+    }catch(err){ alert("Erreur: " + String(err.message || err)); }
   });
 })();
-
 
 /** Modale “Historique” */
 function openHistoryModal(list, b, f){
@@ -1648,39 +1661,16 @@ function openHistoryModal(list, b, f){
     if(!at) return;
     try{
       await apiVersion(b,f);
-    if(act === "view"){
-  // Open a simple compare window with the full snapshot (features included)
-  const snap = await apiGetFull(b,f, at);
-  const pretty = JSON.stringify(snap, null, 2);
-  const w = window.open("", "_blank");
-  if (w) {
-    w.document.write(`
-      <pre style="white-space:pre-wrap;word-break:break-word;margin:16px;font:13px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
-Snapshot ${new Date(at).toLocaleString()}
-— ${snap.size||0} éléments
-${pretty}
-      </pre>
-    `);
-    w.document.close();
-  }
-  hxToast(`Snapshot du ${new Date(at).toLocaleString()} — ${snap.size||0} éléments.`);
-}
-
-if(act === "restore"){
-  // PIN first
-  const okPin = await confirmAdminPin();
-  if (!okPin) { hxToast("PIN incorrect — restauration annulée", false); return; }
-
-  if(!confirm(`Restaurer le snapshot du ${new Date(at).toLocaleString()} ?\n(une nouvelle version sera créée)`)) return;
-
-  const note = $("restoreNote")?.value || `restore @ ${at}`;
-  await apiVersion(b,f);                       // protects against stale version
-  const j = await apiRestoreAt(b,f, at, note); // ✅ correct function & timestamp
-  hxToast(`Restauré → version v${j.nextVersion}`);
-  // Optionnel : recharge l’étage
-  // await onKeyChange();
-}
-
+      if(act === "view"){
+        const snap = await apiGet(b,f, at);
+        console.log("Snapshot @", at, snap);
+        hxToast(`Snapshot du ${new Date(at).toLocaleString()} — ${snap.size} éléments.`);
+      }
+      if(act === "restore"){
+        if(!confirm(`Restaurer le snapshot du ${new Date(at).toLocaleString()} ?\n(une nouvelle version sera créée)`)) return;
+        const note = $("restoreNote")?.value || "restore from UI";
+        const j = await apiRestoreLatest(b,f, note);
+        hxToast(`Restauré → version v${j.nextVersion}`);
         // Optionnel : recharger
         // await onKeyChange();
       }
@@ -1731,7 +1721,6 @@ let __snapshotTimer = null;
 // Réglages
 const SNAPSHOT_DEBOUNCE_MS      = 5000;      // attend 5 s après la dernière modif
 const SNAPSHOT_MIN_INTERVAL_MS  = 300000;    // 5 min = 5 * 60 * 1000
-  const SNAPSHOT_MAX_RETRY = 1;
 
 
 // Hash simple pour éviter les doublons (peut être remplacé par un vrai SHA1)
@@ -1800,6 +1789,13 @@ function planSnapshot(reason="auto"){
 function updateBoard(){ if(board.style.display!=="none"){ renderDashboard(); } }
 
 // ===== Tenant autocomplete =====
+
+// Ensure suggest is inside the tenant field wrapper so it anchors correctly
+try{
+  const wrap = tnInput.closest('.tenant-field') || tnInput.parentElement;
+  if(wrap && suggest.parentElement !== wrap){ wrap.style.position='relative'; wrap.appendChild(suggest); }
+}catch(e){}
+
 const tnInput = $("fTenant");
 const suggest = $("tenantSuggest");
 // Anchor dropdown under the tenant field wrapper
