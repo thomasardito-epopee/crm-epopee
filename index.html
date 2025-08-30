@@ -1313,7 +1313,159 @@ if ((pOcc + pVac) > 0){
 // initial hidden dashboard
 const board=$("visitorBoard");
 board.style.display="none";
+// ===== Historique — Netlify Functions bindings =====
+let __historyVersion = 0; // version courante (mise à jour via floor-version)
 
+function currentBF(){ return { b: buildingSelect.value, f: floorSelect.value }; }
+function hxToast(msg, ok=true){
+  const t = $("historyToast"); if(!t) return;
+  t.textContent = msg;
+  t.style.color = ok ? "#075985" : "#991b1b";
+}
+
+/** API wrappers */
+async function apiVersion(b,f){
+  const r = await fetch(`/.netlify/functions/floor-version?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f)}`, {
+    headers: { "X-User":"admin" }
+  });
+  if(!r.ok) throw new Error(`floor-version: ${r.status}`);
+  const j = await r.json();
+  __historyVersion = j.version_n ?? 0;
+  return __historyVersion;
+}
+async function apiList(b,f){
+  const r = await fetch(`/.netlify/functions/history-list?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f)}`, {
+    headers: { "X-User":"admin" }
+  });
+  if(!r.ok) throw new Error(`history-list: ${r.status}`);
+  return r.json();
+}
+async function apiGet(b,f, atISO){
+  const r = await fetch(`/.netlify/functions/history-get?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f)}&at=${encodeURIComponent(atISO)}`, {
+    headers: { "X-User":"admin" }
+  });
+  if(!r.ok) throw new Error(`history-get: ${r.status}`);
+  return r.json();
+}
+async function apiRestoreLatest(b,f, note){
+  const r = await fetch(`/.netlify/functions/history-restore?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f)}`, {
+    method: "POST",
+    headers: {
+      "X-User": "admin",
+      "If-Match-Version": String(__historyVersion || 0),
+      "X-Commit-Note": note || "restore from UI"
+    }
+  });
+  if(r.status === 409){ throw new Error("409: version a changé entre-temps"); }
+  if(!r.ok){ const txt = await r.text().catch(()=> ""); throw new Error(`restore: ${r.status} ${txt}`); }
+  const j = await r.json();
+  __historyVersion = j.nextVersion || (__historyVersion + 1);
+  return j;
+}
+
+/** UI: bouton + menu */
+(function wireHistoryMenu(){
+  const btn = $("btnHistory"), menu = $("historyMenu");
+  if(!btn || !menu) return;
+
+  function closeMenu(){ menu.style.display = "none"; }
+  btn.addEventListener("click", (e)=>{
+    e.stopPropagation();
+    menu.style.display = (menu.style.display === "block" ? "none" : "block");
+    menu.style.right = "0";
+  });
+  document.addEventListener("click", (e)=>{ if(!menu.contains(e.target) && e.target!==btn) closeMenu(); });
+
+  menu.addEventListener("click", async (e)=>{
+    const it = e.target.closest("button"); if(!it) return;
+    const act = it.dataset.action;
+    closeMenu();
+
+    const { b, f } = currentBF();
+    try{
+      if(act === "version"){
+        const n = await apiVersion(b,f);
+        alert(`Version actuelle de ${b} / ${f} : v${n}`);
+      }
+      if(act === "list"){
+        await apiVersion(b,f);
+        const arr = await apiList(b,f);
+        openHistoryModal(arr, b, f);
+      }
+      if(act === "restore-latest"){
+        const note = prompt("Note (optionnelle) pour cette restauration :", "");
+        await apiVersion(b,f);
+        const j = await apiRestoreLatest(b,f, note || "");
+        alert(`Restauré → nouvelle version v${j.nextVersion}`);
+        // Optionnel : recharger l'étage
+        // await onKeyChange();
+      }
+    }catch(err){ alert("Erreur: " + String(err.message || err)); }
+  });
+})();
+
+/** Modale “Historique” */
+function openHistoryModal(list, b, f){
+  const modal = $("historyModal"), box = $("historyList"), closeBtn = $("historyClose");
+  if(!modal || !box) return;
+
+  if(!Array.isArray(list) || list.length===0){
+    box.innerHTML = `<div class="hint" style="padding:12px">Aucun snapshot pour ${b} / ${f}.</div>`;
+  }else{
+    const rows = list.map(it=>{
+      const date = new Date(it.created_at).toLocaleString();
+      const note = it.note ? ` — ${it.note}` : "";
+      return `
+        <div class="rowlist">
+          <div><strong>${date}</strong><div class="hint">par ${it.created_by} • ${it.size} éléments${note}</div></div>
+          <button class="btn" data-at="${it.created_at}" data-act="view">Voir</button>
+          <button class="btn success" data-at="${it.created_at}" data-act="restore">Restaurer</button>
+        </div>
+      `;
+    }).join("");
+    box.innerHTML = rows;
+  }
+
+  box.onclick = async (e)=>{
+    const btn = e.target.closest("button"); if(!btn) return;
+    const at = btn.dataset.at; const act = btn.dataset.act;
+    if(!at) return;
+    try{
+      await apiVersion(b,f);
+      if(act === "view"){
+        const snap = await apiGet(b,f, at);
+        console.log("Snapshot @", at, snap);
+        hxToast(`Snapshot du ${new Date(at).toLocaleString()} — ${snap.size} éléments.`);
+      }
+      if(act === "restore"){
+        if(!confirm(`Restaurer le snapshot du ${new Date(at).toLocaleString()} ?\n(une nouvelle version sera créée)`)) return;
+        const note = $("restoreNote")?.value || "restore from UI";
+        const j = await apiRestoreLatest(b,f, note);
+        hxToast(`Restauré → version v${j.nextVersion}`);
+        // Optionnel : recharger
+        // await onKeyChange();
+      }
+    }catch(err){
+      if(String(err).includes("409")) hxToast("Conflit: l’étage a changé entre-temps. Rouvre la liste et réessaie.", false);
+      else hxToast("Erreur: " + String(err.message || err), false);
+    }
+  };
+
+  modal.classList.add("open");
+  $("historyClose").onclick = ()=> modal.classList.remove("open");
+  modal.addEventListener("click", (e)=>{ if(e.target===modal) modal.classList.remove("open"); });
+}
+
+/** Suivre le changement d'étage pour garder la version à jour */
+async function refreshHistoryVersion(){
+  const { b, f } = currentBF();
+  try{ await apiVersion(b,f); }catch{}
+}
+document.addEventListener('DOMContentLoaded', refreshHistoryVersion);
+buildingSelect.addEventListener('change', refreshHistoryVersion);
+floorSelect.addEventListener('change', refreshHistoryVersion);
+
+  
 // ===== Shortcuts — suppression clavier sans interférer avec les champs
 document.addEventListener('keydown', (e)=>{
   const tag = (e.target && e.target.tagName || "").toLowerCase();
