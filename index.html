@@ -609,6 +609,10 @@ planSnapshot("auto"); // déclencheur d'un snapshot côté serveur
 }
 
 async function loadLocal(k){
+  // ✅ 1st: préférer le cache local pour éviter le "revenant"
+  const cached = loadFromCache(k);
+  if (cached) return cached;
+  // (sinon, on tente la lecture distante)
   try{
     const [building, floor] = k.split("|");
     const res = await fetch(`/api/spaces?building=${encodeURIComponent(building)}&floor=${encodeURIComponent(floor)}`);
@@ -625,6 +629,7 @@ async function loadLocal(k){
   try{ return JSON.parse(localStorage.getItem(storageKey(k))||"null"); }
   catch(e){ return null; }
 }
+
 
 
 function setLabelValue(val){
