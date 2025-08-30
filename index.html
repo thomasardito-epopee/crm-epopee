@@ -1436,6 +1436,19 @@ function __openDashboardFull(){ const b=$("visitorBoard"); if(!b) return; b.clas
 document.addEventListener("DOMContentLoaded", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
 window.addEventListener("hashchange", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
 
+  <!-- ▼ Modale Historique -->
+<div class="modal" id="historyModal" aria-hidden="true">
+  <div class="pad" role="dialog" aria-modal="true" style="max-width:560px">
+    <h4>Historique de l’étage</h4>
+    <div id="historyList" class="table" style="margin-top:8px;max-height:340px;overflow:auto;border:1px solid var(--border);border-radius:12px"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+      <input id="restoreNote" class="input" placeholder="Note de restauration (optionnel)" style="flex:1">
+      <button class="btn" id="historyClose">Fermer</button>
+    </div>
+    <div id="historyToast" class="hint" style="margin-top:8px"></div>
+  </div>
+</div>
+
 </script>
 </body>
 </html>
