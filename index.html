@@ -1662,16 +1662,39 @@ function openHistoryModal(list, b, f){
     if(!at) return;
     try{
       await apiVersion(b,f);
-      if(act === "view"){
-        const snap = await apiGet(b,f, at);
-        console.log("Snapshot @", at, snap);
-        hxToast(`Snapshot du ${new Date(at).toLocaleString()} — ${snap.size} éléments.`);
-      }
-      if(act === "restore"){
-        if(!confirm(`Restaurer le snapshot du ${new Date(at).toLocaleString()} ?\n(une nouvelle version sera créée)`)) return;
-        const note = $("restoreNote")?.value || "restore from UI";
-        const j = await apiRestoreLatest(b,f, note);
-        hxToast(`Restauré → version v${j.nextVersion}`);
+    if(act === "view"){
+  // Open a simple compare window with the full snapshot (features included)
+  const snap = await apiGetFull(b,f, at);
+  const pretty = JSON.stringify(snap, null, 2);
+  const w = window.open("", "_blank");
+  if (w) {
+    w.document.write(`
+      <pre style="white-space:pre-wrap;word-break:break-word;margin:16px;font:13px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+Snapshot ${new Date(at).toLocaleString()}
+— ${snap.size||0} éléments
+${pretty}
+      </pre>
+    `);
+    w.document.close();
+  }
+  hxToast(`Snapshot du ${new Date(at).toLocaleString()} — ${snap.size||0} éléments.`);
+}
+
+if(act === "restore"){
+  // PIN first
+  const okPin = await confirmAdminPin();
+  if (!okPin) { hxToast("PIN incorrect — restauration annulée", false); return; }
+
+  if(!confirm(`Restaurer le snapshot du ${new Date(at).toLocaleString()} ?\n(une nouvelle version sera créée)`)) return;
+
+  const note = $("restoreNote")?.value || `restore @ ${at}`;
+  await apiVersion(b,f);                       // protects against stale version
+  const j = await apiRestoreAt(b,f, at, note); // ✅ correct function & timestamp
+  hxToast(`Restauré → version v${j.nextVersion}`);
+  // Optionnel : recharge l’étage
+  // await onKeyChange();
+}
+
         // Optionnel : recharger
         // await onKeyChange();
       }
