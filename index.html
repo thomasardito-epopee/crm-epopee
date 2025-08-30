@@ -1740,6 +1740,11 @@ async function sendSnapshot(reason="auto"){
   const [building, floor] = (currentKey || "").split("|");
   if (!building || !floor) return;
 
+  // Réglages
+const SNAPSHOT_DEBOUNCE_MS     = 5000;     // attend 5 s après la dernière modif
+const SNAPSHOT_MIN_INTERVAL_MS = 300000;   // 5 min
+const SNAPSHOT_MAX_RETRY       = 1;        // ← AJOUTER ceci (1 ou 2 tentatives)
+
   // Assure une version à jour
   try { await apiVersion(building, floor); } catch {}
 
