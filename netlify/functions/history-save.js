@@ -1,4 +1,6 @@
+// netlify/functions/history-save.js
 import { Client } from 'pg';
+import { putSnapshot } from './_lib/history.js';
 
 export async function handler(event) {
   if (event.httpMethod !== "POST") {
@@ -6,20 +8,27 @@ export async function handler(event) {
   }
 
   try {
-    const { building, floor, features, note } = JSON.parse(event.body);
+    const { building, floor, features, note } = JSON.parse(event.body || "{}");
+    if (!building || !floor || !features) {
+      return { statusCode: 400, body: "missing building/floor/features" };
+    }
 
-    // Connexion Neon (variable d'env NEON_DB_URL à définir dans Netlify)
+    const created_by = event.headers["x-user"] || "system";
+
+    // 1) Connexion Neon
     const client = new Client({ connectionString: process.env.NEON_DB_URL });
     await client.connect();
 
-    // Lire la version courante
+    // 2) Lire version courante
     const res = await client.query(
-      `select coalesce(max(version_n),0) as v from floor_history where building=$1 and floor=$2`,
+      `select coalesce(max(version_n),0) as v
+         from floor_history
+        where building=$1 and floor=$2`,
       [building, floor]
     );
-    const currentVersion = res.rows[0].v;
+    const currentVersion = Number(res.rows?.[0]?.v ?? 0);
 
-    // Vérifier la version si If-Match-Version est envoyé
+    // 3) Conflit optimiste (If-Match-Version)
     const ifMatch = event.headers["if-match-version"];
     if (ifMatch && Number(ifMatch) !== currentVersion) {
       await client.end();
@@ -27,20 +36,45 @@ export async function handler(event) {
     }
 
     const nextVersion = currentVersion + 1;
+    const created_at = new Date().toISOString();
 
-    // Insérer le snapshot
+    // 4) Insérer dans la table historique (Neon)
     await client.query(
-      `insert into floor_history(building, floor, version_n, created_at, created_by, note, size, data)
-       values ($1,$2,$3,now(),$4,$5,$6,$7)`,
-      [building, floor, nextVersion, event.headers["x-user"] || "system", note || null, features.length, JSON.stringify(features)]
+      `insert into floor_history
+         (building, floor, version_n, created_at, created_by, note, size, data)
+       values ($1,$2,$3,$4,$5,$6,$7,$8)`,
+      [
+        building,
+        floor,
+        nextVersion,
+        created_at,
+        created_by,
+        note || null,
+        Array.isArray(features) ? features.length : 0,
+        JSON.stringify(features),
+      ]
     );
 
     await client.end();
+
+    // 5) Écrire aussi le snapshot dans Netlify Blobs (clé = building|floor|created_at)
+    await putSnapshot(building, floor, {
+      building,
+      floor,
+      version_n: nextVersion,
+      created_at,
+      created_by,
+      note: note || "",
+      size: Array.isArray(features) ? features.length : 0,
+      data: { key: `${building}|${floor}`, features },
+    });
+
+    // 6) Réponse
     return {
       statusCode: 200,
-      body: JSON.stringify({ ok: true, nextVersion })
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ ok: true, nextVersion, created_at }),
     };
-
   } catch (err) {
     console.error("history-save error", err);
     return { statusCode: 500, body: "Server error: " + err.message };
