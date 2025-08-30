@@ -1576,17 +1576,17 @@ async function apiGet(b,f, atISO){
   if(!r.ok) throw new Error(`history-get: ${r.status}`);
   return r.json();
 }
-async function apiRestoreLatest(b,f, note){
-  const r = await fetch(`/.netlify/functions/history-restore?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f)}`, {
+async function apiRestoreAt(b,f, atISO, note){
+  const r = await fetch(`/.netlify/functions/history-restore?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f)}&at=${encodeURIComponent(atISO)}`, {
     method: "POST",
     headers: {
       "X-User": "admin",
       "If-Match-Version": String(__historyVersion || 0),
-      "X-Commit-Note": note || "restore from UI"
+      "X-Commit-Note": note || `restore @ ${atISO}`
     }
   });
-  if(r.status === 409){ throw new Error("409: version a changé entre-temps"); }
-  if(!r.ok){ const txt = await r.text().catch(()=> ""); throw new Error(`restore: ${r.status} ${txt}`); }
+  if (r.status === 409) throw new Error("409: version a changé entre-temps");
+  if (!r.ok){ const txt = await r.text().catch(()=> ""); throw new Error(`restore: ${r.status} ${txt}`); }
   const j = await r.json();
   __historyVersion = j.nextVersion || (__historyVersion + 1);
   return j;
