@@ -789,13 +789,42 @@
     const planFile = $("planFile");
     $("btnPlan") && ($("btnPlan").onclick = ()=> { if(isAdmin) planFile.click(); });
     planFile && (planFile.onchange = async (e)=>{ const file=e.target.files[0]; if(!file) return; await loadPlanFromFile(file); });
-<script>
+// Important : déclarer le worker PDF.js depuis le CDN (sans nouveau <script>)
+if (window.pdfjsLib) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+}
+
+async function loadPlanFromFile(file){
+  if(file.type==="application/pdf"){
+    const url = URL.createObjectURL(file);
+    const pdf = await pdfjsLib.getDocument(url).promise;
+    const page = await pdf.getPage(1);
+    const viewport = page.getViewport({scale:2});
+    const c = document.createElement('canvas');
+    const ctx=c.getContext('2d');
+    c.width = viewport.width;
+    c.height = viewport.height;
+    await page.render({canvasContext:ctx, viewport}).promise;
+    setBaseImage(c.toDataURL('image/png'), [c.height, c.width]);
+    $("planHint").textContent = `${file.name} (page 1)`;
+  } else {
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      const img=new Image();
+      img.onload=()=> setBaseImage(reader.result,[img.naturalHeight,img.naturalWidth]);
+      img.src=reader.result;
+    };
+    reader.readAsDataURL(file);
+    $("planHint").textContent = file.name;
+  }
+}
+
   // Important : déclarer le worker PDF.js depuis le CDN
   if (window.pdfjsLib) {
     pdfjsLib.GlobalWorkerOptions.workerSrc =
       "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
   }
-</script>
     async function loadPlanFromFile(file){
       if(file.type==="application/pdf"){
         const url = URL.createObjectURL(file);
