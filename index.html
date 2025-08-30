@@ -543,15 +543,39 @@ const loadFromCache = (k)=>{
   catch(e){ return null; }
 };
 
-
 // ===== Map (CRS.Simple) + free panning
-map = L.map("map", { crs: L.CRS.Simple, zoomControl:false, minZoom:-4, maxZoom:4, zoomSnap:0.1, zoomDelta:0.5, inertia:true });
-drawn.addTo(map);
-$("zoomIn").onclick=()=> map.zoomIn();
-$("zoomOut").onclick=()=> map.zoomOut();
-  function refreshMap(){ if(map) setTimeout(()=> map.invalidateSize(true), 0); }
-window.addEventListener('resize', refreshMap);
-new ResizeObserver(refreshMap).observe(document.getElementById('layout'));
+function refreshMap(){ if(map) setTimeout(()=> map.invalidateSize(true), 0); } // reste global
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Leaflet et Geoman (defer) sont prêts à ce moment
+  map = L.map("map", {
+    crs: L.CRS.Simple, zoomControl:false, minZoom:-4, maxZoom:4,
+    zoomSnap:0.1, zoomDelta:0.5, inertia:true
+  });
+  drawn.addTo(map);
+
+  $("zoomIn").onclick = ()=> map.zoomIn();
+  $("zoomOut").onclick = ()=> map.zoomOut();
+
+  window.addEventListener('resize', refreshMap);
+  new ResizeObserver(refreshMap).observe(document.getElementById('layout'));
+
+  // Geoman (défensif)
+  if (map.pm) {
+    map.pm.addControls({
+      position:'topright',
+      drawMarker:false, drawCircle:false, drawPolyline:false, drawCircleMarker:false,
+      drawRectangle:true, drawPolygon:true, editMode:true, dragMode:false, removalMode:true, cutPolygon:false
+    });
+    map.pm.setLang('fr');
+    map.pm.setPathOptions({ snappable:true, snapDistance:10 });
+  } else {
+    console.warn('Leaflet-Geoman pas encore prêt (map.pm undefined).');
+  }
+
+  // Premier sync une fois la carte créée
+  syncMode();
+});
 
 // Geoman toolbar (défensif si lib pas encore prête)
 if (map.pm) {
