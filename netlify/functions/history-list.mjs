@@ -1,30 +1,26 @@
-import { neon } from '@neondatabase/serverless';
+// netlify/functions/history-list.js
+import { listSnapshots } from "./_lib/history.js";
 
-// GET /api/history-list?building=A&floor=RDC
 export async function handler(event) {
-  const q = event.queryStringParameters || {};
-  const b = q.building, f = q.floor;
-  if (!b || !f) return { statusCode: 400, body: 'Missing building/floor' };
-
   try {
-    const sql = neon(process.env.DATABASE_URL);
+    const url = new URL(event.rawUrl);
+    const building = url.searchParams.get("building") || "";
+    const floor = url.searchParams.get("floor") || "";
+    if (!building || !floor) return { statusCode: 400, body: "missing building/floor" };
 
-    // On liste du plus récent au plus ancien
-    const rows = await sql/* sql */`
-      SELECT building, floor, size, created_at, created_by, note
-      FROM space_versions
-      WHERE building = ${b} AND floor = ${f}
-      ORDER BY created_at DESC
-      LIMIT 200
-    `;
-
-    return {
-      statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(rows)
-    };
+    const list = await listSnapshots(building, floor);
+    // Light payload for the UI list
+    const ui = list.map(it => ({
+      building: it.building,
+      floor: it.floor,
+      created_at: it.created_at,
+      created_by: it.created_by,
+      note: it.note || "",
+      size: it.size || 0,
+      version_n: it.version_n
+    }));
+    return { statusCode: 200, body: JSON.stringify(ui) };
   } catch (e) {
-    console.error('history-list error', e);
-    return { statusCode: 500, body: 'Server error' };
+    return { statusCode: 500, body: `history-list: ${String(e?.message || e)}` };
   }
 }
