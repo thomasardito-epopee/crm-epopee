@@ -1510,12 +1510,11 @@ function updateBoard(){ if(board.style.display!=="none"){ renderDashboard(); } }
 
 // ===== Tenant autocomplete =====
 
-// Ensure suggest is inside the tenant field wrapper so it anchors correctly
-
 const tnInput = $("fTenant");
 const suggest = $("tenantSuggest");
 
-  try{
+// Ensure suggest is inside the tenant field wrapper so it anchors correctly
+try{
   const wrap = tnInput.closest('.tenant-field') || tnInput.parentElement;
   if(wrap && suggest.parentElement !== wrap){ wrap.style.position='relative'; wrap.appendChild(suggest); }
 }catch(e){}
