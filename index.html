@@ -1345,13 +1345,9 @@ if ((pOcc + pVac) > 0){
   // Top 5 loyers par résident
   const topRent = (S.tenantsRentArr||[]);
   if (topRent.length){
-  const barColorContext = filterEventOnly ? EVENT_DEFAULT_COLOR : STATUS_STYLES["Loué"].fill;
-  drawBars(
-    $("chartTopRent"),
-    topRent.map(t => t.tenant),
-    topRent.map(t => Math.round(t.rent || 0)),
-    [barColorContext]
-  );
+  - const barColorContext = filterEventOnly ? EVENT_DEFAULT_COLOR : STATUS_STYLES["Loué"].fill;
++ const barColorContext = STATUS_STYLES["Loué"].fill;
+
 } else {
   const c = $("chartTopRent"); const ctx = c.getContext("2d");
   ctx.clearRect(0,0,c.width,c.height);
