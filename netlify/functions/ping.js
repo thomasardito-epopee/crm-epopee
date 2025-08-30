@@ -1,1 +1,3 @@
-exports.handler = async () => {   return { statusCode: 200, body: 'pong' }; };
+exports.handler = function (_event, _context, callback) {
+  callback(null, { statusCode: 200, body: 'pong' });
+};
