@@ -766,14 +766,15 @@ $("btnApply").onclick = ()=>{
   setTimeout(()=>{ b.textContent=orig; b.classList.remove("success","flash"); }, 900);
 };
 
-$("btnDelete").onclick = ()=>{ 
+$("btnDelete").onclick = async ()=>{ 
   if(currentLayer){ 
     drawn.removeLayer(currentLayer); 
-    currentLayer=null; 
-    saveLocal(); 
-    planSnapshot("delete");   // ← ajoute cette ligne
+    currentLayer = null; 
+    await saveLocal();           // ← on attend l’écriture
+    planSnapshot("delete");
   } 
 };
+
 
 // ===== Plan loading (logic conservé mais UI masquée)
 const planFile = $("planFile");
