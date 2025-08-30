@@ -1,44 +1,48 @@
-// netlify/functions/history-save.js
-import { getVersion, setVersion, putSnapshot } from "./_lib/history.js";
+import { Client } from 'pg';
 
 export async function handler(event) {
+  if (event.httpMethod !== "POST") {
+    return { statusCode: 405, body: "Method Not Allowed" };
+  }
+
   try {
-    if (event.httpMethod !== "POST") return { statusCode: 405, body: "Method Not Allowed" };
+    const { building, floor, features, note } = JSON.parse(event.body);
 
-    const { building, floor, features, note } = JSON.parse(event.body || "{}");
-    if (!building || !floor) return { statusCode: 400, body: "missing building/floor" };
+    // Connexion Neon (variable d'env NEON_DB_URL à définir dans Netlify)
+    const client = new Client({ connectionString: process.env.NEON_DB_URL });
+    await client.connect();
 
-    const ifMatch = Number(event.headers["if-match-version"] || event.headers["If-Match-Version"] || 0);
-    const by = event.headers["x-user"] || event.headers["X-User"] || "system";
+    // Lire la version courante
+    const res = await client.query(
+      `select coalesce(max(version_n),0) as v from floor_history where building=$1 and floor=$2`,
+      [building, floor]
+    );
+    const currentVersion = res.rows[0].v;
 
-    // 1) Version check
-    const cur = await getVersion(building, floor); // {version_n}
-    if (cur.version_n !== ifMatch) {
-      return { statusCode: 409, body: "version conflict" };
+    // Vérifier la version si If-Match-Version est envoyé
+    const ifMatch = event.headers["if-match-version"];
+    if (ifMatch && Number(ifMatch) !== currentVersion) {
+      await client.end();
+      return { statusCode: 409, body: "Version conflict" };
     }
 
-    // 2) Next
-    const next = cur.version_n + 1;
+    const nextVersion = currentVersion + 1;
 
-    // 3) Snapshot record
-    const created_at = new Date().toISOString();
-    const rec = {
-      building, floor,
-      version_n: next,
-      created_at,
-      created_by: by,
-      note: note || "auto",
-      size: Array.isArray(features) ? features.length : 0,
-      data: { key: `${building}|${floor}`, features }
+    // Insérer le snapshot
+    await client.query(
+      `insert into floor_history(building, floor, version_n, created_at, created_by, note, size, data)
+       values ($1,$2,$3,now(),$4,$5,$6,$7)`,
+      [building, floor, nextVersion, event.headers["x-user"] || "system", note || null, features.length, JSON.stringify(features)]
+    );
+
+    await client.end();
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ ok: true, nextVersion })
     };
 
-    await putSnapshot(building, floor, rec);
-
-    // 4) Persist new version
-    await setVersion(building, floor, next);
-
-    return { statusCode: 200, body: JSON.stringify({ nextVersion: next }) };
-  } catch (e) {
-    return { statusCode: 500, body: `history-save: ${String(e?.message || e)}` };
+  } catch (err) {
+    console.error("history-save error", err);
+    return { statusCode: 500, body: "Server error: " + err.message };
   }
 }
