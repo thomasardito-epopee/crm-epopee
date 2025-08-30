@@ -1272,10 +1272,10 @@ const S = aggStats(featsFiltered);
 const statusLabels = ["Loué","Préavis","Vacant","Réservé","Maintenance"];
 const statusParts  = statusLabels.map(s => S.counts[s] || 0);
 
-// Couleurs : statuts natifs ; si filtre Événementiel, "Réservé" en rose
-const statusColors = statusLabels.map(s =>
-  (s === "Réservé" && filterEventOnly) ? EVENT_DEFAULT_COLOR : STATUS_STYLES[s].fill
-);
+- const statusColors = statusLabels.map(s =>
+-   (s === "Réservé" && filterEventOnly) ? EVENT_DEFAULT_COLOR : STATUS_STYLES[s].fill
+- );
++ const statusColors = statusLabels.map(s => STATUS_STYLES[s].fill);
 
 drawDonut($("chartStatusCount"), statusParts, statusColors, String(S.totalSpaces || 0));
 
