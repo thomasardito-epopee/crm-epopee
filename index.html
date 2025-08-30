@@ -914,6 +914,9 @@ function syncMode(){
   $("statusText").textContent = isAdmin ? "Mode admin" : "Mode visiteur";
   $("adminSection").style.display = isAdmin ? "block" : "none";
   $("btnPlan") && ($("btnPlan").disabled = !isAdmin);
+// Afficher/masquer l'Historique selon le mode
+$("btnHistory") && ($("btnHistory").style.display = isAdmin ? "" : "none");
+$("historyMenu") && ( $("historyMenu").style.display = isAdmin ? $("historyMenu").style.display : "none");
 
   document.body.classList.toggle('visitor', !isAdmin);
   document.body.classList.toggle('admin', isAdmin);
