@@ -9,28 +9,14 @@
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
 <link rel="icon" type="image/png" href="favicon.png"> <!-- fallback -->
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-
+  
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-</script>
-
 <link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.14.1/dist/leaflet-geoman.css">
 <script defer src="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.14.1/dist/leaflet-geoman.min.js"></script>
-// Auto open full-screen dashboard via hash
-function __openDashboardFull(){ const b=$("visitorBoard"); if(!b) return; b.classList.add("fullscreen"); b.style.display="block"; renderDashboard(); }
-document.addEventListener("DOMContentLoaded", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
-window.addEventListener("hashchange", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
-
-</script>
 
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-// Auto open full-screen dashboard via hash
-function __openDashboardFull(){ const b=$("visitorBoard"); if(!b) return; b.classList.add("fullscreen"); b.style.display="block"; renderDashboard(); }
-document.addEventListener("DOMContentLoaded", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
-window.addEventListener("hashchange", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
-
-</script>
 
 <style>
 :root{
