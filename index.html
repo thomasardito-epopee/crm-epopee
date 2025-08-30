@@ -1005,8 +1005,11 @@ padModal.addEventListener('click', (e)=>{ if(e.target===padModal){ closePad(); i
 $("adminToggle").checked=false;
 $("adminToggle").onchange = e=>{ if(e.target.checked){ if(!isAdmin) openPad(); else syncMode(); } else { isAdmin=false; syncMode(); } };
 // --- (ré)montage idempotent de la toolbar Geoman
-function mountGeoman(){
-  // Si la toolbar n'existe pas encore, on la crée
+
+  function mountGeoman(){
+  if (!map || !map.pm) return; // carte/Geoman pas prêts → on sort
+
+  // Crée la toolbar si absente
   if (!document.querySelector('.leaflet-pm-toolbar')){
     map.pm.addControls({
       position:'topright',
@@ -1016,7 +1019,8 @@ function mountGeoman(){
     map.pm.setLang('fr');
     map.pm.setPathOptions({ snappable:true, snapDistance:10 });
   }
-  // Afficher/cacher selon le mode
+
+  // Place/affiche selon le mode
   const bar = document.querySelector('.leaflet-pm-toolbar');
   if (bar){
     bar.style.top = '128px';
