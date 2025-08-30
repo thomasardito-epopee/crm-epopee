@@ -582,8 +582,14 @@ function fromPlain(o){
 function exportGeo(){ return { key: currentKey, features: drawn.getLayers().map(toPlain) }; }
 function importGeo(data){ drawn.clearLayers(); (data?.features||[]).forEach(fromPlain); }
 async function saveLocal(){
-  // 1) cache offline
-  localStorage.setItem(storageKey(currentKey), JSON.stringify(exportGeo()));
+  // 1) capture la clé et l'état AU MOMENT de l'appel
+const keyNow = currentKey;                          // ← fige la clé
+const featuresNow = drawn.getLayers().map(toPlain); // ← fige les features
+const payload = { key: keyNow, features: featuresNow };
+
+// Écrit le cache local pour la bonne clé
+localStorage.setItem(storageKey(keyNow), JSON.stringify(payload));
+
 
   // 2) sync BDD (si admin + token)
   try{
