@@ -1238,99 +1238,167 @@ function renderDashboard(){
   });
   const S = aggStats(featsFiltered);
 
-  // KPIs
-  const kpisEl = $("kpis");
-  kpisEl.innerHTML = `
-    <div class="kpi"><div class="v">${S.occupiedCount} <span class="subl">(${S.occupiedPct}%)</span></div><div class="l">Bureaux occupés</div></div>
-    <div class="kpi"><div class="v">${S.vacantCount} <span class="subl">(${S.vacantPct}%)</span></div><div class="l">Bureaux vacants</div></div>
-    <div class="kpi"><div class="v">${Math.round(S.areaOcc)} m²</div><div class="l">m² occupés</div></div>
-    <div class="kpi"><div class="v">${Math.round(S.areaVac)} m²</div><div class="l">m² vacants</div></div>
-    <div class="kpi"><div class="v">${euro(S.rentFacture)} €</div><div class="l">Loyer facturé (occupés)</div></div>
-    <div class="kpi"><div class="v">${euro(S.rentPotentiel)} €</div><div class="l">Loyer potentiel (après réservés)</div></div>
-    <div class="kpi"><div class="v">${Math.round(S.euroPerPost)} €</div><div class="l">€ / poste (moyenne)</div></div>
-  `;
+const kpisEl = $("kpis");
+kpisEl.innerHTML = `
+  <div class="kpi">
+    <div class="v">${S.occupiedCount} <span class="subl">(${S.occupiedPct}%)</span></div>
+    <div class="l">Bureaux occupés</div>
+  </div>
+  <div class="kpi">
+    <div class="v">${S.vacantCount} <span class="subl">(${S.vacantPct}%)</span></div>
+    <div class="l">Bureaux vacants</div>
+  </div>
+  <div class="kpi">
+    <div class="v">${Math.round(S.areaOcc)} m²</div>
+    <div class="l">m² occupés</div>
+  </div>
+  <div class="kpi">
+    <div class="v">${Math.round(S.areaVac)} m²</div>
+    <div class="l">m² vacants</div>
+  </div>
+  <div class="kpi">
+    <div class="v">${euro(S.rentFacture)} €</div>
+    <div class="l">Loyer facturé (occupés)</div>
+  </div>
+  <div class="kpi">
+    <div class="v">${euro(S.rentPotentiel)} €</div>
+    <div class="l">Loyer potentiel (après réservés)</div>
+  </div>
+  <div class="kpi">
+    <div class="v">${Math.round(S.euroPerPost)} €</div>
+    <div class="l">€ / poste (moyenne)</div>
+  </div>
+`;
 
-  // Donut statuts
-  const statusLabels = ["Loué","Préavis","Vacant","Réservé","Maintenance"];
-  const statusParts  = statusLabels.map(s => S.counts[s] || 0);
-  const statusColors = statusLabels.map(s => STATUS_STYLES[s].fill);
-  drawDonut($("chartStatusCount"), statusParts, statusColors, String(S.totalSpaces || 0));
-  const total = S.totalSpaces || 1;
-  $("legendStatus").innerHTML = statusLabels.map((lab,i)=>{
-    const v = statusParts[i] || 0;
-    if(!v) return "";
-    const pct = Math.round(v*1000/total)/10;
-    return `<div class="item"><span class="dot" style="background:${statusColors[i]}"></span>${lab} — ${v} (${pct}%)</div>`;
-  }).join("");
+/* === Donut : répartition par statut === */
+const statusLabels = ["Loué","Préavis","Vacant","Réservé","Maintenance"];
+const statusParts  = statusLabels.map(s => S.counts[s] || 0);
+const statusColors = statusLabels.map(s => STATUS_STYLES[s].fill);
 
-  // m² occupés vs vacants
-  const occ = S.areaOcc || 0, vac = S.areaVac || 0, totA = (occ + vac) || 1;
-  const occPct = Math.round(occ*1000/totA)/10;
+drawDonut($("chartStatusCount"), statusParts, statusColors, String(S.totalSpaces || 0));
+
+const totalSpacesForPct = S.totalSpaces || 1;
+$("legendStatus").innerHTML = statusLabels.map((lab,i)=>{
+  const v = statusParts[i] || 0;
+  if(!v) return "";
+  const pct = Math.round(v * 1000 / totalSpacesForPct) / 10;
+  return `<div class="item"><span class="dot" style="background:${statusColors[i]}"></span>${lab} — ${v} (${pct}%)</div>`;
+}).join("");
+
+/* === Donut : m² occupés vs vacants === */
+const areaOcc = S.areaOcc || 0;
+const areaVac = S.areaVac || 0;
+const areaTot = (areaOcc + areaVac) || 1;
+const occPct  = Math.round(areaOcc * 1000 / areaTot) / 10;
+
+drawDonut(
+  $("chartAreaOccVac"),
+  [areaOcc, areaVac],
+  [STATUS_STYLES["Loué"].fill, STATUS_STYLES["Vacant"].fill],
+  `${Math.round(occPct)}%`
+);
+
+$("legendArea").innerHTML = `
+  <div class="item">
+    <span class="dot" style="background:${STATUS_STYLES["Loué"].fill}"></span>
+    Occupés — ${Math.round(areaOcc)} m² (${occPct}%)
+  </div>
+  ${areaVac>0 ? `
+    <div class="item">
+      <span class="dot" style="background:${STATUS_STYLES["Vacant"].fill}"></span>
+      Vacants — ${Math.round(areaVac)} m² (${Math.round(areaVac*1000/areaTot)/10}%)
+    </div>
+  ` : ""}
+`;
+
+/* === Top 5 résidents : sélecteur + graph === */
+const topSel = $("topMode");
+const savedMode = window.TOP_TENANTS_MODE || "count";
+if (topSel) {
+  topSel.value = savedMode;
+  topSel.onchange = (e)=>{
+    window.TOP_TENANTS_MODE = e.target.value;
+    renderDashboard(); // re-render pour changer le tri
+  };
+}
+
+const mode = window.TOP_TENANTS_MODE || (topSel ? topSel.value : "count");
+const topData = (mode === "area" ? (S.tenantsAreaArr || []) : (S.tenantsArr || []));
+const labelsTop = topData.map(t => t.tenant);
+const valuesTop = topData.map(t => (mode === "area" ? Math.round(t.area||0) : t.count));
+
+drawBars($("chartTopTenants"), labelsTop, valuesTop, [STATUS_STYLES["Loué"].fill]);
+
+/* === Donut : postes occupés vs vacants === */
+const pOcc = S.occPosts || 0;
+const pVac = S.vacPosts || 0;
+const pTot = (pOcc + pVac) || 1;
+const pOccPct = Math.round(pOcc * 1000 / pTot) / 10;
+
+if ((pOcc + pVac) > 0) {
   drawDonut(
-    $("chartAreaOccVac"),
-    [occ, vac],
+    $("chartPostsOccVac"),
+    [pOcc, pVac],
     [STATUS_STYLES["Loué"].fill, STATUS_STYLES["Vacant"].fill],
-    `${Math.round(occPct)}%`
+    `${Math.round(pOccPct)}%`
   );
-  $("legendArea").innerHTML = `
-    <div class="item"><span class="dot" style="background:${STATUS_STYLES["Loué"].fill}"></span>
-      Occupés — ${Math.round(occ)} m² (${occPct}%)</div>
-    ${vac>0 ? `<div class="item"><span class="dot" style="background:${STATUS_STYLES["Vacant"].fill}"></span>
-      Vacants — ${Math.round(vac)} m² (${Math.round(vac*1000/totA)/10}%)</div>` : ""}
+  $("legendPosts").innerHTML = `
+    <div class="item">
+      <span class="dot" style="background:${STATUS_STYLES["Loué"].fill}"></span>
+      Occupés — ${pOcc} (${pOccPct}%)
+    </div>
+    ${pVac>0 ? `
+      <div class="item">
+        <span class="dot" style="background:${STATUS_STYLES["Vacant"].fill}"></span>
+        Vacants — ${pVac} (${Math.round(pVac*1000/pTot)/10}%)
+      </div>
+    ` : ""}
   `;
+} else {
+  const cv = $("chartPostsOccVac");
+  const ctx = cv.getContext("2d");
+  ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.font = "14px Inter,system-ui";
+  ctx.fillStyle="#6e6e73";
+  ctx.textAlign="center";
+  ctx.fillText("Aucune donnée de postes", cv.width/2, 24);
+  $("legendPosts").innerHTML = ``;
+}
 
-  // Top 5 résidents (barres)
-  const topSel = $("topMode");
-  const savedMode = window.TOP_TENANTS_MODE || "count";
-  if(topSel){ topSel.value = savedMode; topSel.onchange = (e)=>{ window.TOP_TENANTS_MODE = e.target.value; renderDashboard(); }; }
-  const mode = window.TOP_TENANTS_MODE || (topSel ? topSel.value : "count");
-  const topData = (mode==="area" ? (S.tenantsAreaArr||[]) : (S.tenantsArr||[]));
-  const labels = topData.map(t=> t.tenant);
-  const values = topData.map(t=> mode==="area" ? Math.round(t.area||0) : t.count);
-  const barColorContext = STATUS_STYLES["Loué"].fill;
-  drawBars($("chartTopTenants"), labels, values, [barColorContext]);
+/* === Top 5 loyers par résident === */
+const topRent = (S.tenantsRentArr || []);
+if (topRent.length) {
+  drawBars(
+    $("chartTopRent"),
+    topRent.map(t => t.tenant),
+    topRent.map(t => Math.round(t.rent || 0)),
+    [STATUS_STYLES["Loué"].fill]
+  );
+} else {
+  const c = $("chartTopRent");
+  const ctx = c.getContext("2d");
+  ctx.clearRect(0,0,c.width,c.height);
+  ctx.font="14px Inter,system-ui";
+  ctx.fillStyle="#6e6e73";
+  ctx.textAlign="center";
+  ctx.fillText("Aucun loyer renseigné", c.width/2, 24);
+}
 
-  // Postes occupés vs vacants
-  const pOcc = S.occPosts || 0, pVac = S.vacPosts || 0, pTot = (pOcc + pVac) || 1;
-  const pOccPct = Math.round(pOcc*1000/pTot)/10;
-  if ((pOcc + pVac) > 0){
-    drawDonut(
-      $("chartPostsOccVac"),
-      [pOcc, pVac],
-      [STATUS_STYLES["Loué"].fill, STATUS_STYLES["Vacant"].fill],
-      `${Math.round(pOccPct)}%`
-    );
-    $("legendPosts").innerHTML = `
-      <div class="item"><span class="dot" style="background:${STATUS_STYLES["Loué"].fill}"></span>
-        Occupés — ${pOcc} (${pOccPct}%)</div>
-      ${pVac>0 ? `<div class="item"><span class="dot" style="background:${STATUS_STYLES["Vacant"].fill}"></span>
-        Vacants — ${pVac} (${Math.round(pVac*1000/pTot)/10}%)</div>` : ""}
-    `;
-  } else {
-    const cv = $("chartPostsOccVac"); const ctx = cv.getContext("2d");
-    ctx.clearRect(0,0,cv.width,cv.height);
-    ctx.font = "14px Inter,system-ui"; ctx.fillStyle="#6e6e73"; ctx.textAlign="center";
-    ctx.fillText("Aucune donnée de postes", cv.width/2, 24);
-    $("legendPosts").innerHTML = ``;
-  }
-
-  // Top loyers par résident
-  const topRent = (S.tenantsRentArr||[]);
-  if (topRent.length){
-    const barColorContext = STATUS_STYLES["Loué"].fill;
-    drawBars(
-      $("chartTopRent"),
-      topRent.map(t => t.tenant),
-      topRent.map(t => Math.round(t.rent || 0)),
-      [barColorContext]
-    );
-  } else {
-    const c = $("chartTopRent"); const ctx = c.getContext("2d");
-    ctx.clearRect(0,0,c.width,c.height);
-    ctx.font="14px Inter,system-ui"; ctx.fillStyle="#6e6e73"; ctx.textAlign="center";
-    ctx.fillText("Aucun loyer renseigné", c.width/2, 24);
-  }
-
+/* === Liste “Réservés” === */
+const r = $("reservedList");
+if (!S.reservedList || S.reservedList.length === 0) {
+  r.innerHTML = '<div class="hint">Aucun espace réservé.</div>';
+} else {
+  r.innerHTML = S.reservedList
+    .sort((a,b)=> b.area - a.area)
+    .map(v => `
+      <div class="rowlist">
+        <div>${v.code} — ${v.label}</div>
+        <div class="badge">${v.area || 0} m²</div>
+        <div class="badge">Réservé</div>
+      </div>
+    `).join('');
+}
   // Liste “Réservés”
   const r = $("reservedList");
   if(!S.reservedList || S.reservedList.length===0){
