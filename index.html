@@ -1039,14 +1039,16 @@ function syncMode(){
   if (isAdmin){
     $("layout").classList.remove("collapsed");
   } else {
-    $("layout").classList.add("collapsed");
+  $("layout").classList.add("collapsed");
+  if (map && map.pm) {
     map.pm.disableGlobalEditMode();
     map.pm.disableGlobalRemovalMode && map.pm.disableGlobalRemovalMode();
     map.pm.disableDraw('Polygon');
     map.pm.disableDraw('Rectangle');
     drawn.eachLayer(l=>{ if(l.pm && l.pm.disable){ l.pm.disable(); } });
-    currentLayer = null;
   }
+  currentLayer = null;
+}
 
   mountGeoman();
   refreshMap();
