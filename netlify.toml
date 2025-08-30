@@ -1,8 +1,11 @@
-[build]
-command = "npm run build:functions"
-functions = "netlify/functions"
+[functions]
+  # Dis à Netlify où sont tes Functions
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
 
+# (Optionnel mais pratique) URLs jolies :
+# /api/xxx -> /.netlify/functions/xxx
 [[redirects]]
-from = "/api/*"
-to = "/.netlify/functions/api/:splat"
-status = 200
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
