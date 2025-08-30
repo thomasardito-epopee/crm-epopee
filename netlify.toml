@@ -5,6 +5,11 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
+  [functions]
+  node_bundler = "esbuild"
+
+[[plugins]]
+  package = "@netlify/blobs"
 
 [[redirects]]
   from = "/api/*"
