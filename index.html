@@ -85,7 +85,7 @@ aside.panel{background:var(--panel);border-right:1px solid var(--border);padding
 
 /* Drawer toggle */
 .drawer-toggle{position:absolute;top:72px;left:360px;transform:translateX(-50%);z-index:1600;background:#fff;border:1px solid var(--border);border-radius:999px;width:30px;height:44px;box-shadow:0 6px 16px rgba(0,0,0,.08);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:left .24s ease}
-.drawer-toggle span{font-weight:800; color:#2c2c2e; font-size:18px; line-height:1;}
+.drawer-toggle span{font-weight:800;color:#2c2c2e font-size:18px; line-height:1; color:var(--text); }
 .layout.collapsed .drawer-toggle{left:12px}
 .layout.collapsed .drawer-toggle span{transform:rotate(180deg)}
 
@@ -594,13 +594,14 @@ localStorage.setItem(storageKey(keyNow), JSON.stringify(payload));
   // 2) sync BDD (si admin + token)
   try{
     const token = sessionStorage.getItem('ADMIN_TOKEN') || "";
-    const data = payload;                    // ← utilise l’instantané figé
-const [building, floor] = keyNow.split("|");
+    const data = exportGeo(); // { key, features }
+    const [building, floor] = currentKey.split("|");
 
-await fetch("/api/spaces/batch", {
-  ...
-  body: JSON.stringify({ building, floor, features: data.features })
-});
+    await fetch("/api/spaces/batch", {
+      method: "POST",
+      headers: { "content-type":"application/json", ...(token ? { "authorization": "Bearer " + token } : {}) },
+      body: JSON.stringify({ building, floor, features: data.features })
+    });
 
     $("statusText").textContent = "Sauvegardé sur la base ✅";
     setTimeout(()=> $("statusText").textContent = isAdmin ? "Mode admin" : "Mode visiteur", 900);
@@ -766,15 +767,14 @@ $("btnApply").onclick = ()=>{
   setTimeout(()=>{ b.textContent=orig; b.classList.remove("success","flash"); }, 900);
 };
 
-$("btnDelete").onclick = async ()=>{ 
+$("btnDelete").onclick = ()=>{ 
   if(currentLayer){ 
     drawn.removeLayer(currentLayer); 
-    currentLayer = null; 
-    await saveLocal();           // ← on attend l’écriture
-    planSnapshot("delete");
+    currentLayer=null; 
+    saveLocal(); 
+    planSnapshot("delete");   // ← ajoute cette ligne
   } 
 };
-
 
 // ===== Plan loading (logic conservé mais UI masquée)
 const planFile = $("planFile");
