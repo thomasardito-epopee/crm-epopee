@@ -1100,7 +1100,13 @@ function wireBoardActions(){
   const popBtn = $("boardPop");
   if(closeBtn && !closeBtn.__wired){
     closeBtn.__wired = true;
-    closeBtn.onclick = ()=>{ const b=$("visitorBoard"); b.style.display="none"; b.classList.remove("fullscreen"); };
+    closeBtn.onclick = ()=>{
+  const b = $("visitorBoard");
+  b.style.display = "none";
+  b.classList.remove("fullscreen");
+  refreshMap();
+};
+
   }
   if(popBtn && !popBtn.__wired){
     popBtn.__wired = true;
