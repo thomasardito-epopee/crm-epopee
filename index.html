@@ -577,19 +577,6 @@ document.addEventListener('DOMContentLoaded', () => {
   syncMode();
 });
 
-// Geoman toolbar (défensif si lib pas encore prête)
-if (map.pm) {
-  map.pm.addControls({
-    position:'topright',
-    drawMarker:false, drawCircle:false, drawPolyline:false, drawCircleMarker:false,
-    drawRectangle:true, drawPolygon:true, editMode:true, dragMode:false, removalMode:true, cutPolygon:false
-  });
-  map.pm.setLang('fr');
-  map.pm.setPathOptions({ snappable:true, snapDistance:10 });
-} else {
-  console.error('Leaflet-Geoman n’est pas chargé (map.pm undefined). Vérifie la balise <script> et le réseau.');
-}
-
 
 // ===== Styling & data helpers
 function layerProps(l){ return l?.options?.ep || {}; }
