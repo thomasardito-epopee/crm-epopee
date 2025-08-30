@@ -789,7 +789,13 @@
     const planFile = $("planFile");
     $("btnPlan") && ($("btnPlan").onclick = ()=> { if(isAdmin) planFile.click(); });
     planFile && (planFile.onchange = async (e)=>{ const file=e.target.files[0]; if(!file) return; await loadPlanFromFile(file); });
-
+<script>
+  // Important : déclarer le worker PDF.js depuis le CDN
+  if (window.pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  }
+</script>
     async function loadPlanFromFile(file){
       if(file.type==="application/pdf"){
         const url = URL.createObjectURL(file);
