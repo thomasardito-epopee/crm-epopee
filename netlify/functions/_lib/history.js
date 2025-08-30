@@ -4,7 +4,7 @@ const SNAPSHOTS = "snapshots";
 const VERSIONS  = "versions";
 
 const opts = {
-  siteID: process.env.NETLIFY_SITE_ID,
+  siteId: process.env.NETLIFY_SITE_ID,
   token: process.env.NETLIFY_AUTH_TOKEN,
 };
 
