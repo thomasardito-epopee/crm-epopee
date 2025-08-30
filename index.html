@@ -190,13 +190,14 @@ aside.panel{background:var(--panel);border-right:1px solid var(--border);padding
 .layout.collapsed .drawer-toggle{left:12px}
 .layout.collapsed .drawer-toggle span{transform:rotate(180deg)}
 
-/* Zoom + toolbar */
-.controls-stack{position:absolute; top:72px; right:16px; z-index:1500; display:flex; flex-direction:column; gap:8px; align-items:flex-end}
-.zoom-strip{background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:0 8px 20px rgba(0,0,0,.08);display:flex;overflow:hidden}
-.zoom-btn{user-select:none;cursor:pointer;font-weight:800;min-width:44px;text-align:center;padding:10px 14px;border-right:1px solid var(--border)}
-.zoom-btn:last-child{border-right:0}
-.zoom-btn:active{background:#f2f2f7}
-.leaflet-pm-toolbar{top:128px !important; right:16px !important; transform:none !important; z-index:1400 !important}
+/* Boutons +/– : collés au bord droit de la colonne CARTE */
+.controls-stack{
+  position: relative;      /* plus d’absolu */
+  align-self: start;
+  justify-self: end;       /* coin haut-droit de la colonne carte */
+  margin: 72px 16px 0 0;   /* sous la topbar */
+  z-index:1500;            /* au-dessus du dashboard */
+}
 
 /* Hide Geoman in visitor mode */
 body.visitor .leaflet-pm-toolbar{display:none !important}
