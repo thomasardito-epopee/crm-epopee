@@ -11,7 +11,7 @@ const VERSIONS  = "versions";
 // (sinon Netlify utilise la config auto)
 const opts =
   process.env.NETLIFY_SITE_ID && process.env.NETLIFY_AUTH_TOKEN
-    ? { siteID: process.env.NETLIFY_SITE_ID, token: process.env.NETLIFY_AUTH_TOKEN }
+    ? { siteId: process.env.NETLIFY_SITE_ID, token: process.env.NETLIFY_AUTH_TOKEN }
     : undefined;
 
 // Helpers de clés
