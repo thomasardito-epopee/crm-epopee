@@ -594,14 +594,13 @@ localStorage.setItem(storageKey(keyNow), JSON.stringify(payload));
   // 2) sync BDD (si admin + token)
   try{
     const token = sessionStorage.getItem('ADMIN_TOKEN') || "";
-    const data = exportGeo(); // { key, features }
-    const [building, floor] = currentKey.split("|");
+    const data = payload;                    // ← utilise l’instantané figé
+const [building, floor] = keyNow.split("|");
 
-    await fetch("/api/spaces/batch", {
-      method: "POST",
-      headers: { "content-type":"application/json", ...(token ? { "authorization": "Bearer " + token } : {}) },
-      body: JSON.stringify({ building, floor, features: data.features })
-    });
+await fetch("/api/spaces/batch", {
+  ...
+  body: JSON.stringify({ building, floor, features: data.features })
+});
 
     $("statusText").textContent = "Sauvegardé sur la base ✅";
     setTimeout(()=> $("statusText").textContent = isAdmin ? "Mode admin" : "Mode visiteur", 900);
