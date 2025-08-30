@@ -53,7 +53,10 @@ html,body{height:100%;margin:0;font-family:Inter,-apple-system,BlinkMacSystemFon
 .btn.primary.flash{box-shadow:0 0 0 8px rgba(10,132,255,.15)}
 .btn.success{background:var(--green);color:#fff;border-color:transparent}
 .hint{font-size:12px;color:var(--muted)}
-
+  
+/* Cache le libellé d'état (Mode visiteur / Mode admin) dans la topbar */
+.topbar #statusText{ display:none !important; }
+  
 .layout{display:grid;grid-template-columns:360px 1fr;height:calc(100vh - 56px);transition:grid-template-columns .24s ease;position:relative}
 aside.panel{background:var(--panel);border-right:1px solid var(--border);padding:14px;overflow:auto;z-index:1400}
 .layout.collapsed{grid-template-columns:0 1fr}
