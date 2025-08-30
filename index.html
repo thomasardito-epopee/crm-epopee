@@ -583,7 +583,7 @@ async function saveLocal(){
     $("statusText").textContent = "Sauvegardé en local (offline) ☁️";
     setTimeout(()=> $("statusText").textContent = isAdmin ? "Mode admin" : "Mode visiteur", 1200);
   }
-
+planSnapshot("auto"); // déclencheur d'un snapshot côté serveur
   updateBoard && updateBoard();
 }
 
