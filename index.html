@@ -984,11 +984,9 @@ async function onKeyChange(){
   const b = buildingSelect.value, f = floorSelect.value;
   currentKey = keyFor(b,f);
 
-  // on attend la lecture distante (qui met aussi à jour le cache)
+    // charge d'abord le cache (déjà priorisé dans loadLocal)
   const data = await loadLocal(currentKey);
-
-  // on importe la data distante si présente, sinon le cache local, sinon vide
-  importGeo(data || loadFromCache(currentKey) || { features: [] });
+  importGeo(data || { features: [] });
 
   await tryPreload(b,f);
   updateBoard();
