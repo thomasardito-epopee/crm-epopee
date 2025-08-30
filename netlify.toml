@@ -1,18 +1,12 @@
 [build]
-  command = "echo 'no build'"
   publish = "."
+  functions = "netlify/functions"
 
-[functions]
-  directory = "netlify/functions"
-  node_bundler = "esbuild"
-  [functions]
-  node_bundler = "esbuild"
-
-[[plugins]]
-  package = "@netlify/blobs"
-
+# Proxy /api/* -> /.netlify/functions/*
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
-  force = true
+
+[functions]
+  node_bundler = "esbuild"
