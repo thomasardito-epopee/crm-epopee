@@ -1621,14 +1621,15 @@ async function apiRestoreAt(b,f, atISO, note){
         const arr = await apiList(b,f);
         openHistoryModal(arr, b, f);
       }
-      if(act === "restore-latest"){
-        const note = prompt("Note (optionnelle) pour cette restauration :", "");
-        await apiVersion(b,f);
-        const j = await apiRestoreLatest(b,f, note || "");
-        alert(`Restauré → nouvelle version v${j.nextVersion}`);
-        // Optionnel : recharger l'étage
-        // await onKeyChange();
-      }
+     if (act === "restore"){
+  if(!confirm(`Restaurer le snapshot du ${new Date(at).toLocaleString()} ?\n(une nouvelle version sera créée)`)) return;
+  const note = $("restoreNote")?.value || `restore @ ${at}`;
+  await apiVersion(b,f);
+  const j = await apiRestoreAt(b,f, at, note);
+  hxToast(`Restauré → version v${j.nextVersion}`);
+  // recharge l'étage si souhaité:
+  // await onKeyChange();
+}
     }catch(err){ alert("Erreur: " + String(err.message || err)); }
   });
 })();
