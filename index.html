@@ -242,10 +242,9 @@ canvas{width:100%; height:200px}
   <!-- ▼ Nouveau : bouton + menu -->
   <button class="btn" id="btnHistory">🗂️ Historique</button>
   <div id="historyMenu" class="menu" style="display:none; right:0;">
-    <button type="button" data-action="version">Version actuelle</button>
-    <button type="button" data-action="list">Lister les snapshots</button>
-    <button type="button" data-action="restore-latest">Restaurer le dernier</button>
-  </div>
+  <button type="button" data-action="list">Restaurer une autre version</button>
+</div>
+
 </div>
     </div><!-- .topbar -->
 
@@ -394,6 +393,21 @@ const COLORS = {
   maintenance:STATUS_STYLES["Maintenance"].fill, // rouge
   event:      EVENT_DEFAULT_COLOR                // rose
 };
+  // Ask PIN before a destructive action
+async function confirmAdminPin() {
+  const code = window.prompt("Saisis le code admin pour confirmer la restauration :");
+  return code === ADMIN_CODE;
+}
+
+// Full snapshot fetch (includes features)
+async function apiGetFull(b,f, atISO){
+  const r = await fetch(`/.netlify/functions/history-get?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f)}&at=${encodeURIComponent(atISO)}&full=1`, {
+    headers: { "X-User":"admin" }
+  });
+  if(!r.ok) throw new Error(`history-get(full): ${r.status}`);
+  return r.json(); // { at, note, size, data:{key, features:[...] } }
+}
+
 
 function defaultColorFor(ep){
   const lbl = String(ep.label || "")
@@ -1592,12 +1606,12 @@ async function apiRestoreAt(b,f, atISO, note){
   return j;
 }
 
-/** UI: bouton + menu */
 (function wireHistoryMenu(){
   const btn = $("btnHistory"), menu = $("historyMenu");
   if(!btn || !menu) return;
 
   function closeMenu(){ menu.style.display = "none"; }
+
   btn.addEventListener("click", (e)=>{
     e.stopPropagation();
     menu.style.display = (menu.style.display === "block" ? "none" : "block");
@@ -1605,34 +1619,20 @@ async function apiRestoreAt(b,f, atISO, note){
   });
   document.addEventListener("click", (e)=>{ if(!menu.contains(e.target) && e.target!==btn) closeMenu(); });
 
-  menu.addEventListener("click", async (e)=>{
-    const it = e.target.closest("button"); if(!it) return;
-    const act = it.dataset.action;
+  // Only one option: open list modal
+  menu.addEventListener("click", async ()=>{
     closeMenu();
-
     const { b, f } = currentBF();
     try{
-      if(act === "version"){
-        const n = await apiVersion(b,f);
-        alert(`Version actuelle de ${b} / ${f} : v${n}`);
-      }
-      if(act === "list"){
-        await apiVersion(b,f);
-        const arr = await apiList(b,f);
-        openHistoryModal(arr, b, f);
-      }
-     if (act === "restore"){
-  if(!confirm(`Restaurer le snapshot du ${new Date(at).toLocaleString()} ?\n(une nouvelle version sera créée)`)) return;
-  const note = $("restoreNote")?.value || `restore @ ${at}`;
-  await apiVersion(b,f);
-  const j = await apiRestoreAt(b,f, at, note);
-  hxToast(`Restauré → version v${j.nextVersion}`);
-  // recharge l'étage si souhaité:
-  // await onKeyChange();
-}
-    }catch(err){ alert("Erreur: " + String(err.message || err)); }
+      await apiVersion(b,f);           // refresh __historyVersion
+      const arr = await apiList(b,f);  // list snapshots
+      openHistoryModal(arr, b, f);
+    }catch(err){
+      alert("Erreur: " + String(err.message || err));
+    }
   });
 })();
+
 
 /** Modale “Historique” */
 function openHistoryModal(list, b, f){
@@ -1662,16 +1662,39 @@ function openHistoryModal(list, b, f){
     if(!at) return;
     try{
       await apiVersion(b,f);
-      if(act === "view"){
-        const snap = await apiGet(b,f, at);
-        console.log("Snapshot @", at, snap);
-        hxToast(`Snapshot du ${new Date(at).toLocaleString()} — ${snap.size} éléments.`);
-      }
-      if(act === "restore"){
-        if(!confirm(`Restaurer le snapshot du ${new Date(at).toLocaleString()} ?\n(une nouvelle version sera créée)`)) return;
-        const note = $("restoreNote")?.value || "restore from UI";
-        const j = await apiRestoreLatest(b,f, note);
-        hxToast(`Restauré → version v${j.nextVersion}`);
+    if(act === "view"){
+  // Open a simple compare window with the full snapshot (features included)
+  const snap = await apiGetFull(b,f, at);
+  const pretty = JSON.stringify(snap, null, 2);
+  const w = window.open("", "_blank");
+  if (w) {
+    w.document.write(`
+      <pre style="white-space:pre-wrap;word-break:break-word;margin:16px;font:13px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+Snapshot ${new Date(at).toLocaleString()}
+— ${snap.size||0} éléments
+${pretty}
+      </pre>
+    `);
+    w.document.close();
+  }
+  hxToast(`Snapshot du ${new Date(at).toLocaleString()} — ${snap.size||0} éléments.`);
+}
+
+if(act === "restore"){
+  // PIN first
+  const okPin = await confirmAdminPin();
+  if (!okPin) { hxToast("PIN incorrect — restauration annulée", false); return; }
+
+  if(!confirm(`Restaurer le snapshot du ${new Date(at).toLocaleString()} ?\n(une nouvelle version sera créée)`)) return;
+
+  const note = $("restoreNote")?.value || `restore @ ${at}`;
+  await apiVersion(b,f);                       // protects against stale version
+  const j = await apiRestoreAt(b,f, at, note); // ✅ correct function & timestamp
+  hxToast(`Restauré → version v${j.nextVersion}`);
+  // Optionnel : recharge l’étage
+  // await onKeyChange();
+}
+
         // Optionnel : recharger
         // await onKeyChange();
       }
