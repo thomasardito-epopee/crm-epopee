@@ -1669,7 +1669,7 @@ function openHistoryModal(list, b, f){
       if(act === "restore"){
         if(!confirm(`Restaurer le snapshot du ${new Date(at).toLocaleString()} ?\n(une nouvelle version sera créée)`)) return;
         const note = $("restoreNote")?.value || "restore from UI";
-        const j = await apiRestoreLatest(b,f, note);
+        const j = await apiRestoreAt(b, f, at, note);
         hxToast(`Restauré → version v${j.nextVersion}`);
         // Optionnel : recharger
         // await onKeyChange();
