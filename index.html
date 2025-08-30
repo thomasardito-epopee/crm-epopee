@@ -182,11 +182,19 @@ canvas{width:100%; height:200px}
   <div class="topbar">
     <div class="brand">Épopée — Exploitation</div>
     <div class="hint" id="statusText">Mode visiteur</div>
-    <div>
-      <button class="btn primary" id="btnSave">💾 Enregistrer</button>
-      <button class="btn" id="btnAdminBoard">📊 Dashboard</button>
-    </div>
+
+    <div style="position:relative">
+  <button class="btn primary" id="btnSave">💾 Enregistrer</button>
+  <button class="btn" id="btnAdminBoard">📊 Dashboard</button>
+
+  <!-- ▼ Nouveau : bouton + menu -->
+  <button class="btn" id="btnHistory">🗂️ Historique</button>
+  <div id="historyMenu" class="menu" style="display:none; right:0;">
+    <button type="button" data-action="version">Version actuelle</button>
+    <button type="button" data-action="list">Lister les snapshots</button>
+    <button type="button" data-action="restore-latest">Restaurer le dernier</button>
   </div>
+</div>
 
   <div class="layout" id="layout">
     <aside class="panel" id="leftPanel">
