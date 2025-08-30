@@ -387,6 +387,23 @@ const STATUS_STYLES = {
   "Réservé":     { color:"#bf5af2", fill:"#bf5af2" }, // ← confirmé
   "Maintenance": { color:"#ff453a", fill:"#ff453a" }
 };
+
+  // Auto open full-screen dashboard via hash
+function __openDashboardFull(){
+  const b = document.getElementById("visitorBoard");
+  if (!b) return;
+  b.classList.add("fullscreen");
+  b.style.display = "block";
+  if (typeof renderDashboard === "function") renderDashboard();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  if (location.hash === "#dashboard-full") __openDashboardFull();
+});
+window.addEventListener("hashchange", () => {
+  if (location.hash === "#dashboard-full") __openDashboardFull();
+});
+
   const EVENT_DEFAULT_COLOR = "#ff7ab6"; // ✅ Evenementiel
 const COLORS = {
   occupied:   STATUS_STYLES["Loué"].fill,        // vert
