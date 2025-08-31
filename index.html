@@ -11,35 +11,30 @@
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.14.1/dist/leaflet-geoman.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+// Auto open full-screen dashboard via hash
+function __openDashboardFull(){ const b=$("visitorBoard"); if(!b) return; b.classList.add("fullscreen"); b.style.display="block"; renderDashboard(); }
+document.addEventListener("DOMContentLoaded", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
+window.addEventListener("hashchange", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
 
-
-<!-- Librairies -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.14.1/dist/leaflet-geoman.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-
-
-<!-- Code inline séparé (pas dans un <script src="…">) -->
-<script>
-  // Auto open full-screen dashboard via hash
-  function __openDashboardFull(){
-    const b = document.getElementById("visitorBoard");
-    if (!b) return;
-    b.classList.add("fullscreen");
-    b.style.display = "block";
-    if (typeof renderDashboard === "function") renderDashboard();
-  }
-
-  document.addEventListener("DOMContentLoaded", () => {
-    if (location.hash === "#dashboard-full") __openDashboardFull();
-  });
-
-  window.addEventListener("hashchange", () => {
-    if (location.hash === "#dashboard-full") __openDashboardFull();
-  });
 </script>
 
+<link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.14.1/dist/leaflet-geoman.css">
+<script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.14.1/dist/leaflet-geoman.min.js">
+// Auto open full-screen dashboard via hash
+function __openDashboardFull(){ const b=$("visitorBoard"); if(!b) return; b.classList.add("fullscreen"); b.style.display="block"; renderDashboard(); }
+document.addEventListener("DOMContentLoaded", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
+window.addEventListener("hashchange", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
+
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js">
+// Auto open full-screen dashboard via hash
+function __openDashboardFull(){ const b=$("visitorBoard"); if(!b) return; b.classList.add("fullscreen"); b.style.display="block"; renderDashboard(); }
+document.addEventListener("DOMContentLoaded", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
+window.addEventListener("hashchange", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
+
+</script>
 
 <style>
 :root{
@@ -58,10 +53,7 @@ html,body{height:100%;margin:0;font-family:Inter,-apple-system,BlinkMacSystemFon
 .btn.primary.flash{box-shadow:0 0 0 8px rgba(10,132,255,.15)}
 .btn.success{background:var(--green);color:#fff;border-color:transparent}
 .hint{font-size:12px;color:var(--muted)}
-  
-/* Cache le libellé d'état (Mode visiteur / Mode admin) dans la topbar */
-.topbar #statusText{ display:none !important; }
-  
+
 .layout{display:grid;grid-template-columns:360px 1fr;height:calc(100vh - 56px);transition:grid-template-columns .24s ease;position:relative}
 aside.panel{background:var(--panel);border-right:1px solid var(--border);padding:14px;overflow:auto;z-index:1400}
 .layout.collapsed{grid-template-columns:0 1fr}
@@ -89,46 +81,13 @@ aside.panel{background:var(--panel);border-right:1px solid var(--border);padding
 .layout.collapsed .drawer-toggle{left:12px}
 .layout.collapsed .drawer-toggle span{transform:rotate(180deg)}
 
-/* Déplace les contrôles de zoom et la toolbar Geoman sans changer le design */
-.controls-stack{
-  position:absolute;
-  top:120px;            /* ↓ étagé pour ne pas recouvrir le menu Historique */
-  right:16px;
-  z-index:1500;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  align-items:flex-end;
-}
-
-.zoom-strip{
-  background:#fff;
-  border:1px solid var(--border);
-  border-radius:14px;
-  box-shadow:0 8px 20px rgba(0,0,0,.08);
-  display:flex;
-  overflow:hidden;
-}
-
-.zoom-btn{
-  user-select:none;
-  cursor:pointer;
-  font-weight:800;
-  min-width:44px;
-  text-align:center;
-  padding:10px 14px;
-  border-right:1px solid var(--border);
-}
-.zoom-btn:last-child{ border-right:0; }
-.zoom-btn:active{ background:#f2f2f7; }
-
-/* Position de la toolbar Geoman alignée sous le zoom */
-.leaflet-pm-toolbar{
-  top:176px !important;   /* 120 + hauteur du bloc zoom (~56) */
-  right:16px !important;
-  transform:none !important;
-  z-index:1400 !important;
-}
+/* Zoom + toolbar */
+.controls-stack{position:absolute; top:72px; right:16px; z-index:1500; display:flex; flex-direction:column; gap:8px; align-items:flex-end}
+.zoom-strip{background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:0 8px 20px rgba(0,0,0,.08);display:flex;overflow:hidden}
+.zoom-btn{user-select:none;cursor:pointer;font-weight:800;min-width:44px;text-align:center;padding:10px 14px;border-right:1px solid var(--border)}
+.zoom-btn:last-child{border-right:0}
+.zoom-btn:active{background:#f2f2f7}
+.leaflet-pm-toolbar{top:128px !important; right:16px !important; transform:none !important; z-index:1400 !important}
 
 /* Hide Geoman in visitor mode */
 body.visitor .leaflet-pm-toolbar{display:none !important}
@@ -141,11 +100,6 @@ body.visitor .leaflet-pm-toolbar{display:none !important}
 .switch input:checked ~ .knob{transform:translateX(24px)}
 .track{position:absolute;inset:0;border-radius:999px;background:#e5e5ea;transition:background .18s ease}
 .switch input:checked ~ .track{background:var(--blue)}
-  /* Cacher le bouton & le menu Historique en mode visiteur */
-body.visitor #btnHistory,
-body.visitor #historyMenu{
-  display: none !important;
-}
 
 /* PIN modal */
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;z-index:3000}
@@ -221,17 +175,6 @@ canvas{width:100%; height:200px}
 .suggest .item:hover,.suggest .item.active{background:#f5f5f7}
 .suggest .icon{opacity:.7}
 
-  /* Mini menu déroulant (Historique) */
-.menu{
-  position:absolute; top:100%; margin-top:6px; background:#fff; border:1px solid var(--border);
-  border-radius:12px; box-shadow:0 12px 30px rgba(0,0,0,.12); padding:6px; z-index:2000;
-}
-.menu button{
-  display:block; width:100%; text-align:left; border:0; background:#fff; padding:8px 10px;
-  border-radius:10px; cursor:pointer; font-size:14px;
-}
-.menu button:hover{ background:#f5f5f7; }
-  
 </style>
 </head>
 <body class="visitor">
@@ -239,19 +182,11 @@ canvas{width:100%; height:200px}
   <div class="topbar">
     <div class="brand">Épopée — Exploitation</div>
     <div class="hint" id="statusText">Mode visiteur</div>
-
-    <div style="position:relative">
-  <button class="btn primary" id="btnSave">💾 Enregistrer</button>
-  <button class="btn" id="btnAdminBoard">📊 Dashboard</button>
-
-  <!-- ▼ Nouveau : bouton + menu -->
-  <button class="btn" id="btnHistory">🗂️ Historique</button>
-  <div id="historyMenu" class="menu" style="display:none; right:0;">
-  <button type="button" data-action="list">Restaurer une autre version</button>
-</div>
-
-</div>
-    </div><!-- .topbar -->
+    <div>
+      <button class="btn primary" id="btnSave">💾 Enregistrer</button>
+      <button class="btn" id="btnAdminBoard">📊 Dashboard</button>
+    </div>
+  </div>
 
   <div class="layout" id="layout">
     <aside class="panel" id="leftPanel">
@@ -367,18 +302,7 @@ canvas{width:100%; height:200px}
 
 <!-- Autocomplete container (now inside the tenant field) -->
 <div id="tenantSuggest" class="suggest" role="listbox" aria-label="Suggestions de résidents"></div>
-  <!-- ▼ Modale Historique -->
-<div class="modal" id="historyModal" aria-hidden="true">
-  <div class="pad" role="dialog" aria-modal="true" style="max-width:560px">
-    <h4>Historique de l’étage</h4>
-    <div id="historyList" class="table" style="margin-top:8px;max-height:340px;overflow:auto;border:1px solid var(--border);border-radius:12px"></div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
-      <input id="restoreNote" class="input" placeholder="Note de restauration (optionnel)" style="flex:1">
-      <button class="btn" id="historyClose">Fermer</button>
-    </div>
-    <div id="historyToast" class="hint" style="margin-top:8px"></div>
-  </div>
-</div>
+
 <script>
 // ===== Config
 const ADMIN_CODE = "1812";
@@ -389,23 +313,6 @@ const STATUS_STYLES = {
   "Réservé":     { color:"#bf5af2", fill:"#bf5af2" }, // ← confirmé
   "Maintenance": { color:"#ff453a", fill:"#ff453a" }
 };
-
-  // Auto open full-screen dashboard via hash
-function __openDashboardFull(){
-  const b = document.getElementById("visitorBoard");
-  if (!b) return;
-  b.classList.add("fullscreen");
-  b.style.display = "block";
-  if (typeof renderDashboard === "function") renderDashboard();
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  if (location.hash === "#dashboard-full") __openDashboardFull();
-});
-window.addEventListener("hashchange", () => {
-  if (location.hash === "#dashboard-full") __openDashboardFull();
-});
-
   const EVENT_DEFAULT_COLOR = "#ff7ab6"; // ✅ Evenementiel
 const COLORS = {
   occupied:   STATUS_STYLES["Loué"].fill,        // vert
@@ -471,7 +378,7 @@ let isAdmin = false;
 let activeStatuses = new Set(ALL_STATUSES);
 let searchText = "";
 let currentKey = "";
-let showEvent = true; // Événementiel affiché (en couleur) par défaut
+let filterEventOnly = false; // filtre Type: Evenementiel
 
 // ===== Helpers
 const $ = (id)=>document.getElementById(id);
@@ -582,14 +489,8 @@ function fromPlain(o){
 function exportGeo(){ return { key: currentKey, features: drawn.getLayers().map(toPlain) }; }
 function importGeo(data){ drawn.clearLayers(); (data?.features||[]).forEach(fromPlain); }
 async function saveLocal(){
-  // 1) capture la clé et l'état AU MOMENT de l'appel
-const keyNow = currentKey;                          // ← fige la clé
-const featuresNow = drawn.getLayers().map(toPlain); // ← fige les features
-const payload = { key: keyNow, features: featuresNow };
-
-// Écrit le cache local pour la bonne clé
-localStorage.setItem(storageKey(keyNow), JSON.stringify(payload));
-
+  // 1) cache offline
+  localStorage.setItem(storageKey(currentKey), JSON.stringify(exportGeo()));
 
   // 2) sync BDD (si admin + token)
   try{
@@ -610,15 +511,11 @@ localStorage.setItem(storageKey(keyNow), JSON.stringify(payload));
     $("statusText").textContent = "Sauvegardé en local (offline) ☁️";
     setTimeout(()=> $("statusText").textContent = isAdmin ? "Mode admin" : "Mode visiteur", 1200);
   }
-planSnapshot("auto"); // déclencheur d'un snapshot côté serveur
+
   updateBoard && updateBoard();
 }
 
 async function loadLocal(k){
-  // ✅ 1st: préférer le cache local pour éviter le "revenant"
-  const cached = loadFromCache(k);
-  if (cached) return cached;
-  // (sinon, on tente la lecture distante)
   try{
     const [building, floor] = k.split("|");
     const res = await fetch(`/api/spaces?building=${encodeURIComponent(building)}&floor=${encodeURIComponent(floor)}`);
@@ -635,7 +532,6 @@ async function loadLocal(k){
   try{ return JSON.parse(localStorage.getItem(storageKey(k))||"null"); }
   catch(e){ return null; }
 }
-
 
 
 function setLabelValue(val){
@@ -767,14 +663,8 @@ $("btnApply").onclick = ()=>{
   setTimeout(()=>{ b.textContent=orig; b.classList.remove("success","flash"); }, 900);
 };
 
-$("btnDelete").onclick = ()=>{ 
-  if(currentLayer){ 
-    drawn.removeLayer(currentLayer); 
-    currentLayer=null; 
-    saveLocal(); 
-    planSnapshot("delete");   // ← ajoute cette ligne
-  } 
-};
+$("btnDelete").onclick = ()=>{ if(currentLayer){ drawn.removeLayer(currentLayer); currentLayer=null; saveLocal(); } };
+$("btnDup").onclick = ()=>{ if(!currentLayer) return; const p=toPlain(currentLayer); p.latlngs=p.latlngs.map(r=> r.map(ll=> L.latLng(ll.lat+20,ll.lng+20))); fromPlain(p); saveLocal(); };
 
 // ===== Plan loading (logic conservé mais UI masquée)
 const planFile = $("planFile");
@@ -843,13 +733,11 @@ function setBaseImage(src, dim){
 function rebuildTypeChips(){
   const wrap = $("typeChips"); if(!wrap) return;
   wrap.innerHTML="";
-  const id = "chip_event_type";
-  const lab = document.createElement("label"); lab.className = "chip";
-  // ✅ coché par défaut
-  lab.innerHTML = `<input type="checkbox" id="${id}" checked> Événementiel`;
+  const id="chip_event_type";
+  const lab=document.createElement("label"); lab.className="chip";
+  lab.innerHTML=`<input type="checkbox" id="${id}"> Événementiel`;
   wrap.appendChild(lab);
-  // ✅ quand décoché → on grise les Evenementiel
-  $(id).onchange = (e)=>{ showEvent = !!e.target.checked; updateGreying(); updateBoard && updateBoard(); };
+  $(id).onchange = (e)=>{ filterEventOnly = !!e.target.checked; updateGreying(); };
 }
 
 function rebuildStatusChips(){
@@ -868,8 +756,7 @@ function updateGreying(){
     const matches=activeStatuses.has(ep.status||"Vacant");
     const text=`${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
     const matchText = !searchText || text.includes(searchText);
-// ✅ si showEvent=false → on ne “colorise” pas les Evenementiel
-const typeOk = showEvent || (ep.label !== "Evenementiel");
+    const typeOk = !filterEventOnly || (ep.label === "Evenementiel");
     const ok = matches && matchText && typeOk;
     if(ok){ l.setStyle(normalStyleFor(l)); }
     else{ l.setStyle(greyStyle()); }
@@ -958,25 +845,21 @@ function syncMode(){
   $("statusText").textContent = isAdmin ? "Mode admin" : "Mode visiteur";
   $("adminSection").style.display = isAdmin ? "block" : "none";
   $("btnPlan") && ($("btnPlan").disabled = !isAdmin);
-// Afficher/masquer l'Historique selon le mode
-$("btnHistory") && ($("btnHistory").style.display = isAdmin ? "" : "none");
-$("historyMenu") && ( $("historyMenu").style.display = isAdmin ? $("historyMenu").style.display : "none");
 
   document.body.classList.toggle('visitor', !isAdmin);
   document.body.classList.toggle('admin', isAdmin);
 
- if (isAdmin){
-  $("layout").classList.remove("collapsed");
-} else {
-  // ✅ en visiteur : panneau OUVERT par défaut
-  $("layout").classList.remove("collapsed");
-  map.pm.disableGlobalEditMode();
-  map.pm.disableGlobalRemovalMode && map.pm.disableGlobalRemovalMode();
-  map.pm.disableDraw('Polygon');
-  map.pm.disableDraw('Rectangle');
-  drawn.eachLayer(l=>{ if(l.pm && l.pm.disable){ l.pm.disable(); } });
-  currentLayer = null;
-}
+  if (isAdmin){
+    $("layout").classList.remove("collapsed");
+  } else {
+    $("layout").classList.add("collapsed");
+    map.pm.disableGlobalEditMode();
+    map.pm.disableGlobalRemovalMode && map.pm.disableGlobalRemovalMode();
+    map.pm.disableDraw('Polygon');
+    map.pm.disableDraw('Rectangle');
+    drawn.eachLayer(l=>{ if(l.pm && l.pm.disable){ l.pm.disable(); } });
+    currentLayer = null;
+  }
 
   mountGeoman();
 }
@@ -996,9 +879,11 @@ async function onKeyChange(){
   const b = buildingSelect.value, f = floorSelect.value;
   currentKey = keyFor(b,f);
 
-    // charge d'abord le cache (déjà priorisé dans loadLocal)
+  // on attend la lecture distante (qui met aussi à jour le cache)
   const data = await loadLocal(currentKey);
-  importGeo(data || { features: [] });
+
+  // on importe la data distante si présente, sinon le cache local, sinon vide
+  importGeo(data || loadFromCache(currentKey) || { features: [] });
 
   await tryPreload(b,f);
   updateBoard();
@@ -1223,7 +1108,7 @@ function drawBars(canvas, labels, values, colors = ["#0a84ff"]){
 
 // Dashboard rendering
 function renderDashboard(){
-  const board = $("visitorBoard");
+    const board = $("visitorBoard");
   let scopeSel = board.querySelector('#kpiScope');
   const curB = buildingSelect.value;
   const scope = scopeSel ? scopeSel.value : 'building';
@@ -1239,7 +1124,7 @@ function renderDashboard(){
       </div>
     </div>
     <div class="board-actions"><button class="iconbtn" id="boardPop" title="Ouvrir dans un nouvel onglet">↗</button><button class="iconbtn" id="boardClose" title="Fermer">✕</button></div>
-    <div class="kpis" id="kpis"></div>
+        <div class="kpis" id="kpis"></div>
 
     <div class="grid2">
       <div class="card">
@@ -1279,20 +1164,19 @@ function renderDashboard(){
   $("kpiScope").onchange = ()=> renderDashboard();
 
   const feats = getFeaturesForScope($("kpiScope").value);
+// applique exactement les mêmes filtres que sur la carte
+const featsFiltered = feats.filter(fe=>{
+  const ep = (fe.options && fe.options.ep) || {};
+  const matchesStatus = activeStatuses.has(ep.status || "Vacant");
+  const isEvent = (ep.label === "Evenementiel");
+  const typeOk = !filterEventOnly || isEvent;
+  const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
+  const matchText = !searchText || text.includes(searchText);
+  return matchesStatus && typeOk && matchText;
+});
+const S = aggStats(featsFiltered);
 
-  // applique exactement les mêmes filtres que sur la carte
-  const featsFiltered = feats.filter(fe=>{
-    const ep = (fe.options && fe.options.ep) || {};
-    const matchesStatus = activeStatuses.has(ep.status || "Vacant");
-    const isEvent = (ep.label === "Evenementiel");
-    const typeOk = showEvent || !isEvent;  // si showEvent=false, on exclut Evenementiel
-    const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
-    const matchText = !searchText || text.includes(searchText);
-    return matchesStatus && typeOk && matchText;
-  });
-  const S = aggStats(featsFiltered);
 
-  // KPIs
   const kpisEl = $("kpis");
   kpisEl.innerHTML = `
     <div class="kpi"><div class="v">${S.occupiedCount} <span class="subl">(${S.occupiedPct}%)</span></div><div class="l">Bureaux occupés</div></div>
@@ -1304,36 +1188,44 @@ function renderDashboard(){
     <div class="kpi"><div class="v">${Math.round(S.euroPerPost)} €</div><div class="l">€ / poste (moyenne)</div></div>
   `;
 
-  // Donut statuts
-  const statusLabels = ["Loué","Préavis","Vacant","Réservé","Maintenance"];
-  const statusParts  = statusLabels.map(s => S.counts[s] || 0);
-  const statusColors = statusLabels.map(s => STATUS_STYLES[s].fill);
-  drawDonut($("chartStatusCount"), statusParts, statusColors, String(S.totalSpaces || 0));
-  const total = S.totalSpaces || 1;
-  $("legendStatus").innerHTML = statusLabels.map((lab,i)=>{
-    const v = statusParts[i] || 0;
-    if(!v) return "";
-    const pct = Math.round(v*1000/total)/10;
-    return `<div class="item"><span class="dot" style="background:${statusColors[i]}"></span>${lab} — ${v} (${pct}%)</div>`;
-  }).join("");
+ // --- Répartition par statut (nb espaces)
+const statusLabels = ["Loué","Préavis","Vacant","Réservé","Maintenance"];
+const statusParts  = statusLabels.map(s => S.counts[s] || 0);
 
-  // m² occupés vs vacants
-  const occ = S.areaOcc || 0, vac = S.areaVac || 0, totA = (occ + vac) || 1;
-  const occPct = Math.round(occ*1000/totA)/10;
-  drawDonut(
-    $("chartAreaOccVac"),
-    [occ, vac],
-    [STATUS_STYLES["Loué"].fill, STATUS_STYLES["Vacant"].fill],
-    `${Math.round(occPct)}%`
-  );
-  $("legendArea").innerHTML = `
-    <div class="item"><span class="dot" style="background:${STATUS_STYLES["Loué"].fill}"></span>
-      Occupés — ${Math.round(occ)} m² (${occPct}%)</div>
-    ${vac>0 ? `<div class="item"><span class="dot" style="background:${STATUS_STYLES["Vacant"].fill}"></span>
-      Vacants — ${Math.round(vac)} m² (${Math.round(vac*1000/totA)/10}%)</div>` : ""}
-  `;
+// Couleurs : statuts natifs ; si filtre Événementiel, "Réservé" en rose
+const statusColors = statusLabels.map(s =>
+  (s === "Réservé" && filterEventOnly) ? EVENT_DEFAULT_COLOR : STATUS_STYLES[s].fill
+);
 
-  // Top 5 résidents (barres)
+drawDonut($("chartStatusCount"), statusParts, statusColors, String(S.totalSpaces || 0));
+
+const total = S.totalSpaces || 1;
+$("legendStatus").innerHTML = statusLabels.map((lab,i)=>{
+  const v = statusParts[i] || 0;
+  if(!v) return "";
+  const pct = Math.round(v*1000/total)/10;
+  return `<div class="item"><span class="dot" style="background:${statusColors[i]}"></span>${lab} — ${v} (${pct}%)</div>`;
+}).join("");
+
+  // --- m² occupés vs vacants
+const occ = S.areaOcc || 0, vac = S.areaVac || 0, totA = (occ + vac) || 1;
+const occPct = Math.round(occ*1000/totA)/10, vacPct = Math.round(vac*1000/totA)/10;
+
+// Vert = Loué, Orange = Vacant (cohérent statuts/carte)
+drawDonut(
+  $("chartAreaOccVac"),
+  [occ, vac],
+  [STATUS_STYLES["Loué"].fill, STATUS_STYLES["Vacant"].fill],
+  `${Math.round(occPct)}%`
+);
+
+$("legendArea").innerHTML = `
+  <div class="item"><span class="dot" style="background:${STATUS_STYLES["Loué"].fill}"></span>
+    Occupés — ${Math.round(occ)} m² (${occPct}%)</div>
+  ${vac>0 ? `<div class="item"><span class="dot" style="background:${STATUS_STYLES["Vacant"].fill}"></span>
+    Vacants — ${Math.round(vac)} m² (${vacPct}%)</div>` : ""}
+`;
+
   const topSel = $("topMode");
   const savedMode = window.TOP_TENANTS_MODE || "count";
   if(topSel){ topSel.value = savedMode; topSel.onchange = (e)=>{ window.TOP_TENANTS_MODE = e.target.value; renderDashboard(); }; }
@@ -1341,51 +1233,52 @@ function renderDashboard(){
   const topData = (mode==="area" ? (S.tenantsAreaArr||[]) : (S.tenantsArr||[]));
   const labels = topData.map(t=> t.tenant);
   const values = topData.map(t=> mode==="area" ? Math.round(t.area||0) : t.count);
-  const barColorContext = STATUS_STYLES["Loué"].fill;
-  drawBars($("chartTopTenants"), labels, values, [barColorContext]);
+  const barColorContext = filterEventOnly ? EVENT_DEFAULT_COLOR : STATUS_STYLES["Loué"].fill;
+drawBars($("chartTopTenants"), labels, values, [barColorContext]);
+  
+  // Posts donut
+  // --- Postes occupés vs vacants
+const pOcc = S.occPosts || 0, pVac = S.vacPosts || 0, pTot = (pOcc + pVac) || 1;
+const pOccPct = Math.round(pOcc*1000/pTot)/10, pVacPct = Math.round(pVac*1000/pTot)/10;
 
-  // Postes occupés vs vacants
-  const pOcc = S.occPosts || 0, pVac = S.vacPosts || 0, pTot = (pOcc + pVac) || 1;
-  const pOccPct = Math.round(pOcc*1000/pTot)/10;
-  if ((pOcc + pVac) > 0){
-    drawDonut(
-      $("chartPostsOccVac"),
-      [pOcc, pVac],
-      [STATUS_STYLES["Loué"].fill, STATUS_STYLES["Vacant"].fill],
-      `${Math.round(pOccPct)}%`
-    );
-    $("legendPosts").innerHTML = `
-      <div class="item"><span class="dot" style="background:${STATUS_STYLES["Loué"].fill}"></span>
-        Occupés — ${pOcc} (${pOccPct}%)</div>
-      ${pVac>0 ? `<div class="item"><span class="dot" style="background:${STATUS_STYLES["Vacant"].fill}"></span>
-        Vacants — ${pVac} (${Math.round(pVac*1000/pTot)/10}%)</div>` : ""}
-    `;
-  } else {
-    const cv = $("chartPostsOccVac"); const ctx = cv.getContext("2d");
-    ctx.clearRect(0,0,cv.width,cv.height);
-    ctx.font = "14px Inter,system-ui"; ctx.fillStyle="#6e6e73"; ctx.textAlign="center";
-    ctx.fillText("Aucune donnée de postes", cv.width/2, 24);
-    $("legendPosts").innerHTML = ``;
-  }
+if ((pOcc + pVac) > 0){
+  drawDonut(
+    $("chartPostsOccVac"),
+    [pOcc, pVac],
+    [STATUS_STYLES["Loué"].fill, STATUS_STYLES["Vacant"].fill],
+    `${Math.round(pOccPct)}%`
+  );
+  $("legendPosts").innerHTML = `
+    <div class="item"><span class="dot" style="background:${STATUS_STYLES["Loué"].fill}"></span>
+      Occupés — ${pOcc} (${pOccPct}%)</div>
+    ${pVac>0 ? `<div class="item"><span class="dot" style="background:${STATUS_STYLES["Vacant"].fill}"></span>
+      Vacants — ${pVac} (${pVacPct}%)</div>` : ""}
+  `;
+} else {
+  const cv = $("chartPostsOccVac"); const ctx = cv.getContext("2d");
+  ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.font = "14px Inter,system-ui"; ctx.fillStyle="#6e6e73"; ctx.textAlign="center";
+  ctx.fillText("Aucune donnée de postes", cv.width/2, 24);
+  $("legendPosts").innerHTML = ``;
+}
 
-  // Top loyers par résident
+  // Top 5 loyers par résident
   const topRent = (S.tenantsRentArr||[]);
   if (topRent.length){
-    const barColorContext = STATUS_STYLES["Loué"].fill;
-    drawBars(
-      $("chartTopRent"),
-      topRent.map(t => t.tenant),
-      topRent.map(t => Math.round(t.rent || 0)),
-      [barColorContext]
-    );
-  } else {
-    const c = $("chartTopRent"); const ctx = c.getContext("2d");
-    ctx.clearRect(0,0,c.width,c.height);
-    ctx.font="14px Inter,system-ui"; ctx.fillStyle="#6e6e73"; ctx.textAlign="center";
-    ctx.fillText("Aucun loyer renseigné", c.width/2, 24);
-  }
+  const barColorContext = filterEventOnly ? EVENT_DEFAULT_COLOR : STATUS_STYLES["Loué"].fill;
+  drawBars(
+    $("chartTopRent"),
+    topRent.map(t => t.tenant),
+    topRent.map(t => Math.round(t.rent || 0)),
+    [barColorContext]
+  );
+} else {
+  const c = $("chartTopRent"); const ctx = c.getContext("2d");
+  ctx.clearRect(0,0,c.width,c.height);
+  ctx.font="14px Inter,system-ui"; ctx.fillStyle="#6e6e73"; ctx.textAlign="center";
+  ctx.fillText("Aucun loyer renseigné", c.width/2, 24);
+}
 
-  // Liste “Réservés”
   const r = $("reservedList");
   if(!S.reservedList || S.reservedList.length===0){
     r.innerHTML = '<div class="hint">Aucun espace réservé.</div>';
@@ -1395,167 +1288,13 @@ function renderDashboard(){
       .map(v=> `<div class="rowlist"><div>${v.code} — ${v.label}</div><div class="badge">${v.area||0} m²</div><div class="badge">Réservé</div></div>`)
       .join('');
   }
-
   wireBoardActions();
 }
 
 // initial hidden dashboard
 const board=$("visitorBoard");
 board.style.display="none";
-// ===== Historique — Netlify Functions bindings =====
-let __historyVersion = 0; // version courante (mise à jour via floor-version)
 
-function currentBF(){ return { b: buildingSelect.value, f: floorSelect.value }; }
-function hxToast(msg, ok=true){
-  const t = $("historyToast"); if(!t) return;
-  t.textContent = msg;
-  t.style.color = ok ? "#075985" : "#991b1b";
-}
-
-/** API wrappers */
-async function apiVersion(b,f){
-  const r = await fetch(`/.netlify/functions/floor-version?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f)}`, {
-    headers: { "X-User":"admin" }
-  });
-  if(!r.ok) throw new Error(`floor-version: ${r.status}`);
-  const j = await r.json();
-  __historyVersion = j.version_n ?? 0;
-  return __historyVersion;
-}
-async function apiList(b,f){
-  const r = await fetch(`/.netlify/functions/history-list?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f)}`, {
-    headers: { "X-User":"admin" }
-  });
-  if(!r.ok) throw new Error(`history-list: ${r.status}`);
-  return r.json();
-}
-async function apiGet(b,f, atISO){
-  const r = await fetch(`/.netlify/functions/history-get?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f)}&at=${encodeURIComponent(atISO)}`, {
-    headers: { "X-User":"admin" }
-  });
-  if(!r.ok) throw new Error(`history-get: ${r.status}`);
-  return r.json();
-}
-async function apiRestoreAt(b,f, atISO, note){
-  const r = await fetch(`/.netlify/functions/history-restore?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f)}&at=${encodeURIComponent(atISO)}`, {
-    method: "POST",
-    headers: {
-      "X-User": "admin",
-      "If-Match-Version": String(__historyVersion || 0),
-      "X-Commit-Note": note || `restore @ ${atISO}`
-    }
-  });
-  if (r.status === 409) throw new Error("409: version a changé entre-temps");
-  if (!r.ok){ const txt = await r.text().catch(()=> ""); throw new Error(`restore: ${r.status} ${txt}`); }
-  const j = await r.json();
-  __historyVersion = j.nextVersion || (__historyVersion + 1);
-  return j;
-}
-
-/** UI: bouton + menu */
-(function wireHistoryMenu(){
-  const btn = $("btnHistory"), menu = $("historyMenu");
-  if(!btn || !menu) return;
-
-  function closeMenu(){ menu.style.display = "none"; }
-  btn.addEventListener("click", (e)=>{
-    e.stopPropagation();
-    menu.style.display = (menu.style.display === "block" ? "none" : "block");
-    menu.style.right = "0";
-  });
-  document.addEventListener("click", (e)=>{ if(!menu.contains(e.target) && e.target!==btn) closeMenu(); });
-
-  menu.addEventListener("click", async (e)=>{
-    const it = e.target.closest("button"); if(!it) return;
-    const act = it.dataset.action;
-    closeMenu();
-
-    const { b, f } = currentBF();
-    try{
-      if(act === "version"){
-        const n = await apiVersion(b,f);
-        alert(`Version actuelle de ${b} / ${f} : v${n}`);
-      }
-      if(act === "list"){
-        await apiVersion(b,f);
-        const arr = await apiList(b,f);
-        openHistoryModal(arr, b, f);
-      }
-     if (act === "restore"){
-  if(!confirm(`Restaurer le snapshot du ${new Date(at).toLocaleString()} ?\n(une nouvelle version sera créée)`)) return;
-  const note = $("restoreNote")?.value || `restore @ ${at}`;
-  await apiVersion(b,f);
-  const j = await apiRestoreAt(b,f, at, note);
-  hxToast(`Restauré → version v${j.nextVersion}`);
-  // recharge l'étage si souhaité:
-  // await onKeyChange();
-}
-    }catch(err){ alert("Erreur: " + String(err.message || err)); }
-  });
-})();
-
-/** Modale “Historique” */
-function openHistoryModal(list, b, f){
-  const modal = $("historyModal"), box = $("historyList"), closeBtn = $("historyClose");
-  if(!modal || !box) return;
-
-  if(!Array.isArray(list) || list.length===0){
-    box.innerHTML = `<div class="hint" style="padding:12px">Aucun snapshot pour ${b} / ${f}.</div>`;
-  }else{
-    const rows = list.map(it=>{
-      const date = new Date(it.created_at).toLocaleString();
-      const note = it.note ? ` — ${it.note}` : "";
-      return `
-        <div class="rowlist">
-          <div><strong>${date}</strong><div class="hint">par ${it.created_by} • ${it.size} éléments${note}</div></div>
-          <button class="btn" data-at="${it.created_at}" data-act="view">Voir</button>
-          <button class="btn success" data-at="${it.created_at}" data-act="restore">Restaurer</button>
-        </div>
-      `;
-    }).join("");
-    box.innerHTML = rows;
-  }
-
-  box.onclick = async (e)=>{
-    const btn = e.target.closest("button"); if(!btn) return;
-    const at = btn.dataset.at; const act = btn.dataset.act;
-    if(!at) return;
-    try{
-      await apiVersion(b,f);
-      if(act === "view"){
-        const snap = await apiGet(b,f, at);
-        console.log("Snapshot @", at, snap);
-        hxToast(`Snapshot du ${new Date(at).toLocaleString()} — ${snap.size} éléments.`);
-      }
-      if(act === "restore"){
-        if(!confirm(`Restaurer le snapshot du ${new Date(at).toLocaleString()} ?\n(une nouvelle version sera créée)`)) return;
-        const note = $("restoreNote")?.value || "restore from UI";
-        const j = await apiRestoreAt(b, f, at, note);
-        hxToast(`Restauré → version v${j.nextVersion}`);
-        // Optionnel : recharger
-        // await onKeyChange();
-      }
-    }catch(err){
-      if(String(err).includes("409")) hxToast("Conflit: l’étage a changé entre-temps. Rouvre la liste et réessaie.", false);
-      else hxToast("Erreur: " + String(err.message || err), false);
-    }
-  };
-
-  modal.classList.add("open");
-  $("historyClose").onclick = ()=> modal.classList.remove("open");
-  modal.addEventListener("click", (e)=>{ if(e.target===modal) modal.classList.remove("open"); });
-}
-
-/** Suivre le changement d'étage pour garder la version à jour */
-async function refreshHistoryVersion(){
-  const { b, f } = currentBF();
-  try{ await apiVersion(b,f); }catch{}
-}
-document.addEventListener('DOMContentLoaded', refreshHistoryVersion);
-buildingSelect.addEventListener('change', refreshHistoryVersion);
-floorSelect.addEventListener('change', refreshHistoryVersion);
-
-  
 // ===== Shortcuts — suppression clavier sans interférer avec les champs
 document.addEventListener('keydown', (e)=>{
   const tag = (e.target && e.target.tagName || "").toLowerCase();
@@ -1574,80 +1313,6 @@ document.addEventListener('keydown', (e)=>{
   }
   if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='s'){ e.preventDefault(); saveLocal(); }
 });
-  // ===== Auto-snapshots (Google Docs-like) =====
-let __lastSnapshotAt = 0;
-let __lastSnapshotHash = "";
-let __snapshotTimer = null;
-
-// Réglages
-
-const SNAPSHOT_DEBOUNCE_MS     = 5000;   // 5 s après la dernière modif
-const SNAPSHOT_MIN_INTERVAL_MS = 60000;  // 1 min (au lieu de 5) pour tes tests
-const SNAPSHOT_MAX_RETRY       = 1;      // ✅ manquait → causait un crash
-
-
-// Hash simple pour éviter les doublons (peut être remplacé par un vrai SHA1)
-function hashState(obj){
-  try { return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).slice(0,64); }
-  catch { return String(Math.random()); }
-}
-
-async function sendSnapshot(reason="auto"){
-  const now = Date.now();
-  if (now - __lastSnapshotAt < SNAPSHOT_MIN_INTERVAL_MS) return; // rate-limit
-
-  const data = exportGeo();
-  const h = hashState(data);
-  if (h === __lastSnapshotHash) return; // rien n'a changé
-
-  const [building, floor] = (currentKey || "").split("|");
-  if (!building || !floor) return;
-
-  // Assure une version à jour
-  try { await apiVersion(building, floor); } catch {}
-
-  const note = `${reason} @ ${new Date().toLocaleTimeString()}`;
-  const payload = { building, floor, features: data.features, note };
-
-  let tries = 0;
-  while (tries <= SNAPSHOT_MAX_RETRY){
-    try{
-      const r = await fetch(`/.netlify/functions/history-save`, {
-        method: "POST",
-        headers: {
-          "content-type":"application/json",
-          "X-User":"admin",
-          "If-Match-Version": String(__historyVersion || 0)
-        },
-        body: JSON.stringify(payload)
-      });
-      if (r.status === 409){
-        // Conflit de version -> on resynchronise et on retente une fois
-        tries++; 
-        await apiVersion(building, floor);
-        if (tries > SNAPSHOT_MAX_RETRY) throw new Error("409 after retry");
-        continue;
-      }
-      if (!r.ok) throw new Error(`history-save: ${r.status}`);
-      const j = await r.json();
-      __historyVersion = j.nextVersion ?? (__historyVersion + 1);
-      __lastSnapshotAt = now;
-      __lastSnapshotHash = h;
-      $("statusText").textContent = "Version enregistrée (auto) ✓";
-      setTimeout(()=> $("statusText").textContent = isAdmin ? "Mode admin" : "Mode visiteur", 900);
-      return;
-    }catch(err){
-      console.warn("history-save KO:", err);
-      break;
-    }
-  }
-}
-
-function planSnapshot(reason="auto"){
-  clearTimeout(__snapshotTimer);
-  __snapshotTimer = setTimeout(()=> sendSnapshot(reason), SNAPSHOT_DEBOUNCE_MS);
-}
-
 
 function updateBoard(){ if(board.style.display!=="none"){ renderDashboard(); } }
 
@@ -1751,6 +1416,7 @@ document.addEventListener("click", (e)=>{
 function __openDashboardFull(){ const b=$("visitorBoard"); if(!b) return; b.classList.add("fullscreen"); b.style.display="block"; renderDashboard(); }
 document.addEventListener("DOMContentLoaded", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
 window.addEventListener("hashchange", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
+
 </script>
 </body>
 </html>
