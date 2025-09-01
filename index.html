@@ -1239,13 +1239,11 @@ function renderDashboardFull(){
     `<option value="all"${currentScope==='all'?' selected':''}>Village (tous)</option>`
   ].join('');
 
-  // ✅ (1) SUPPRIME le champ "Chercher un code" en plein écran
   board.innerHTML = `
-  board.innerHTML = `
-  <div class="board-actions">
-    <button class="iconbtn" id="boardMin"   title="Réduire">⤢</button>
-    <button class="iconbtn" id="boardClose" title="Fermer">✕</button>
-  </div>
+    <div class="board-actions">
+      <button class="iconbtn" id="boardMin"   title="Réduire">⤢</button>
+      <button class="iconbtn" id="boardClose" title="Fermer">✕</button>
+    </div>
     <div class="fs-toolbar">
       <div class="fs-left">
         <strong style="font-size:14px">Dashboard</strong>
@@ -1260,7 +1258,6 @@ function renderDashboardFull(){
         <button class="btn" id="boardBack">←</button>
       </div>
     </div>
-
     <div class="grid-kpis-4" id="kpisFS"></div>
 
     <div class="grid2" style="margin-top:10px">
