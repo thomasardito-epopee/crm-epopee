@@ -1402,6 +1402,13 @@ function drawBars(canvas, labels, values, colors = ["#0a84ff"]){
 // ===== Dashboard (renders + CLICKABLE legend)
 function renderDashboard(){
   const board = $("visitorBoard");
+  if (board && board.classList.contains("fullscreen")) {  // <-- plein écran : nouveau rendu
+    return renderDashboardFull();
+  }
+  const scopeSel = board.querySelector('#kpiScope');
+  // ... (la suite de ta version "panneau" ne change pas)
+   
+  const board = $("visitorBoard");
   let scopeSel = board.querySelector('#kpiScope');
  // construit la portée courante + les <option>
 const currentScope = scopeSel ? scopeSel.value : buildingSelect.value; // A, B, … ou "all"
