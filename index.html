@@ -841,7 +841,29 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Save & Dashboard button
 $("btnSave").onclick = ()=>{ saveLocal(); };
-$("btnAdminBoard").onclick = ()=>{ const b=$("visitorBoard"); b.style.display = (b.style.display==="none"||!b.style.display) ? "block":"none"; if(b.style.display!=="none"){ renderDashboard(); } };
+
+// Toggle: afficher le Dashboard dans le panneau gauche
+$("btnAdminBoard").onclick = ()=>{
+  const b = $("visitorBoard");
+  const left = $("leftPanel");
+
+  // Bascule du mode
+  const activating = !document.body.classList.contains("board-mode");
+  document.body.classList.toggle("board-mode", activating);
+
+  if (activating){
+    // On place le board DANS le panneau
+    if (b.parentElement !== left) left.appendChild(b);
+    b.classList.remove("fullscreen");
+    b.classList.add("in-panel");
+    b.style.display = "block";
+    renderDashboard();
+  } else {
+    // On cache le board et on rend le panneau d'édition
+    b.classList.remove("in-panel","fullscreen");
+    b.style.display = "none";
+  }
+};
 
 function euro(n){ const v=Number(n||0); const hasCents=Math.abs(v-Math.round(v))>1e-6; return v.toLocaleString('fr-FR',{minimumFractionDigits:hasCents?2:0, maximumFractionDigits:2}); }
 
