@@ -1557,7 +1557,13 @@ function showStatusList(status){
   openStatusModal(status, items);
 }
 
-function updateBoard(){ if(board.style.display!=="none"){ renderDashboard(); } }
+function updateBoard(){
+  const b = $("visitorBoard");
+  if (b && b.style.display !== "none") {
+    renderDashboard();
+  }
+}
+
 
 // Autocomplete
 const tnInput = $("fTenant");
