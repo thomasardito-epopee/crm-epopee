@@ -1556,11 +1556,14 @@ function showStatusList(status){
 
 function updateBoard(){
   const b = $("visitorBoard");
-  if (b && b.style.display !== "none") {
-    renderDashboard();
-  }
-}
+  if (!b) return;
+  const visible =
+    document.body.classList.contains("board-mode") ||  // dashboard dans le panneau
+    b.classList.contains("fullscreen") ||              // mode plein écran
+    b.style.display === "block";                       // visible en overlay
 
+  if (visible) renderDashboard();
+}
 
 // Autocomplete
 const tnInput = $("fTenant");
