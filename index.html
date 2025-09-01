@@ -1196,48 +1196,6 @@ function focusSpaceByCode(code){
     setTimeout(()=> s.textContent = old, 1200);
   }
 }
-
-// --- Bascule automatiquement vers b|f puis focus l’espace
-async function switchToKeyAndFocus(key, code){
-  const [b,f] = key.split("|");
-  if (!BUILDING_FLOORS[b] || !(BUILDING_FLOORS[b]||[]).includes(f)) return;
-
-  // Bascule sélecteurs
-  buildingSelect.value = b;
-  buildFloorOptions(b);
-  floorSelect.value = f;
-
-  // Recharge le plan puis focus
-  await onKeyChange();
-  focusSpaceByCode(code);
-}
-
-    const btnHtml = onThisFloor
-      ? `<button class="btn pill primary" data-goto="${code}">Voir</button>`
-      : `<button class="btn pill primary" data-goto="${code}" data-goto-key="${key}">Ouvrir et voir</button>`;
-
-    const place = (key!==currentKey)
-      ? `<span class="badge soft">${key.replace('|',' — ')}</span>`
-      : '';
-
-    return `
-      <div class="rowlist space-item">
-        <div class="left">
-          <div class="title">${code} — ${label}</div>
-          <div class="meta">
-            ${area ? `<span class="badge soft">${area}</span>` : ""}
-            ${tenant ? `<span class="badge">${tenant}</span>` : ""}
-            ${place}
-          </div>
-        </div>
-        <div class="right">${btnHtml}</div>
-      </div>
-    `;
-  }).join("");
-
-  $("statusModalContent").innerHTML = html || "<div class='hint'>Aucun espace</div>";
-  $("statusModal").classList.add("open");
-
     function openStatusModal(status, items){
   $("statusModalTitle").textContent = `${status} — ${items.length} espace(s)`;
 
@@ -1251,32 +1209,6 @@ async function switchToKeyAndFocus(key, code){
       let ok=false; drawn.eachLayer(l=>{ if(layerProps(l).code===ep.code) ok=true; });
       return ok;
     })();
-
-    const btnHtml = onThisFloor
-      ? `<button class="btn pill primary" data-goto="${code}">Voir</button>`
-      : `<button class="btn pill primary" data-goto="${code}" data-goto-key="${key}">Ouvrir et voir</button>`;
-
-    const place = (key!==currentKey)
-      ? `<span class="badge soft">${key.replace('|',' — ')}</span>`
-      : '';
-
-    return `
-      <div class="rowlist space-item">
-        <div class="left">
-          <div class="title">${code} — ${label}</div>
-          <div class="meta">
-            ${area ? `<span class="badge soft">${area}</span>` : ""}
-            ${tenant ? `<span class="badge">${tenant}</span>` : ""}
-            ${place}
-          </div>
-        </div>
-        <div class="right">${btnHtml}</div>
-      </div>
-    `;
-  }).join("");
-
-  $("statusModalContent").innerHTML = html || "<div class='hint'>Aucun espace</div>";
-  $("statusModal").classList.add("open");
 
   // Wiring boutons (après avoir inséré le HTML)
   $("statusModalContent").querySelectorAll("[data-goto]").forEach(btn=>{
