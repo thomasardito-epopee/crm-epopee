@@ -208,6 +208,43 @@ body.board-mode #visitorBoard{ display:block }
   padding:0;
   z-index:auto;
 }
+/* ----- Optimisation du board quand il est dans le panneau ----- */
+.board.in-panel{
+  position: static;
+  left: auto; right: auto; top: auto; bottom: auto;
+  display: block;
+  max-width: none; min-width: unset;
+  background: transparent;
+  box-shadow: none;
+  border: 0;
+  padding: 0;
+  z-index: auto;
+}
+
+/* 1 graphique par ligne (au lieu de 2 colonnes) */
+.board.in-panel .grid2{
+  grid-template-columns: 1fr;      /* <-- force une seule colonne */
+  gap: 12px;
+}
+
+/* KPIs sur 2 colonnes (plus lisible dans un panneau étroit) */
+.board.in-panel .kpis{
+  grid-template-columns: 1fr 1fr;
+}
+@media (max-width: 420px){
+  .board.in-panel .kpis{ grid-template-columns: 1fr; }
+}
+
+/* Cartes et paddings adaptés au panneau */
+.board.in-panel .card{
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+.board.in-panel .canvas-wrap{
+  height: 220px;        /* garde une hauteur confortable */
+}
+.board.in-panel h4{ margin-bottom: 8px; }
 
 </style>
 </head>
