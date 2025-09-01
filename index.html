@@ -1419,29 +1419,53 @@ function drawDonut(canvas, parts, colors, centerText){
   ctx.fillStyle = "#1c1c1e"; ctx.font = `${Math.round(r*0.28)}px SF Pro, Inter, system-ui`; ctx.textAlign='center'; ctx.textBaseline='middle';
   ctx.fillText(centerText, cx, cy);
 }
-function drawBars(canvas, labels, values, colors = ["#0a84ff"]){
+function drawBars(canvas, labels, values, colors = ["#0a84ff"], onBarClick){
   const ctx = canvas.getContext('2d');
   const W = canvas.width = canvas.clientWidth * devicePixelRatio;
   const H = canvas.height = 200 * devicePixelRatio;
   ctx.clearRect(0,0,W,H);
-const max = Math.max(...values, 1);
+
+  const max = Math.max(...values, 1);
   const mL = 10*devicePixelRatio, mR = 10*devicePixelRatio, mT = 10*devicePixelRatio, mB = 24*devicePixelRatio;
   const plotW = W - mL - mR, plotH = H - mT - mB;
   const n = values.length; const gap = plotW*0.08/(n||1); const bw = (plotW - gap*(n+1)) / (n||1);
   const baseY = mT + plotH;
+
   ctx.fillStyle = "#e5e5ea"; ctx.fillRect(mL, baseY, plotW, 1*devicePixelRatio);
+
+  const hitboxes = [];
   values.forEach((v,i)=>{
-    const x = mL + gap + i*(bw+gap); const h = v/max * (plotH-6*devicePixelRatio); const y = baseY - h;
+    const x = mL + gap + i*(bw+gap);
+    const h = v/max * (plotH-6*devicePixelRatio);
+    const y = baseY - h;
+
     ctx.fillStyle = colors[i % colors.length];
     const radius = 8*devicePixelRatio; const w=bw, r=Math.min(radius, w/2, h);
     ctx.beginPath();
     ctx.moveTo(x, y+r); ctx.arcTo(x, y, x+r, y, r); ctx.lineTo(x+w-r, y); ctx.arcTo(x+w, y, x+w, y+r, r);
     ctx.lineTo(x+w, y+h); ctx.lineTo(x, y+h); ctx.closePath(); ctx.fill();
+
     ctx.fillStyle = "#1c1c1e"; ctx.font = `${12*devicePixelRatio}px Inter, system-ui`; ctx.textAlign='center';
     let ty = y - 6*devicePixelRatio; if (ty < mT + 10*devicePixelRatio) ty = y + 14*devicePixelRatio;
     ctx.fillText(String(v), x+w/2, ty);
-    ctx.fillStyle = "#3a3a3c"; ctx.font = `${11*devicePixelRatio}px Inter, system-ui`; ctx.fillText(labels[i].slice(0,18), x+w/2, baseY + 14*devicePixelRatio);
+
+    ctx.fillStyle = "#3a3a3c"; ctx.font = `${11*devicePixelRatio}px Inter, system-ui`;
+    ctx.fillText(labels[i].slice(0,18), x+w/2, baseY + 14*devicePixelRatio);
+
+    hitboxes.push({x, y, w, h, index:i});
   });
+
+  // Clicks
+  canvas.__barHitboxes = hitboxes;
+  canvas.onclick = onBarClick
+    ? (e)=>{
+        const r = canvas.getBoundingClientRect();
+        const px = (e.clientX - r.left) * devicePixelRatio;
+        const py = (e.clientY - r.top)  * devicePixelRatio;
+        const hit = (canvas.__barHitboxes||[]).find(b => px>=b.x && px<=b.x+b.w && py>=b.y && py<=b.y+b.h);
+        if(hit) onBarClick(hit.index, labels[hit.index]);
+      }
+    : null;
 }
 
 // ===== Dashboard (renders + CLICKABLE legend)
