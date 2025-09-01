@@ -1312,6 +1312,57 @@ function showStatusList(status){
   const curB = buildingSelect.value;
   const curF = floorSelect.value;
   const curKey = keyFor(curB, curF);
+  // --- Liste des postes (occupés / vacants)
+function showPostsList(kind){
+  const scope  = $("kpiScope") ? $("kpiScope").value : "building";
+  const curB   = buildingSelect.value;
+  const curF   = floorSelect.value;
+  const curKey = keyFor(curB, curF);
+  const items  = [];
+  const isOccupied = (kind === "occupied");
+  const isOccStatus = s => (s==="Loué" || s==="Préavis");
+
+  function pushFromStore(key){
+    const store = (key === curKey) ? exportGeo() : loadFromCache(key);
+    const feats = (store && store.features) || [];
+    feats.forEach(fe=>{
+      const ep = (fe.options && fe.options.ep) || {};
+      const postsVal = parseInt(ep.posts||0,10)||0;
+      const status   = ep.status || "Vacant";
+      const isEvent  = (ep.label === "Evenementiel");
+
+      // mêmes filtres que la carte
+      const matchesStatus = activeStatuses.has(status);
+      const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
+      const matchText = !searchText || text.includes(searchText);
+
+      // appartenances : occupés = Loué/Préavis ; vacants = le reste
+      const belongs = isOccupied ? isOccStatus(status) : !isOccStatus(status);
+
+      if (postsVal > 0 && !isEvent && matchesStatus && matchText && belongs){
+        items.push({ ep, key });
+      }
+    });
+  }
+
+  if (scope === "all"){
+    Object.keys(BUILDING_FLOORS).forEach(b=>{
+      (BUILDING_FLOORS[b]||[]).forEach(f=> pushFromStore(keyFor(b,f)));
+    });
+  } else {
+    (BUILDING_FLOORS[curB]||[]).forEach(f=> pushFromStore(keyFor(curB,f)));
+  }
+
+  // tri : nb de postes décroissant puis code
+  items.sort((a,b)=>{
+    const d = (parseInt(b.ep.posts||0,10) || 0) - (parseInt(a.ep.posts||0,10) || 0);
+    if (d) return d;
+    return (a.ep.code||"").localeCompare(b.ep.code||"");
+  });
+
+  openStatusModal(isOccupied ? "Postes occupés" : "Postes vacants", items);
+}
+
 
   const items = [];
 
