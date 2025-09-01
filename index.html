@@ -951,9 +951,10 @@ $("btnAdminBoard").onclick = ()=>{
 function euro(n){ const v=Number(n||0); const hasCents=Math.abs(v-Math.round(v))>1e-6; return v.toLocaleString('fr-FR',{minimumFractionDigits:hasCents?2:0, maximumFractionDigits:2}); }
 
 function wireBoardActions(){
-  const closeBtn = $("boardClose");
-  const popBtn   = $("boardPop");
   const backBtn  = $("boardBack");
+  const popBtn   = $("boardPop");
+  const closeBtn = $("boardClose");
+  const minBtn   = $("boardMin");
 
   // ← Revenir à l’édition
   if (backBtn && !backBtn.__wired){
@@ -961,92 +962,58 @@ function wireBoardActions(){
     backBtn.onclick = () => {
       const t = $("btnAdminBoard");
       if (t) { t.click(); return; }
-
-      // Fallback
       const b = $("visitorBoard");
-      if (b){
-        b.style.display = "none";
-        b.classList.remove("fullscreen");
-      }
+      if (b){ b.style.display = "none"; b.classList.remove("fullscreen"); }
       $("adminSection").style.display =
         (isAdmin && !document.body.classList.contains("board-mode")) ? "block" : "none";
     };
   }
 
-  // ✖️ Fermer (si présent)
+  // ↗ Plein écran (overlay)
+  if (popBtn && !popBtn.__wired){
+    popBtn.__wired = true;
+    popBtn.onclick = () => {
+      const b = $("visitorBoard");
+      b.classList.remove("in-panel");
+      b.classList.add("fullscreen");
+      b.style.display = "block";
+      renderDashboard();
+      wireBoardActions();
+    };
+  }
+
+  // ⤢ Réduire
+  if (minBtn && !minBtn.__wired){
+    minBtn.__wired = true;
+    minBtn.onclick = () => {
+      const b = $("visitorBoard");
+      b.classList.remove("fullscreen");
+      if (document.body.classList.contains("board-mode")){
+        const left = $("leftPanel");
+        if (b.parentElement !== left) left.appendChild(b);
+        b.classList.add("in-panel");
+        b.style.display = "block";
+        renderDashboard();
+      } else {
+        b.style.display = "none";
+      }
+    };
+  }
+
+  // ✕ Fermer
   if (closeBtn && !closeBtn.__wired){
     closeBtn.__wired = true;
     closeBtn.onclick = () => {
       const b = $("visitorBoard");
-      if (b){
-        b.style.display = "none";
-        b.classList.remove("fullscreen","in-panel");
-      }
+      if (b){ b.style.display = "none"; b.classList.remove("fullscreen","in-panel"); }
       document.body.classList.remove("board-mode");
       $("layout").classList.remove("collapsed");
       $("adminSection").style.display =
         (isAdmin && !document.body.classList.contains("board-mode")) ? "block" : "none";
     };
   }
-
-// ↗ Ouvrir en grand (overlay dans l'onglet courant)
-if (popBtn && !popBtn.__wired){
-  popBtn.__wired = true;
-  popBtn.onclick = () => {
-    const b = $("visitorBoard");
-    // sort du panneau si besoin
-    b.classList.remove("in-panel");
-    // passe en overlay plein écran
-    b.classList.add("fullscreen");
-    b.style.display = "block";
-    renderDashboard();
-    wireBoardActions();
-  };
-  }
-}
-  const minBtn  = $("boardMin");
-const closeBtn = $("boardClose");
-
-// ⤢ Réduire : revenir dans le panneau si on était en mode "board-mode",
-// sinon juste masquer l’overlay.
-if (minBtn && !minBtn.__wired){
-  minBtn.__wired = true;
-  minBtn.onclick = () => {
-    const b = $("visitorBoard");
-    b.classList.remove("fullscreen");
-    if (document.body.classList.contains("board-mode")){
-      const left = $("leftPanel");
-      if (b.parentElement !== left) left.appendChild(b);
-      b.classList.add("in-panel");
-      b.style.display = "block";
-      renderDashboard();
-    } else {
-      b.style.display = "none";
-    }
-  };
 }
 
-// ✕ Fermer : cache l’overlay sans changer l’état sous-jacent
-if (closeBtn && !closeBtn.__wired){
-  closeBtn.__wired = true;
-  closeBtn.onclick = () => {
-    const b = $("visitorBoard");
-    b.classList.remove("fullscreen");
-    b.style.display = "none";
-    // Ré-affiche l’édition si on n’est pas en mode board
-    $("adminSection").style.display =
-      (isAdmin && !document.body.classList.contains("board-mode")) ? "block" : "none";
-  };
-}
-
-  document.addEventListener("keydown", (e)=>{
-  if(e.key === "Escape"){
-    const b = $("visitorBoard");
-    if (b.classList.contains("fullscreen")){
-      $("boardClose")?.click();
-    }
-  }
-});
 
 
 // ===== Dashboard computations & charts
