@@ -977,16 +977,29 @@ function getFeaturesForScope(scope){
   const curB = buildingSelect.value;
   const curF = floorSelect.value;
   const curKey = keyFor(curB, curF);
+
+  const isBuildingCode = !!BUILDING_FLOORS[scope];       // "A".."R" ?
+  const targetB = isBuildingCode ? scope : curB;         // bâtiment demandé ou courant
+
   function pushFromStore(k){
-    if(k===curKey){ exportGeo().features.forEach(fe=> all.push(fe)); }
-    else{
+    if (k === curKey) {
+      exportGeo().features.forEach(fe => all.push(fe));
+    } else {
       const st = loadFromCache(k);
-      if(st && st.features){ st.features.forEach(fe=> all.push(fe)); }
+      if (st && st.features) st.features.forEach(fe => all.push(fe));
     }
   }
-  if(scope === "building"){ (BUILDING_FLOORS[curB]||[]).forEach(f => pushFromStore(keyFor(curB, f))); }
-  else if(scope === "all"){ Object.keys(BUILDING_FLOORS).forEach(b=> (BUILDING_FLOORS[b]||[]).forEach(f=> pushFromStore(keyFor(b,f)) )); }
-  else{ exportGeo().features.forEach(fe=> all.push(fe)); }
+
+  if (scope === "all"){
+    Object.keys(BUILDING_FLOORS).forEach(b =>
+      (BUILDING_FLOORS[b]||[]).forEach(f => pushFromStore(keyFor(b,f)))
+    );
+  } else if (isBuildingCode || scope === "building"){
+    (BUILDING_FLOORS[targetB] || []).forEach(f => pushFromStore(keyFor(targetB, f)));
+  } else {
+    // fallback = seulement l'étage courant
+    exportGeo().features.forEach(fe => all.push(fe));
+  }
   return all;
 }
 
