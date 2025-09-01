@@ -1213,17 +1213,16 @@ async function switchToKeyAndFocus(key, code){
 }
 
 // --- Ouvre la modale avec une belle liste (items = [{ ep, key }])
-function openStatusModal(status, items){
- $("statusModalContent").querySelectorAll("[data-goto]").forEach((_btn)=>{
-  _btn.onclick = async () => {
-    // flash vert
-    _btn.classList.add("success","flash");
-    setTimeout(()=> _btn.classList.remove("success","flash"), 700);
+$("statusModalContent").querySelectorAll("[data-goto]").forEach(btn=>{
+  btn.onclick = async () => {
+    // petit feedback visuel
+    btn.classList.add("success","flash");
+    setTimeout(()=> btn.classList.remove("success","flash"), 700);
 
-    const code = _btn.dataset.goto;
-    const key  = _btn.dataset.gotoKey;
+    const code = btn.dataset.goto;
+    const key  = btn.dataset.gotoKey;
     if (key){ await switchToKeyAndFocus(key, code); }
-    else     { focusSpaceByCode(code); }
+    else { focusSpaceByCode(code); }
   };
 });
 
