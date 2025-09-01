@@ -829,20 +829,43 @@ function syncPad(){ pinDots.forEach((d,i)=> d.classList.toggle('active', i<pin.l
 })();
 
 // Keyboard support inside modal
-
-document.addEventListener('keydown', (e)=>{
+document.addEventListener('keydown', (e) => {
   const isPadOpen = padModal.classList.contains('open');
-  if(isPadOpen){
-    const k = e.key;
-    if(/^[0-9]$/.test(k)){ e.preventDefault(); if(pin.length<4){ pin+=k; syncPad(); } return; }
-    if(k==='Backspace' || k==='Delete'){ e.preventDefault(); pin=pin.slice(0,-1); syncPad(); return; }
+  if (!isPadOpen) return;
+
+  const k = e.key;
+
+  // chiffres
+  if (/^[0-9]$/.test(k)) {
+    e.preventDefault();
+    if (pin.length < 4) { pin += k; syncPad(); }
+    return;
+  }
+
+  // effacer
+  if (k === 'Backspace' || k === 'Delete') {
+    e.preventDefault();
+    pin = pin.slice(0, -1);
+    syncPad();
+    return;
+  }
+
+  // valider
   if (k === 'Enter' || e.code === 'NumpadEnter') {
-  e.preventDefault();
-  const okBtn = keysGrid.querySelector('[data-role="ok"]');
-  if (okBtn && !okBtn.disabled) okBtn.click();
-  return;
-}
-    if(k==='Escape'){ e.preventDefault(); closePad(); if(!isAdmin){ $("adminToggle").checked=false; } return; }});
+    e.preventDefault();
+    const okBtn = keysGrid.querySelector('[data-role="ok"]');
+    if (okBtn && !okBtn.disabled) okBtn.click();
+    return;
+  }
+
+  // quitter
+  if (k === 'Escape') {
+    e.preventDefault();
+    closePad();
+    if (!isAdmin) { $("adminToggle").checked = false; }
+    return;
+  }
+});
 
 
 padModal.addEventListener('click', (e)=>{ if(e.target===padModal){ closePad(); if(!isAdmin){ $("adminToggle").checked=false; } } });
