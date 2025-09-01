@@ -1004,6 +1004,41 @@ if (popBtn && !popBtn.__wired){
   };
   }
 }
+  const minBtn  = $("boardMin");
+const closeBtn = $("boardClose");
+
+// ⤢ Réduire : revenir dans le panneau si on était en mode "board-mode",
+// sinon juste masquer l’overlay.
+if (minBtn && !minBtn.__wired){
+  minBtn.__wired = true;
+  minBtn.onclick = () => {
+    const b = $("visitorBoard");
+    b.classList.remove("fullscreen");
+    if (document.body.classList.contains("board-mode")){
+      const left = $("leftPanel");
+      if (b.parentElement !== left) left.appendChild(b);
+      b.classList.add("in-panel");
+      b.style.display = "block";
+      renderDashboard();
+    } else {
+      b.style.display = "none";
+    }
+  };
+}
+
+// ✕ Fermer : cache l’overlay sans changer l’état sous-jacent
+if (closeBtn && !closeBtn.__wired){
+  closeBtn.__wired = true;
+  closeBtn.onclick = () => {
+    const b = $("visitorBoard");
+    b.classList.remove("fullscreen");
+    b.style.display = "none";
+    // Ré-affiche l’édition si on n’est pas en mode board
+    $("adminSection").style.display =
+      (isAdmin && !document.body.classList.contains("board-mode")) ? "block" : "none";
+  };
+}
+
 
 // ===== Dashboard computations & charts
 function getFeaturesForScope(scope){
