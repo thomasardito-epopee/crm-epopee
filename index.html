@@ -399,10 +399,13 @@ $("zoomOut").onclick=()=> map.zoomOut();
 
 // Geoman toolbar
 map.pm.addControls({
-  position:'topright',
-  drawMarker:false, drawCircle:false, drawPolyline:false, drawCircleMarker:false,
-  drawRectangle:true, drawPolygon:true, editMode:true, dragMode:false, removalMode:true, cutPolygon:false
+  position: 'topleft',
+  drawPolygon: true,
+  drawRectangle: true,
+  editMode: true,
+  removalMode: false, // désactive la gomme Geoman
 });
+
 map.pm.setLang('fr');
 map.pm.setPathOptions({ snappable:true, snapDistance:10 });
 
