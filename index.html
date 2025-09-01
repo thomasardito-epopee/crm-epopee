@@ -412,102 +412,14 @@ map.pm.addControls({
   cutPolygon: false
 });
 
-// --- Étape 2 : persister les suppressions faites via la gomme Geoman ---
-
-// 1) Reconstituer la liste des formes courantes depuis la carte
-function collectFeaturesForSave() {
-  const features = [];
-  map.eachLayer((layer) => {
-    // On n'exporte que ce qui a été dessiné (rectangles & polygones)
-    if (!layer?.pm) return;
-
-    // Rectangle
-    if (layer instanceof L.Rectangle && typeof layer.getBounds === 'function') {
-      const b = layer.getBounds();
-      const sw = b.getSouthWest();
-      const ne = b.getNorthEast();
-      features.push({
-        type: 'rect',
-        bounds: [
-          { lat: sw.lat, lng: sw.lng },
-          { lat: ne.lat, lng: ne.lng }
-        ],
-        // on conserve les métadonnées éventuelles
-        options: layer.options?.ep ? { ep: layer.options.ep } : undefined,
-      });
-      return;
-    }
-
-    // Polygone (y compris polylgons multiples)
-    if (layer instanceof L.Polygon && typeof layer.getLatLngs === 'function') {
-      const rings = layer.getLatLngs().map(ring =>
-        ring.map(ll => ({ lat: ll.lat, lng: ll.lng }))
-      );
-      features.push({
-        type: 'poly',
-        latlngs: rings,
-        options: layer.options?.ep ? { ep: layer.options.ep } : undefined,
-      });
-    }
-  });
-  return features;
-}
-
-// 2) Trouver le bâtiment / l'étage actifs (essaie plusieurs sélecteurs possibles)
-function getCurrentContext() {
-  const building =
-    document.querySelector('#building')?.value ||
-    document.querySelector('[name="building"]')?.value ||
-    'A';
-
-  const floor =
-    document.querySelector('#floor')?.value ||
-    document.querySelector('[name="floor"]')?.value ||
-    'RDC';
-
-  return { building, floor };
-}
-
-// 3) À chaque suppression via Geoman, on sauvegarde l'état du plan
-map.on('pm:remove', async () => {
-  try {
-    const { building, floor } = getCurrentContext();
-    const features = collectFeaturesForSave();
-
-    // Si tu gères une version (ETag), mets-la ici si disponible
-    const ifMatch =
-      window.FLOOR_VERSION ||
-      window.currentFloorVersion ||
-      undefined;
-
-    const res = await fetch(
-      `/api/save-floor?building=${encodeURIComponent(building)}&floor=${encodeURIComponent(floor)}`,
-      {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          ...(ifMatch ? { 'if-match-version': String(ifMatch) } : {}),
-        },
-        body: JSON.stringify(features),
-      }
-    );
-
-    if (!res.ok) {
-      const txt = await res.text().catch(() => '');
-      console.error('Échec sauvegarde suppression', res.status, txt);
-      alert("La suppression n'a pas pu être enregistrée (réseau ou conflit). La page va recharger l'état serveur.");
-      location.reload();
-    }
-  } catch (err) {
-    console.error(err);
-    alert("Erreur inattendue pendant l'enregistrement. La page va recharger l'état serveur.");
-    location.reload();
-  }
+// Persister les suppressions faites avec la gomme Geoman
+map.on('pm:remove', () => {
+  saveLocal(); // met à jour le cache et déclenche POST /api/spaces/batch
 });
 
-
 map.pm.setLang('fr');
-map.pm.setPathOptions({ snappable:true, snapDistance:10 });
+map.pm.setPathOptions({ snappable: true, snapDistance: 10 });
+
 
 // ===== Styling & data helpers
 function layerProps(l){ return l?.options?.ep || {}; }
