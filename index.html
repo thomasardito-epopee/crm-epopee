@@ -911,16 +911,18 @@ function syncMode(){
   document.body.classList.toggle('admin', isAdmin);
 
   if (isAdmin){
-    $("layout").classList.remove("collapsed");
-  } else {
-    $("layout").classList.add("collapsed");
-    map.pm.disableGlobalEditMode();
-    map.pm.disableGlobalRemovalMode && map.pm.disableGlobalRemovalMode();
-    map.pm.disableDraw('Polygon');
-    map.pm.disableDraw('Rectangle');
-    drawn.eachLayer(l=>{ if(l.pm && l.pm.disable){ l.pm.disable(); } });
-    currentLayer = null;
-  }
+  $("layout").classList.remove("collapsed");
+} else {
+  // ✅ Panneau ouvert par défaut en mode visiteur
+  $("layout").classList.remove("collapsed");
+
+  map.pm.disableGlobalEditMode();
+  map.pm.disableGlobalRemovalMode && map.pm.disableGlobalRemovalMode();
+  map.pm.disableDraw('Polygon');
+  map.pm.disableDraw('Rectangle');
+  drawn.eachLayer(l=>{ if(l.pm && l.pm.disable){ l.pm.disable(); } });
+  currentLayer = null;
+}
 
   mountGeoman();
 }
