@@ -1437,37 +1437,37 @@ function drawBars(canvas, labels, values, colors = ["#0a84ff"]){
 }
 
 // ===== Dashboard (renders + CLICKABLE legend)
+<script>
 function renderDashboard(){
   const board = $("visitorBoard");
-  if (board && board.classList.contains("fullscreen")) {  // <-- plein écran : nouveau rendu
+  // Si le board est en plein écran, on délègue à la version "full"
+  if (board && board.classList.contains("fullscreen")) {
     return renderDashboardFull();
   }
-  const scopeSel = board.querySelector('#kpiScope');
-  // ... (la suite de ta version "panneau" ne change pas)
-   
-  const board = $("visitorBoard");
-  let scopeSel = board.querySelector('#kpiScope');
- // construit la portée courante + les <option>
-const currentScope = scopeSel ? scopeSel.value : buildingSelect.value; // A, B, … ou "all"
-const scopeOptions = [
-  ...Object.keys(BUILDING_FLOORS).map(b =>
-    `<option value="${b}"${currentScope===b ? ' selected' : ''}>Bâtiment ${b}</option>`
-  ),
-  `<option value="all"${currentScope==='all' ? ' selected' : ''}>Statistiques du village</option>`
-].join('');
 
+  // Portée sélectionnée (bâtiment courant par défaut)
+  const existing = board.querySelector('#kpiScope');
+  const currentScope = existing ? existing.value : buildingSelect.value;
+  const scopeOptions = [
+    ...Object.keys(BUILDING_FLOORS).map(b =>
+      `<option value="${b}"${currentScope===b?' selected':''}>Bâtiment ${b}</option>`
+    ),
+    `<option value="all"${currentScope==='all'?' selected':''}>Statistiques du village</option>`
+  ].join('');
+
+  // Gabarit "panneau"
   board.innerHTML = `
     <h4>Dashboard</h4>
     <div class="sub">
       <div class="scope">
         <span>Vue :</span>
-       <select id="kpiScope">${scopeOptions}</select>
+        <select id="kpiScope">${scopeOptions}</select>
       </div>
     </div>
-   <div class="board-actions inpanel">
-  <button class="iconbtn" id="boardBack" title="Revenir à l’édition">←</button>
-  <button class="iconbtn" id="boardPop"  title="Ouvrir le dashboard complet">↗</button>
-</div>
+    <div class="board-actions inpanel">
+      <button class="iconbtn" id="boardBack" title="Revenir à l’édition">←</button>
+      <button class="iconbtn" id="boardPop"  title="Ouvrir le dashboard complet">↗</button>
+    </div>
 
     <div class="kpis" id="kpis"></div>
 
@@ -1483,6 +1483,7 @@ const scopeOptions = [
         <div id="legendArea" class="legend"></div>
       </div>
     </div>
+
     <div class="grid2" style="margin-top:10px">
       <div class="card">
         <h5>Postes occupés vs vacants</h5>
@@ -1497,7 +1498,12 @@ const scopeOptions = [
 
     <div class="grid2" style="margin-top:10px">
       <div class="card">
-        <h5>Top 5 résidents <select id="topMode" style="margin-left:8px;padding:4px 8px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--panel);"><option value="count">par nombre d'espaces</option><option value="area">par m² occupés</option></select></h5>
+        <h5>Top 5 résidents
+          <select id="topMode" style="margin-left:8px;padding:4px 8px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--panel);">
+            <option value="count">par nombre d'espaces</option>
+            <option value="area">par m² occupés</option>
+          </select>
+        </h5>
         <div class="canvas-wrap"><canvas id="chartTopTenants"></canvas></div>
       </div>
       <div class="card">
@@ -1506,12 +1512,13 @@ const scopeOptions = [
       </div>
     </div>
   `;
-  $("kpiScope").onchange = ()=> renderDashboard();
 
+  $("kpiScope").onchange = () => renderDashboard();
+  wireBoardActions();
+
+  // Données selon la portée + filtres identiques à la carte
   const feats = getFeaturesForScope($("kpiScope").value);
-
-  // mêmes filtres que la carte
-  const featsFiltered = feats.filter(fe=>{
+  const featsFiltered = feats.filter(fe => {
     const ep = (fe.options && fe.options.ep) || {};
     const matchesStatus = activeStatuses.has(ep.status || "Vacant");
     const isEvent = (ep.label === "Evenementiel");
@@ -1522,8 +1529,8 @@ const scopeOptions = [
   });
   const S = aggStats(featsFiltered);
 
-  const kpisEl = $("kpis");
-  kpisEl.innerHTML = `
+  // KPIs
+  $("kpis").innerHTML = `
     <div class="kpi"><div class="v">${S.occupiedCount} <span class="subl">(${S.occupiedPct}%)</span></div><div class="l">Bureaux occupés</div></div>
     <div class="kpi"><div class="v">${S.vacantCount} <span class="subl">(${S.vacantPct}%)</span></div><div class="l">Bureaux vacants</div></div>
     <div class="kpi"><div class="v">${Math.round(S.areaOcc)} m²</div><div class="l">m² occupés</div></div>
@@ -1533,55 +1540,40 @@ const scopeOptions = [
     <div class="kpi"><div class="v">${Math.round(S.euroPerPost)} €</div><div class="l">€ / poste (moyenne)</div></div>
   `;
 
-  // --- Répartition par statut (nb espaces)
+  // Répartition par statut (donut + légende cliquable)
   const statusLabels = ["Loué","Préavis","Vacant","Réservé","Maintenance"];
   const statusParts  = statusLabels.map(s => S.counts[s] || 0);
   const statusColors = statusLabels.map(s => (s === "Réservé" && filterEventOnly) ? EVENT_DEFAULT_COLOR : STATUS_STYLES[s].fill);
-
   drawDonut($("chartStatusCount"), statusParts, statusColors, String(S.totalSpaces || 0));
-
   const total = S.totalSpaces || 1;
   $("legendStatus").innerHTML = statusLabels.map((lab,i)=>{
-    const v = statusParts[i] || 0;
-    if(!v) return "";
+    const v = statusParts[i] || 0; if(!v) return "";
     const pct = Math.round(v*1000/total)/10;
-    const color = statusColors[i];
     return `<div class="item" role="button" style="cursor:pointer" data-status="${lab}">
-              <span class="dot" style="background:${color}"></span>
-              ${lab} — ${v} (${pct}%)
+              <span class="dot" style="background:${statusColors[i]}"></span>${lab} — ${v} (${pct}%)
             </div>`;
   }).join("");
-  // clic = ouvrir liste
-  $("legendStatus").querySelectorAll(".item").forEach(node=>{
-    node.onclick = () => showStatusList(node.dataset.status);
-  });
+  $("legendStatus").querySelectorAll(".item").forEach(n => n.onclick = () => showStatusList(n.dataset.status));
 
-  // --- m² occupés vs vacants
+  // m² occupés vs vacants
   const occ = S.areaOcc || 0, vac = S.areaVac || 0, totA = (occ + vac) || 1;
   const occPct = Math.round(occ*1000/totA)/10, vacPct = Math.round(vac*1000/totA)/10;
   drawDonut($("chartAreaOccVac"), [occ, vac], [STATUS_STYLES["Loué"].fill, STATUS_STYLES["Vacant"].fill], `${Math.round(occPct)}%`);
   $("legendArea").innerHTML = `
-  <div class="item" role="button" style="cursor:pointer" data-area="occupied">
-    <span class="dot" style="background:${STATUS_STYLES["Loué"].fill}"></span>
-    Occupés — ${Math.round(occ)} m² (${occPct}%)
-  </div>
-  ${vac>0 ? `
-  <div class="item" role="button" style="cursor:pointer" data-area="vacant">
-    <span class="dot" style="background:${STATUS_STYLES["Vacant"].fill}"></span>
-    Vacants — ${Math.round(vac)} m² (${vacPct}%)
-  </div>` : ""}
-`;
+    <div class="item" role="button" style="cursor:pointer" data-area="occupied">
+      <span class="dot" style="background:${STATUS_STYLES["Loué"].fill}"></span>
+      Occupés — ${Math.round(occ)} m² (${occPct}%)
+    </div>
+    ${vac>0 ? `<div class="item" role="button" style="cursor:pointer" data-area="vacant">
+      <span class="dot" style="background:${STATUS_STYLES["Vacant"].fill}"></span>
+      Vacants — ${Math.round(vac)} m² (${vacPct}%)
+    </div>` : ""}`;
+  $("legendArea").querySelectorAll(".item").forEach(n => n.onclick = () => showAreaList(n.dataset.area));
 
-// clic = ouvrir la liste m² occupés / m² vacants
-$("legendArea").querySelectorAll(".item").forEach(node=>{
-  node.onclick = () => showAreaList(node.dataset.area);
-});
-
-
-  // Top 5 résidents
+  // Top 5 résidents (mode)
   const topSel = $("topMode");
   const savedMode = window.TOP_TENANTS_MODE || "count";
-  if(topSel){ topSel.value = savedMode; topSel.onchange = (e)=>{ window.TOP_TENANTS_MODE = e.target.value; renderDashboard(); }; }
+  if (topSel){ topSel.value = savedMode; topSel.onchange = (e)=>{ window.TOP_TENANTS_MODE = e.target.value; renderDashboard(); }; }
   const mode = window.TOP_TENANTS_MODE || (topSel ? topSel.value : "count");
   const topData = (mode==="area" ? (S.tenantsAreaArr||[]) : (S.tenantsArr||[]));
   const labels = topData.map(t=> t.tenant);
@@ -1594,21 +1586,16 @@ $("legendArea").querySelectorAll(".item").forEach(node=>{
   const pOccPct = Math.round(pOcc*1000/pTot)/10, pVacPct = Math.round(pVac*1000/pTot)/10;
   if ((pOcc + pVac) > 0){
     drawDonut($("chartPostsOccVac"), [pOcc, pVac], [STATUS_STYLES["Loué"].fill, STATUS_STYLES["Vacant"].fill], `${Math.round(pOccPct)}%`);
-   $("legendPosts").innerHTML = `
-  <div class="item" role="button" style="cursor:pointer" data-posts="occupied">
-    <span class="dot" style="background:${STATUS_STYLES["Loué"].fill}"></span>
-    Occupés — ${pOcc} (${pOccPct}%)
-  </div>
-  ${pVac>0 ? `<div class="item" role="button" style="cursor:pointer" data-posts="vacant">
-    <span class="dot" style="background:${STATUS_STYLES["Vacant"].fill}"></span>
-    Vacants — ${pVac} (${pVacPct}%)
-  </div>` : ""}
-`;
-
-// clic = ouvrir liste des postes (occupés / vacants)
-$("legendPosts").querySelectorAll(".item").forEach(node=>{
-  node.onclick = () => showPostsList(node.dataset.posts);
-});
+    $("legendPosts").innerHTML = `
+      <div class="item" role="button" style="cursor:pointer" data-posts="occupied">
+        <span class="dot" style="background:${STATUS_STYLES["Loué"].fill}"></span>
+        Occupés — ${pOcc} (${pOccPct}%)
+      </div>
+      ${pVac>0 ? `<div class="item" role="button" style="cursor:pointer" data-posts="vacant">
+        <span class="dot" style="background:${STATUS_STYLES["Vacant"].fill}"></span>
+        Vacants — ${pVac} (${pVacPct}%)
+      </div>` : ""}`;
+    $("legendPosts").querySelectorAll(".item").forEach(n => n.onclick = () => showPostsList(n.dataset.posts));
   } else {
     const cv = $("chartPostsOccVac"); const ctx = cv.getContext("2d");
     ctx.clearRect(0,0,cv.width,cv.height);
@@ -1628,6 +1615,7 @@ $("legendPosts").querySelectorAll(".item").forEach(node=>{
     ctx.fillText("Aucun loyer renseigné", c.width/2, 24);
   }
 
+  // Réservés
   const r = $("reservedList");
   if(!S.reservedList || S.reservedList.length===0){
     r.innerHTML = '<div class="hint">Aucun espace réservé.</div>';
@@ -1637,8 +1625,8 @@ $("legendPosts").querySelectorAll(".item").forEach(node=>{
       .map(v=> `<div class="rowlist"><div>${v.code} — ${v.label}</div><div class="badge">${v.area||0} m²</div><div class="badge">Réservé</div></div>`)
       .join('');
   }
-  wireBoardActions();
 }
+</script>
 
 // === Modal helpers (GLOBAUX — en dehors de renderDashboard)
 
