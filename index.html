@@ -1122,12 +1122,21 @@ function renderDashboard(){
   const pOccPct = Math.round(pOcc*1000/pTot)/10, pVacPct = Math.round(pVac*1000/pTot)/10;
   if ((pOcc + pVac) > 0){
     drawDonut($("chartPostsOccVac"), [pOcc, pVac], [STATUS_STYLES["Loué"].fill, STATUS_STYLES["Vacant"].fill], `${Math.round(pOccPct)}%`);
-    $("legendPosts").innerHTML = `
-      <div class="item"><span class="dot" style="background:${STATUS_STYLES["Loué"].fill}"></span>
-        Occupés — ${pOcc} (${pOccPct}%)</div>
-      ${pVac>0 ? `<div class="item"><span class="dot" style="background:${STATUS_STYLES["Vacant"].fill}"></span>
-        Vacants — ${pVac} (${pVacPct}%)</div>` : ""}
-    `;
+   $("legendPosts").innerHTML = `
+  <div class="item" role="button" style="cursor:pointer" data-posts="occupied">
+    <span class="dot" style="background:${STATUS_STYLES["Loué"].fill}"></span>
+    Occupés — ${pOcc} (${pOccPct}%)
+  </div>
+  ${pVac>0 ? `<div class="item" role="button" style="cursor:pointer" data-posts="vacant">
+    <span class="dot" style="background:${STATUS_STYLES["Vacant"].fill}"></span>
+    Vacants — ${pVac} (${pVacPct}%)
+  </div>` : ""}
+`;
+
+// clic = ouvrir liste des postes (occupés / vacants)
+$("legendPosts").querySelectorAll(".item").forEach(node=>{
+  node.onclick = () => showPostsList(node.dataset.posts);
+});
   } else {
     const cv = $("chartPostsOccVac"); const ctx = cv.getContext("2d");
     ctx.clearRect(0,0,cv.width,cv.height);
