@@ -11,29 +11,17 @@
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
-// Auto open full-screen dashboard via hash
-function __openDashboardFull(){ const b=$("visitorBoard"); if(!b) return; b.classList.add("fullscreen"); b.style.display="block"; renderDashboard(); }
-document.addEventListener("DOMContentLoaded", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
-window.addEventListener("hashchange", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
-
-</script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.14.1/dist/leaflet-geoman.css">
-<script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.14.1/dist/leaflet-geoman.min.js">
-// Auto open full-screen dashboard via hash
-function __openDashboardFull(){ const b=$("visitorBoard"); if(!b) return; b.classList.add("fullscreen"); b.style.display="block"; renderDashboard(); }
-document.addEventListener("DOMContentLoaded", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
-window.addEventListener("hashchange", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
+<script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.14.1/dist/leaflet-geoman.min.js"></script>
 
-</script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js">
-// Auto open full-screen dashboard via hash
-function __openDashboardFull(){ const b=$("visitorBoard"); if(!b) return; b.classList.add("fullscreen"); b.style.display="block"; renderDashboard(); }
-document.addEventListener("DOMContentLoaded", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
-window.addEventListener("hashchange", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  // Indispensable avec pdf.js via CDN
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 </script>
 
 <style>
@@ -1495,6 +1483,7 @@ document.addEventListener("click", (e)=>{
   if(e.target!==tnInput && !suggest.contains(e.target)){ suggest.style.display="none"; }
 });
 </script>
+  
 
 <!-- 🚨 MODALE LISTE STATUT — en dehors de <script> et avant </body> -->
 <div class="modal" id="statusModal" aria-hidden="true">
@@ -1506,5 +1495,21 @@ document.addEventListener("click", (e)=>{
     </div>
   </div>
 </div>
+  <script>
+  function __openDashboardFull(){
+    const b=document.getElementById("visitorBoard");
+    if(!b) return;
+    b.classList.add("fullscreen");
+    b.style.display="block";
+    renderDashboard();
+  }
+  document.addEventListener("DOMContentLoaded", ()=>{
+    if(location.hash==="#dashboard-full") __openDashboardFull();
+  });
+  window.addEventListener("hashchange", ()=>{
+    if(location.hash==="#dashboard-full") __openDashboardFull();
+  });
+</script>
+
 </body>
 </html>
