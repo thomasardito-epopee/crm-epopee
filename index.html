@@ -245,6 +245,21 @@ body.board-mode #visitorBoard{ display:block }
   height: 220px;        /* garde une hauteur confortable */
 }
 .board.in-panel h4{ margin-bottom: 8px; }
+/* Positionne les actions quand le board est dans le panneau */
+.board.in-panel .board-actions.inpanel{
+  position: sticky;
+  top: 4px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding-bottom: 6px;
+  z-index: 5;
+}
+
+.board.in-panel .board-actions.inpanel .iconbtn{
+  width: 30px; height: 30px; font-size: 14px;
+  border-radius: 999px;
+}
 
 </style>
 </head>
