@@ -413,10 +413,19 @@ map.pm.addControls({
   cutPolygon: false
 });
 
-// --- suppression via gomme Geoman : 1 seul listener, après retrait de la couche
-map.off('pm:remove');                  // évite tout doublon résiduel
-map.on('pm:remove', () => {            // enregistre l’état après suppression
-  setTimeout(() => { saveLocal(); }, 0);   // saveLocal() -> POST /api/spaces/batch
+// --- suppression via gomme Geoman : 1 seul listener
+// (retire aussi la couche du FeatureGroup `drawn`)
+map.off('pm:remove'); // évite tout doublon résiduel
+map.on('pm:remove', (e) => {
+  try {
+    const l = e && e.layer;
+    if (l && drawn && drawn.hasLayer && drawn.hasLayer(l)) {
+      drawn.removeLayer(l);    // <- on l'enlève aussi de `drawn`
+    }
+  } catch (_) {}
+
+  // Laisse Geoman finir, puis on enregistre (local + POST /api/spaces/batch)
+  setTimeout(() => { saveLocal(); }, 0);
 });
 
 map.pm.setLang('fr');
