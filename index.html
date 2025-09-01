@@ -83,6 +83,11 @@ aside.panel{background:var(--panel);border-right:1px solid var(--border);padding
 .zoom-btn:last-child{border-right:0}
 .zoom-btn:active{background:#f2f2f7}
 .leaflet-pm-toolbar{top:128px !important; right:16px !important; transform:none !important; z-index:1400 !important}
+/* Cacher les boutons +/- quand le dashboard est en plein écran */
+#visitorBoard.fullscreen ~ .controls-stack,
+#visitorBoard.fullscreen ~ #drawerToggle{
+  display: none !important;
+}
 
 /* Hide Geoman in visitor mode */
 body.visitor .leaflet-pm-toolbar{display:none !important}
