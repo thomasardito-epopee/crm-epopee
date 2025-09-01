@@ -1196,7 +1196,77 @@ function focusSpaceByCode(code){
     setTimeout(()=> s.textContent = old, 1200);
   }
 }
-  
+  function openStatusModal(status, items){
+  document.getElementById("statusModalTitle").textContent =
+    `${status} — ${items.length} espace(s)`;
+
+  const html = items.map(({ep, key})=>{
+    const code   = ep.code || "—";
+    const label  = ep.label || "—";
+    const tenant = (ep.tenant || "").trim();
+    const area   = ep.area ? `${ep.area} m²` : "";
+
+    const onThisFloor = (key === currentKey) && (()=>{
+      let ok=false; drawn.eachLayer(l=>{ if(layerProps(l).code===ep.code) ok=true; });
+      return ok;
+    })();
+
+    const btnHtml = onThisFloor
+      ? `<button class="btn pill primary" data-goto="${code}">Voir</button>`
+      : `<button class="btn pill primary" data-goto="${code}" data-goto-key="${key}">Ouvrir et voir</button>`;
+
+    const place = (key!==currentKey)
+      ? `<span class="badge soft">${key.replace('|',' — ')}</span>`
+      : '';
+
+    return `
+      <div class="rowlist space-item">
+        <div class="left">
+          <div class="title">${code} — ${label}</div>
+          <div class="meta">
+            ${area ? `<span class="badge soft">${area}</span>` : ""}
+            ${tenant ? `<span class="badge">${tenant}</span>` : ""}
+            ${place}
+          </div>
+        </div>
+        <div class="right">${btnHtml}</div>
+      </div>
+    `;
+  }).join("");
+
+  document.getElementById("statusModalContent").innerHTML =
+    html || "<div class='hint'>Aucun espace</div>";
+
+  document.getElementById("statusModal").classList.add("open");
+
+  // Wiring des boutons après insertion du HTML
+  document
+    .getElementById("statusModalContent")
+    .querySelectorAll("[data-goto]")
+    .forEach(btn=>{
+      btn.onclick = async () => {
+        btn.classList.add("success","flash");
+        setTimeout(()=> btn.classList.remove("success","flash"), 700);
+
+        const code = btn.dataset.goto;
+        const key  = btn.dataset.gotoKey;
+        if (key){
+          await (async function switchToKeyAndFocus(key, code){
+            const [b,f] = key.split("|");
+            if (!BUILDING_FLOORS[b] || !(BUILDING_FLOORS[b]||[]).includes(f)) return;
+            buildingSelect.value = b;
+            buildFloorOptions(b);
+            floorSelect.value = f;
+            await onKeyChange();
+            focusSpaceByCode(code);
+          })(key, code);
+        } else {
+          focusSpaceByCode(code);
+        }
+      };
+    });
+}
+
 function closeStatusModal(){ $("statusModal").classList.remove("open"); }
   // --- Liste des postes (occupés / vacants)
 // --- m² (occupés / vacants) — portée globale
