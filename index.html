@@ -842,7 +842,7 @@ document.addEventListener('keydown', (e)=>{
   if (okBtn && !okBtn.disabled) okBtn.click();
   return;
 }
-    if(k==='Escape'){ e.preventDefault(); closePad(); if(!isAdmin){ $("adminToggle").checked=false; } return; }
+    if(k==='Escape'){ e.preventDefault(); closePad(); if(!isAdmin){ $("adminToggle").checked=false; } return; }});
 
 
 padModal.addEventListener('click', (e)=>{ if(e.target===padModal){ closePad(); if(!isAdmin){ $("adminToggle").checked=false; } } });
