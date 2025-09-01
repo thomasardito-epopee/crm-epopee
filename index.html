@@ -1467,5 +1467,15 @@ document.addEventListener("click", (e)=>{
   }
 });
 </script>
+<!-- MODAL LISTE STATUT -->
+<div class="modal" id="statusModal" aria-hidden="true">
+  <div class="pad" role="dialog" aria-modal="true" style="max-width:600px;width:90%">
+    <h4 id="statusModalTitle">Espaces</h4>
+    <div id="statusModalContent" style="max-height:60vh;overflow:auto;margin-top:12px"></div>
+    <div style="text-align:right;margin-top:12px">
+      <button class="btn" onclick="closeStatusModal()">Fermer</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
