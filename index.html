@@ -1516,11 +1516,14 @@ function showPostsList(kind){
 
 // --- Liste par statut : récupère *avec la clé b|f* pour permettre la bascule auto
 function showStatusList(status){
-  const scope = $("kpiScope") ? $("kpiScope").value : "building";
+  const sel = $("kpiScope");
+  const picked = sel ? sel.value : "building";
   const curB = buildingSelect.value;
   const curF = floorSelect.value;
   const curKey = keyFor(curB, curF);
-  // --- Liste des postes (occupés / vacants)
+
+  const isAll = picked === "all";
+  const targetB = BUILDING_FLOORS[picked] ? picked : curB;
 
   const items = [];
 
@@ -1535,15 +1538,14 @@ function showStatusList(status){
     });
   }
 
-  if (scope === "all"){
-    Object.keys(BUILDING_FLOORS).forEach(b=>{
-      (BUILDING_FLOORS[b]||[]).forEach(f=> pushFromStore(keyFor(b,f)));
-    });
-  } else { // "building"
-    (BUILDING_FLOORS[curB]||[]).forEach(f=> pushFromStore(keyFor(curB,f)));
+  if (isAll){
+    Object.keys(BUILDING_FLOORS).forEach(b =>
+      (BUILDING_FLOORS[b]||[]).forEach(f => pushFromStore(keyFor(b,f)))
+    );
+  } else {
+    (BUILDING_FLOORS[targetB]||[]).forEach(f => pushFromStore(keyFor(targetB,f)));
   }
 
-  // tri par code puis surface décroissante si dispo
   items.sort((a,b)=>{
     const aa = (a.ep.code||"").localeCompare(b.ep.code||"");
     if (aa!==0) return aa;
@@ -1552,26 +1554,6 @@ function showStatusList(status){
 
   openStatusModal(status, items);
 }
-
-// initial hidden dashboard + shortcuts
-const board=$("visitorBoard");
-board.style.display="none";
-document.addEventListener('keydown', (e)=>{
-  const tag = (e.target && e.target.tagName || "").toLowerCase();
-  const typing = ['input','textarea','select'].includes(tag) || (e.target && e.target.isContentEditable);
-  const isPadOpen = padModal.classList.contains('open');
-  if(isPadOpen) return;
-  if ((e.key === 'Delete' || e.key === 'Backspace') && !typing){
-    if(currentLayer && isAdmin){
-      e.preventDefault();
-      drawn.removeLayer(currentLayer);
-      currentLayer = null;
-      saveLocal();
-      const s=$("statusText"); const old=s.textContent; s.textContent="Élément supprimé 🗑️"; setTimeout(()=> s.textContent=old, 900);
-    }
-  }
-  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='s'){ e.preventDefault(); saveLocal(); }
-});
 
 function updateBoard(){ if(board.style.display!=="none"){ renderDashboard(); } }
 
