@@ -1267,9 +1267,23 @@ function openStatusModal(status, items){
   });
 }
 
-    const btn = onThisFloor
-  ? `<button class="btn pill primary" data-goto="${code}">Voir</button>`
-  : `<button class="btn pill primary" data-goto="${code}" data-goto-key="${key}">Ouvrir et voir</button>`;
+    function openStatusModal(status, items){
+  $("statusModalTitle").textContent = `${status} — ${items.length} espace(s)`;
+
+  const html = items.map(({ep, key})=>{
+    const code   = ep.code || "—";
+    const label  = ep.label || "—";
+    const tenant = (ep.tenant || "").trim();
+    const area   = ep.area ? `${ep.area} m²` : "";
+
+    const onThisFloor = (key === currentKey) && (()=>{
+      let ok=false; drawn.eachLayer(l=>{ if(layerProps(l).code===ep.code) ok=true; });
+      return ok;
+    })();
+
+    const btnHtml = onThisFloor
+      ? `<button class="btn pill primary" data-goto="${code}">Voir</button>`
+      : `<button class="btn pill primary" data-goto="${code}" data-goto-key="${key}">Ouvrir et voir</button>`;
 
     const place = (key!==currentKey)
       ? `<span class="badge soft">${key.replace('|',' — ')}</span>`
@@ -1285,13 +1299,27 @@ function openStatusModal(status, items){
             ${place}
           </div>
         </div>
-        <div class="right">${btn}</div>
+        <div class="right">${btnHtml}</div>
       </div>
     `;
   }).join("");
 
   $("statusModalContent").innerHTML = html || "<div class='hint'>Aucun espace</div>";
   $("statusModal").classList.add("open");
+
+  // Wiring boutons (après avoir inséré le HTML)
+  $("statusModalContent").querySelectorAll("[data-goto]").forEach(btn=>{
+    btn.onclick = async () => {
+      btn.classList.add("success","flash");
+      setTimeout(()=> btn.classList.remove("success","flash"), 700);
+
+      const code = btn.dataset.goto;
+      const key  = btn.dataset.gotoKey;
+      if (key){ await switchToKeyAndFocus(key, code); }
+      else { focusSpaceByCode(code); }
+    };
+  });
+}
 
   // Wiring boutons
   $("statusModalContent").querySelectorAll("[data-goto]").forEach(btn=>{
