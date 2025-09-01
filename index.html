@@ -891,9 +891,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   fillStatusSelect(); syncEventUI && syncEventUI();
 });
 
-// Save & Dashboard button
-$("btnSave").onclick = ()=>{ saveLocal(); };
-
 // Dashboard dans le panneau de gauche (visiteur & admin)
 $("btnAdminBoard").onclick = ()=>{
   const b = $("visitorBoard");
