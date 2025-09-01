@@ -1227,8 +1227,8 @@ function openStatusModal(status, items){
     })();
 
     const btn = onThisFloor
-      ? `<button class="btn pill" data-goto="${code}">Voir</button>`
-      : `<button class="btn pill ghost" data-goto="${code}" data-goto-key="${key}">Ouvrir et voir</button>`;
+  ? `<button class="btn pill primary" data-goto="${code}">Voir</button>`
+  : `<button class="btn pill primary" data-goto="${code}" data-goto-key="${key}">Ouvrir et voir</button>`;
 
     const place = (key!==currentKey)
       ? `<span class="badge soft">${key.replace('|',' — ')}</span>`
