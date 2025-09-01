@@ -1116,10 +1116,15 @@ function renderDashboard(){
     <div class="sub">
       <div class="scope">
         <span>Vue :</span>
-        <select id="kpiScope">
-          <option value="building"${scope==='building'?' selected':''}>Bâtiment ${curB}</option>
-          <option value="all"${scope==='all'?' selected':''}>Tous bâtiments</option>
-        </select>
+       // juste avant board.innerHTML = `...`, prépare la valeur courante
+const curB = buildingSelect.value;
+const scope = (scopeSel ? scopeSel.value : curB);
+const buildingList = Object.keys(BUILDING_FLOORS);
+const scopeOptions =
+  buildingList.map(b =>
+    `<option value="${b}"${scope===b?' selected':''}>Bâtiment ${b}</option>`
+  ).join('') +
+  `<option value="all"${scope==='all'?' selected':''}>Statistiques du village</option>`;
       </div>
     </div>
    <div class="board-actions inpanel">
