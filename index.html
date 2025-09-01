@@ -940,11 +940,9 @@ if (backBtn && !backBtn.__wired){
       b.style.display = "none";
       b.classList.remove("fullscreen");
     }
-    // réaffiche la section d’édition (si admin)
-    $("adminSection").style.display = isAdmin ? "block" : "none";
-  };
-}
-
+    
+    $("adminSection").style.display =
+  (isAdmin && !document.body.classList.contains("board-mode")) ? "block" : "none";
 
   if (closeBtn && !closeBtn.__wired){
     closeBtn.__wired = true;
