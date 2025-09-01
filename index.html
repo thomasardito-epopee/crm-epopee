@@ -1266,75 +1266,7 @@ function openStatusModal(status, items){
 
 function closeStatusModal(){ $("statusModal").classList.remove("open"); }
   // --- Liste des postes (occupés / vacants)
-function showPostsList(kind){
-  const scope  = $("kpiScope") ? $("kpiScope").value : "building";
-  const curB   = buildingSelect.value;
-  const curF   = floorSelect.value;
-  const curKey = keyFor(curB, curF);
-  const items  = [];
-  const isOccupied = (kind === "occupied");
-  const isOccStatus = s => (s==="Loué" || s==="Préavis");
-
-  if (scope === "all"){
-    Object.keys(BUILDING_FLOORS).forEach(b=>{
-      (BUILDING_FLOORS[b]||[]).forEach(f=> pushFromStore(keyFor(b,f)));
-    });
-  } else {
-    (BUILDING_FLOORS[curB]||[]).forEach(f=> pushFromStore(keyFor(curB,f)));
-  }
-
-  // tri : surface décroissante puis code
-  items.sort((a,b)=>{
-    const d = (Number(b.ep.area||0) - Number(a.ep.area||0));
-    if (d) return d;
-    return (a.ep.code||"").localeCompare(b.ep.code||"");
-  });
-
-  openStatusModal(isOccupied ? "m² occupés" : "m² vacants", items);
-}
-
-  function pushFromStore(key){
-    const store = (key === curKey) ? exportGeo() : loadFromCache(key);
-    const feats = (store && store.features) || [];
-    feats.forEach(fe=>{
-      const ep = (fe.options && fe.options.ep) || {};
-      const postsVal = parseInt(ep.posts||0,10)||0;
-      const status   = ep.status || "Vacant";
-      const isEvent  = (ep.label === "Evenementiel");
-
-      // mêmes filtres que la carte (recherche texte + statuts cochés)
-      const matchesStatus = activeStatuses.has(status);
-      const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
-      const matchText = !searchText || text.includes(searchText);
-
-      // règle d'appartenance : occupés = Loué/Préavis ; vacants = tout le reste
-      const belongs =
-        isOccupied ? isOccStatus(status) : !isOccStatus(status);
-
-      if (postsVal > 0 && !isEvent && matchesStatus && matchText && belongs){
-        items.push({ ep, key });
-      }
-    });
-  }
-
-  if (scope === "all"){
-    Object.keys(BUILDING_FLOORS).forEach(b=>{
-      (BUILDING_FLOORS[b]||[]).forEach(f=> pushFromStore(keyFor(b,f)));
-    });
-  } else {
-    (BUILDING_FLOORS[curB]||[]).forEach(f=> pushFromStore(keyFor(curB,f)));
-  }
-
-  // tri : d'abord nb de postes décroissant, puis code
-  items.sort((a,b)=>{
-    const d = (parseInt(b.ep.posts||0,10) || 0) - (parseInt(a.ep.posts||0,10) || 0);
-    if (d) return d;
-    return (a.ep.code||"").localeCompare(b.ep.code||"");
-  });
-
-  openStatusModal(isOccupied ? "Postes occupés" : "Postes vacants", items);
-}
-// Liste des espaces par m² (groupes: occupés = Loué/Préavis, vacants = Vacant)
+// --- m² (occupés / vacants) — portée globale
 function showAreaList(kind){
   const scope  = $("kpiScope") ? $("kpiScope").value : "building";
   const curB   = buildingSelect.value;
@@ -1360,7 +1292,7 @@ function showAreaList(kind){
       const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
       const matchText = !searchText || text.includes(searchText);
 
-      // appartenance au groupe (occupés = Loué/Préavis ; vacants = Vacant)
+      // groupe : occupés = Loué/Préavis ; vacants = Vacant
       const belongs = isOccupied ? isOccStatus(status) : (status === "Vacant");
 
       if(areaVal > 0 && matchesStatus && matchText && typeOk && belongs){
@@ -1368,6 +1300,75 @@ function showAreaList(kind){
       }
     });
   }
+
+  if (scope === "all"){
+    Object.keys(BUILDING_FLOORS).forEach(b=>{
+      (BUILDING_FLOORS[b]||[]).forEach(f=> pushFromStore(keyFor(b,f)));
+    });
+  } else {
+    (BUILDING_FLOORS[curB]||[]).forEach(f=> pushFromStore(keyFor(curB,f)));
+  }
+
+  // tri : surface décroissante puis code
+  items.sort((a,b)=>{
+    const d = (Number(b.ep.area||0) - Number(a.ep.area||0));
+    if (d) return d;
+    return (a.ep.code||"").localeCompare(b.ep.code||"");
+  });
+
+  openStatusModal(isOccupied ? "m² occupés" : "m² vacants", items);
+}
+
+// --- Postes (occupés / vacants) — portée globale
+function showPostsList(kind){
+  const scope  = $("kpiScope") ? $("kpiScope").value : "building";
+  const curB   = buildingSelect.value;
+  const curF   = floorSelect.value;
+  const curKey = keyFor(curB, curF);
+  const items  = [];
+  const isOccupied = (kind === "occupied");
+  const isOccStatus = s => (s==="Loué" || s==="Préavis");
+
+  function pushFromStore(key){
+    const store = (key === curKey) ? exportGeo() : loadFromCache(key);
+    const feats = (store && store.features) || [];
+    feats.forEach(fe=>{
+      const ep = (fe.options && fe.options.ep) || {};
+      const postsVal = parseInt(ep.posts||0,10)||0;
+      const status   = ep.status || "Vacant";
+      const isEvent  = (ep.label === "Evenementiel");
+
+      // mêmes filtres que la carte (recherche + statuts)
+      const matchesStatus = activeStatuses.has(status);
+      const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
+      const matchText = !searchText || text.includes(searchText);
+
+      // appartenance : occupés = Loué/Préavis ; vacants = le reste
+      const belongs = isOccupied ? isOccStatus(status) : !isOccStatus(status);
+
+      if (postsVal > 0 && !isEvent && matchesStatus && matchText && belongs){
+        items.push({ ep, key });
+      }
+    });
+  }
+
+  if (scope === "all"){
+    Object.keys(BUILDING_FLOORS).forEach(b=>{
+      (BUILDING_FLOORS[b]||[]).forEach(f=> pushFromStore(keyFor(b,f)));
+    });
+  } else {
+    (BUILDING_FLOORS[curB]||[]).forEach(f=> pushFromStore(keyFor(curB,f)));
+  }
+
+  // tri : nb de postes décroissant puis code
+  items.sort((a,b)=>{
+    const d = (parseInt(b.ep.posts||0,10) || 0) - (parseInt(a.ep.posts||0,10) || 0);
+    if (d) return d;
+    return (a.ep.code||"").localeCompare(b.ep.code||"");
+  });
+
+  openStatusModal(isOccupied ? "Postes occupés" : "Postes vacants", items);
+}
 
 // --- Liste par statut : récupère *avec la clé b|f* pour permettre la bascule auto
 function showStatusList(status){
