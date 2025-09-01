@@ -1212,19 +1212,60 @@ async function switchToKeyAndFocus(key, code){
   focusSpaceByCode(code);
 }
 
-// --- Ouvre la modale avec une belle liste (items = [{ ep, key }])
-$("statusModalContent").querySelectorAll("[data-goto]").forEach(btn=>{
-  btn.onclick = async () => {
-    // petit feedback visuel
-    btn.classList.add("success","flash");
-    setTimeout(()=> btn.classList.remove("success","flash"), 700);
+function openStatusModal(status, items){
+  $("statusModalTitle").textContent = `${status} — ${items.length} espace(s)`;
 
-    const code = btn.dataset.goto;
-    const key  = btn.dataset.gotoKey;
-    if (key){ await switchToKeyAndFocus(key, code); }
-    else { focusSpaceByCode(code); }
-  };
-});
+  const html = items.map(({ep, key})=>{
+    const code   = ep.code || "—";
+    const label  = ep.label || "—";
+    const tenant = (ep.tenant || "").trim();
+    const area   = ep.area ? `${ep.area} m²` : "";
+
+    const onThisFloor = (key === currentKey) && (()=>{
+      let ok=false; drawn.eachLayer(l=>{ if(layerProps(l).code===ep.code) ok=true; });
+      return ok;
+    })();
+
+    const btnHtml = onThisFloor
+      ? `<button class="btn pill primary" data-goto="${code}">Voir</button>`
+      : `<button class="btn pill primary" data-goto="${code}" data-goto-key="${key}">Ouvrir et voir</button>`;
+
+    const place = (key!==currentKey)
+      ? `<span class="badge soft">${key.replace('|',' — ')}</span>`
+      : '';
+
+    return `
+      <div class="rowlist space-item">
+        <div class="left">
+          <div class="title">${code} — ${label}</div>
+          <div class="meta">
+            ${area ? `<span class="badge soft">${area}</span>` : ""}
+            ${tenant ? `<span class="badge">${tenant}</span>` : ""}
+            ${place}
+          </div>
+        </div>
+        <div class="right">${btnHtml}</div>
+      </div>
+    `;
+  }).join("");
+
+  $("statusModalContent").innerHTML = html || "<div class='hint'>Aucun espace</div>";
+  $("statusModal").classList.add("open");
+
+  // Wiring boutons (après avoir inséré le HTML)
+  $("statusModalContent").querySelectorAll("[data-goto]").forEach(btn=>{
+    btn.onclick = async () => {
+      // petit feedback visuel
+      btn.classList.add("success","flash");
+      setTimeout(()=> btn.classList.remove("success","flash"), 700);
+
+      const code = btn.dataset.goto;
+      const key  = btn.dataset.gotoKey;
+      if (key){ await switchToKeyAndFocus(key, code); }
+      else { focusSpaceByCode(code); }
+    };
+  });
+}
 
     const btn = onThisFloor
   ? `<button class="btn pill primary" data-goto="${code}">Voir</button>`
