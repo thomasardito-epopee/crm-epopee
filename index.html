@@ -1919,12 +1919,15 @@ function collectTenantStats(){
 }
 function suggestionsFor(q, limit=6){
   const qn = norm(q);
-  if(qn.length<2) return [];
+  if (qn.length < 2) return [];
   const stats = collectTenantStats();
-  const arr = [...stats.values()].filter(...);
-[...suggest.querySelectorAll(".item")].forEach(...);
+  const arr = [...stats.values()]
+    .filter(it => norm(it.name).includes(qn))
+    .sort((a,b) => (b.count - a.count) || a.name.localeCompare(b.name))
+    .slice(0, limit);
   return arr;
 }
+
 function positionSuggest(el){
   suggest.style.left = '0px'; suggest.style.right = '0px'; suggest.style.width = '100%';
   suggest.style.top  = (el.offsetTop + el.offsetHeight + 6 - (tnInput.offsetTop)) + 'px';
