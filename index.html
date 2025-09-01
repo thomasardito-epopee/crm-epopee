@@ -989,21 +989,19 @@ function wireBoardActions(){
     };
   }
 
-  // ↗ Ouvrir en grand (une seule fois)
-  if (popBtn && !popBtn.__wired){
-    popBtn.__wired = true;
-    popBtn.onclick = () => {
-      const url = (location.href.replace(/#.*$/, "") + "#dashboard-full");
-      const win = window.open(url, "_blank");
-      if(!win || win.closed){
-        const b = $("visitorBoard");
-        if (!document.body.classList.contains("board-mode")){
-          b.classList.add("fullscreen");
-        }
-        b.style.display = "block";
-        renderDashboard();
-      }
-    };
+// ↗ Ouvrir en grand (overlay dans l'onglet courant)
+if (popBtn && !popBtn.__wired){
+  popBtn.__wired = true;
+  popBtn.onclick = () => {
+    const b = $("visitorBoard");
+    // sort du panneau si besoin
+    b.classList.remove("in-panel");
+    // passe en overlay plein écran
+    b.classList.add("fullscreen");
+    b.style.display = "block";
+    renderDashboard();
+    wireBoardActions();
+  };
   }
 }
 
