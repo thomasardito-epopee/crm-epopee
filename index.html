@@ -894,28 +894,32 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Save & Dashboard button
 $("btnSave").onclick = ()=>{ saveLocal(); };
 
-// Toggle: afficher le Dashboard dans le panneau gauche
+// Dashboard : même comportement qu'en visiteur (overlay)
+// et on replie le panneau d'édition pendant l'affichage
 $("btnAdminBoard").onclick = ()=>{
   const b = $("visitorBoard");
-  const left = $("leftPanel");
 
-  // Bascule du mode
-  const activating = !document.body.classList.contains("board-mode");
-  document.body.classList.toggle("board-mode", activating);
+  // on s'assure de ne PAS être en mode "board dans le panneau"
+  document.body.classList.remove("board-mode");
+  b.classList.remove("in-panel");
+  b.classList.remove("fullscreen");
 
-  if (activating){
-    // On place le board DANS le panneau
-    if (b.parentElement !== left) left.appendChild(b);
-    b.classList.remove("fullscreen");
-    b.classList.add("in-panel");
-    b.style.display = "block";
+  // on replie le panneau de gauche pour ne pas voir l'édition au-dessus
+  $("layout").classList.add("collapsed");
+
+  // toggle overlay
+  const willShow = (b.style.display === "none" || !b.style.display);
+  b.style.display = willShow ? "block" : "none";
+
+  if (willShow){
     renderDashboard();
+    wireBoardActions(); // au cas où
   } else {
-    // On cache le board et on rend le panneau d'édition
-    b.classList.remove("in-panel","fullscreen");
-    b.style.display = "none";
+    // si on referme via le même bouton, on ré-affiche le panneau d'édition
+    $("layout").classList.remove("collapsed");
   }
 };
+
 
 function euro(n){ const v=Number(n||0); const hasCents=Math.abs(v-Math.round(v))>1e-6; return v.toLocaleString('fr-FR',{minimumFractionDigits:hasCents?2:0, maximumFractionDigits:2}); }
 
