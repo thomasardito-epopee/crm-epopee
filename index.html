@@ -906,7 +906,6 @@ $("btnAdminBoard").onclick = ()=>{
   document.body.classList.toggle("board-mode", activating);
   $("adminSection").style.display = "none";
 
-
   if (activating){
     // Place le board DANS le panneau gauche
     if (b.parentElement !== left) left.appendChild(b);
@@ -919,8 +918,12 @@ $("btnAdminBoard").onclick = ()=>{
     // Cache le board et revient au panneau d’édition
     b.classList.remove("in-panel","fullscreen");
     b.style.display = "none";
+    // ✅ ré-affiche l’édition si on quitte le dashboard
+    $("adminSection").style.display =
+      (isAdmin && !document.body.classList.contains("board-mode")) ? "block" : "none";
   }
 };
+
 
 function euro(n){ const v=Number(n||0); const hasCents=Math.abs(v-Math.round(v))>1e-6; return v.toLocaleString('fr-FR',{minimumFractionDigits:hasCents?2:0, maximumFractionDigits:2}); }
 
