@@ -932,15 +932,14 @@ function wireBoardActions(){
   const popBtn   = $("boardPop");
   const backBtn  = $("boardBack");
 
-  // ← Bouton "←" : revenir à l’édition
+  // ← Revenir à l’édition
   if (backBtn && !backBtn.__wired){
     backBtn.__wired = true;
     backBtn.onclick = () => {
-      // Si on peut basculer via le bouton topbar, faisons-le
       const t = $("btnAdminBoard");
       if (t) { t.click(); return; }
 
-      // Sinon, on masque le board et on ré-affiche l’édition si admin
+      // Fallback
       const b = $("visitorBoard");
       if (b){
         b.style.display = "none";
@@ -951,7 +950,7 @@ function wireBoardActions(){
     };
   }
 
-  // ← Bouton de fermeture (s’il existe)
+  // ✖️ Fermer (si présent)
   if (closeBtn && !closeBtn.__wired){
     closeBtn.__wired = true;
     closeBtn.onclick = () => {
@@ -967,7 +966,7 @@ function wireBoardActions(){
     };
   }
 
-  // ↗ Bouton “ouvrir en grand”
+  // ↗ Ouvrir en grand (une seule fois)
   if (popBtn && !popBtn.__wired){
     popBtn.__wired = true;
     popBtn.onclick = () => {
@@ -975,24 +974,6 @@ function wireBoardActions(){
       const win = window.open(url, "_blank");
       if(!win || win.closed){
         const b = $("visitorBoard");
-        if (!document.body.classList.contains("board-mode")){
-          b.classList.add("fullscreen");
-        }
-        b.style.display = "block";
-        renderDashboard();
-      }
-    };
-  }
-   }
-
-  if (popBtn && !popBtn.__wired){
-    popBtn.__wired = true;
-    popBtn.onclick = ()=>{
-      const url = (location.href.replace(/#.*$/, "") + "#dashboard-full");
-      const win = window.open(url, "_blank");
-      if(!win || win.closed){
-        const b = $("visitorBoard");
-        // Si on est déjà en board-mode (dans le panneau), on reste dans le panneau
         if (!document.body.classList.contains("board-mode")){
           b.classList.add("fullscreen");
         }
