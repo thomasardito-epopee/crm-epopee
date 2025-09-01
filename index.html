@@ -412,9 +412,13 @@ map.pm.addControls({
   cutPolygon: false
 });
 
-// Persister les suppressions faites avec la gomme Geoman
+// Suppression via gomme Geoman — 1 seul handler, décalé d’un tick
+map.off('pm:remove'); // au cas où un ancien listener traîne
 map.on('pm:remove', () => {
-  saveLocal(); // met à jour le cache et déclenche POST /api/spaces/batch
+  // Laisse Geoman retirer la couche du FeatureGroup avant d’exporter
+  setTimeout(() => {
+    saveLocal();        // -> met à jour localStorage + POST /api/spaces/batch
+  }, 0);
 });
 
 map.pm.setLang('fr');
