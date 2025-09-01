@@ -904,6 +904,8 @@ $("btnAdminBoard").onclick = ()=>{
   // Bascule du mode
   const activating = !document.body.classList.contains("board-mode");
   document.body.classList.toggle("board-mode", activating);
+  $("adminSection").style.display = "none";
+
 
   if (activating){
     // Place le board DANS le panneau gauche
