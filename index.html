@@ -1214,17 +1214,18 @@ async function switchToKeyAndFocus(key, code){
 
 // --- Ouvre la modale avec une belle liste (items = [{ ep, key }])
 function openStatusModal(status, items){
-  $("statusModalTitle").textContent = `${status} — ${items.length} espace(s)`;
+ $("statusModalContent").querySelectorAll("[data-goto]").forEach((_btn)=>{
+  _btn.onclick = async () => {
+    // flash vert
+    _btn.classList.add("success","flash");
+    setTimeout(()=> _btn.classList.remove("success","flash"), 700);
 
-  const html = items.map(({ep, key})=>{
-    const code   = ep.code || "—";
-    const label  = ep.label || "—";
-    const tenant = (ep.tenant || "").trim();
-    const area   = ep.area ? `${ep.area} m²` : "";
-    const onThisFloor = (key === currentKey) && (()=>{
-      let ok=false; drawn.eachLayer(l=>{ if(layerProps(l).code===ep.code) ok=true; });
-      return ok;
-    })();
+    const code = _btn.dataset.goto;
+    const key  = _btn.dataset.gotoKey;
+    if (key){ await switchToKeyAndFocus(key, code); }
+    else     { focusSpaceByCode(code); }
+  };
+});
 
     const btn = onThisFloor
   ? `<button class="btn pill primary" data-goto="${code}">Voir</button>`
