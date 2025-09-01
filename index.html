@@ -868,15 +868,32 @@ $("btnAdminBoard").onclick = ()=>{
 function euro(n){ const v=Number(n||0); const hasCents=Math.abs(v-Math.round(v))>1e-6; return v.toLocaleString('fr-FR',{minimumFractionDigits:hasCents?2:0, maximumFractionDigits:2}); }
 
 function wireBoardActions(){
-  const closeBtn = $("boardClose"); const popBtn = $("boardPop");
-  if(closeBtn && !closeBtn.__wired){ closeBtn.__wired = true; closeBtn.onclick = ()=>{ const b=$("visitorBoard"); b.style.display="none"; b.classList.remove("fullscreen"); }; }
-  if(popBtn && !popBtn.__wired){
+  const closeBtn = $("boardClose");
+  const popBtn = $("boardPop");
+
+  if (closeBtn && !closeBtn.__wired){
+    closeBtn.__wired = true;
+    closeBtn.onclick = ()=>{
+      const b = $("visitorBoard");
+      b.style.display = "none";
+      b.classList.remove("fullscreen","in-panel");
+      document.body.classList.remove("board-mode");
+    };
+  }
+
+  if (popBtn && !popBtn.__wired){
     popBtn.__wired = true;
     popBtn.onclick = ()=>{
       const url = (location.href.replace(/#.*$/, "") + "#dashboard-full");
       const win = window.open(url, "_blank");
       if(!win || win.closed){
-        const b = $("visitorBoard"); b.classList.add("fullscreen"); b.style.display="block"; renderDashboard();
+        const b = $("visitorBoard");
+        // Si on est déjà en board-mode (dans le panneau), on reste dans le panneau
+        if (!document.body.classList.contains("board-mode")){
+          b.classList.add("fullscreen");
+        }
+        b.style.display = "block";
+        renderDashboard();
       }
     };
   }
