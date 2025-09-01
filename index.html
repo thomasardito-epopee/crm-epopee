@@ -1125,10 +1125,10 @@ function floorsStats(scope){
     o.occArea += occ; o.totArea += tot;
     mapRates.set(k,o);
   });
-  return [...mapRates.values()].map(o => ({
-    ...o, rate: o.totArea ? Math.round(o.occArea*1000/o.totArea)/10 : 0
-  }));
-}
+ return [...mapRates.values()].map(o => ({
+  ...o,
+  rate: o.totArea ? Math.round(o.occArea*1000/o.totArea)/10 : 0
+}));
 
   const occupiedCount = (counts["Loué"]||0) + (counts["Préavis"]||0);
   const vacantCount   = (counts["Vacant"]||0);
