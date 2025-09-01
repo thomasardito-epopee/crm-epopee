@@ -926,34 +926,58 @@ function euro(n){ const v=Number(n||0); const hasCents=Math.abs(v-Math.round(v))
 
 function wireBoardActions(){
   const closeBtn = $("boardClose");
-  const popBtn = $("boardPop");
-  const backBtn = $("boardBack");
-if (backBtn && !backBtn.__wired){
-  backBtn.__wired = true;
-  backBtn.onclick = () => {
-    // Retour au panneau d’édition
-    // 1) si tu bascules via le bouton topbar, on peut simplement simuler le clic :
-    const t = $("btnAdminBoard");
-    if (t) { t.click(); return; }
+  const popBtn   = $("boardPop");
+  const backBtn  = $("boardBack");
 
-    // 2) sinon, fallback générique : on cache le board et on ré-affiche l’édition
-    const b = $("visitorBoard");
-    if (b){
-      b.style.display = "none";
-      b.classList.remove("fullscreen");
-    }
-    
-    $("adminSection").style.display =
-  (isAdmin && !document.body.classList.contains("board-mode")) ? "block" : "none";
+  // ← Bouton "←" : revenir à l’édition
+  if (backBtn && !backBtn.__wired){
+    backBtn.__wired = true;
+    backBtn.onclick = () => {
+      // Si on peut basculer via le bouton topbar, faisons-le
+      const t = $("btnAdminBoard");
+      if (t) { t.click(); return; }
 
+      // Sinon, on masque le board et on ré-affiche l’édition si admin
+      const b = $("visitorBoard");
+      if (b){
+        b.style.display = "none";
+        b.classList.remove("fullscreen");
+      }
+      $("adminSection").style.display =
+        (isAdmin && !document.body.classList.contains("board-mode")) ? "block" : "none";
+    };
+  }
+
+  // ← Bouton de fermeture (s’il existe)
   if (closeBtn && !closeBtn.__wired){
     closeBtn.__wired = true;
-    closeBtn.onclick = ()=>{
+    closeBtn.onclick = () => {
       const b = $("visitorBoard");
-      b.style.display = "none";
-      b.classList.remove("fullscreen","in-panel");
+      if (b){
+        b.style.display = "none";
+        b.classList.remove("fullscreen","in-panel");
+      }
       document.body.classList.remove("board-mode");
       $("layout").classList.remove("collapsed");
+      $("adminSection").style.display =
+        (isAdmin && !document.body.classList.contains("board-mode")) ? "block" : "none";
+    };
+  }
+
+  // ↗ Bouton “ouvrir en grand”
+  if (popBtn && !popBtn.__wired){
+    popBtn.__wired = true;
+    popBtn.onclick = () => {
+      const url = (location.href.replace(/#.*$/, "") + "#dashboard-full");
+      const win = window.open(url, "_blank");
+      if(!win || win.closed){
+        const b = $("visitorBoard");
+        if (!document.body.classList.contains("board-mode")){
+          b.classList.add("fullscreen");
+        }
+        b.style.display = "block";
+        renderDashboard();
+      }
     };
   }
 
