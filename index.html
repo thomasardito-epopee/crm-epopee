@@ -1212,20 +1212,6 @@ async function switchToKeyAndFocus(key, code){
   focusSpaceByCode(code);
 }
 
-function openStatusModal(status, items){
-  $("statusModalTitle").textContent = `${status} — ${items.length} espace(s)`;
-
-  const html = items.map(({ep, key})=>{
-    const code   = ep.code || "—";
-    const label  = ep.label || "—";
-    const tenant = (ep.tenant || "").trim();
-    const area   = ep.area ? `${ep.area} m²` : "";
-
-    const onThisFloor = (key === currentKey) && (()=>{
-      let ok=false; drawn.eachLayer(l=>{ if(layerProps(l).code===ep.code) ok=true; });
-      return ok;
-    })();
-
     const btnHtml = onThisFloor
       ? `<button class="btn pill primary" data-goto="${code}">Voir</button>`
       : `<button class="btn pill primary" data-goto="${code}" data-goto-key="${key}">Ouvrir et voir</button>`;
@@ -1251,21 +1237,6 @@ function openStatusModal(status, items){
 
   $("statusModalContent").innerHTML = html || "<div class='hint'>Aucun espace</div>";
   $("statusModal").classList.add("open");
-
-  // Wiring boutons (après avoir inséré le HTML)
-  $("statusModalContent").querySelectorAll("[data-goto]").forEach(btn=>{
-    btn.onclick = async () => {
-      // petit feedback visuel
-      btn.classList.add("success","flash");
-      setTimeout(()=> btn.classList.remove("success","flash"), 700);
-
-      const code = btn.dataset.goto;
-      const key  = btn.dataset.gotoKey;
-      if (key){ await switchToKeyAndFocus(key, code); }
-      else { focusSpaceByCode(code); }
-    };
-  });
-}
 
     function openStatusModal(status, items){
   $("statusModalTitle").textContent = `${status} — ${items.length} espace(s)`;
