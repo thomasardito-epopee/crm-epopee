@@ -2007,6 +2007,15 @@ document.addEventListener("click", (e)=>{
     if(location.hash==="#dashboard-full") __openDashboardFull();
   });
 </script>
+  <script>
+  function syncTopbarHeight(){
+    const h = document.querySelector('.topbar')?.offsetHeight || 56;
+    document.documentElement.style.setProperty('--topbar-h', h + 'px');
+  }
+  window.addEventListener('resize', syncTopbarHeight);
+  document.addEventListener('DOMContentLoaded', syncTopbarHeight);
+</script>
+
 
 </body>
 </html>
