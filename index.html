@@ -1166,15 +1166,6 @@ function floorsStats(scope){
   }));
 }
 
-  function floorsStats(scope){
-  const mapRates = new Map();
-  // …
-  return [...mapRates.values()].map(o => ({
-    ...o,
-    rate: o.totArea ? Math.round(o.occArea*1000/o.totArea)/10 : 0
-  }));
-}
-
 // --- CSV export helper
 function exportCSV(rows, headers, filename){
   // …
