@@ -1392,7 +1392,7 @@ function drawBars(canvas, labels, values, colors = ["#0a84ff"]){
   const W = canvas.width = canvas.clientWidth * devicePixelRatio;
   const H = canvas.height = 200 * devicePixelRatio;
   ctx.clearRect(0,0,W,H);
-  const max = Math.max(...values, 1);
+const max = Math.max(...values, 1);
   const mL = 10*devicePixelRatio, mR = 10*devicePixelRatio, mT = 10*devicePixelRatio, mB = 24*devicePixelRatio;
   const plotW = W - mL - mR, plotH = H - mT - mB;
   const n = values.length; const gap = plotW*0.08/(n||1); const bw = (plotW - gap*(n+1)) / (n||1);
