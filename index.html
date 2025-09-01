@@ -836,7 +836,13 @@ document.addEventListener('keydown', (e)=>{
     const k = e.key;
     if(/^[0-9]$/.test(k)){ e.preventDefault(); if(pin.length<4){ pin+=k; syncPad(); } return; }
     if(k==='Backspace' || k==='Delete'){ e.preventDefault(); pin=pin.slice(0,-1); syncPad(); return; }
-    if(k==='Enter'){ e.preventDefault(); const okBtn=document.getElementById('btnValidate'); if(okBtn && !okBtn.disabled){ okBtn.click(); } return; }
+  if (k === 'Enter' || e.code === 'NumpadEnter') {
+  e.preventDefault();
+  const okBtn = keysGrid.querySelector('[data-role="ok"]');
+  if (okBtn && !okBtn.disabled) okBtn.click();
+  return;
+}
+
     if(k==='Escape'){ e.preventDefault(); closePad(); if(!isAdmin){ $("adminToggle").checked=false; } return; }
    // ENTER -> clique sur "Valider"
   if (isPadOpen && (e.key === 'Enter' || e.code === 'NumpadEnter')) {
