@@ -1,12 +1,12 @@
 [build]
-  publish = "."
   functions = "netlify/functions"
 
-# Proxy /api/* -> /.netlify/functions/*
 [[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
+  from = "/api/spaces"
+  to   = "/.netlify/functions/spaces"
   status = 200
 
-[functions]
-  node_bundler = "esbuild"
+[[redirects]]
+  from = "/api/spaces/batch"
+  to   = "/.netlify/functions/spaces"
+  status = 200
