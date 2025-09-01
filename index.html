@@ -1210,31 +1210,6 @@ function focusSpaceByCode(code){
       return ok;
     })();
 
-  // Wiring boutons (après avoir inséré le HTML)
-  $("statusModalContent").querySelectorAll("[data-goto]").forEach(btn=>{
-    btn.onclick = async () => {
-      btn.classList.add("success","flash");
-      setTimeout(()=> btn.classList.remove("success","flash"), 700);
-
-      const code = btn.dataset.goto;
-      const key  = btn.dataset.gotoKey;
-      if (key){ await switchToKeyAndFocus(key, code); }
-      else { focusSpaceByCode(code); }
-    };
-  });
-}
-
-  // Wiring boutons
-  $("statusModalContent").querySelectorAll("[data-goto]").forEach(btn=>{
-    btn.onclick = async () => {
-      const code = btn.dataset.goto;
-      const key  = btn.dataset.gotoKey;
-      if (key){ await switchToKeyAndFocus(key, code); }
-      else { focusSpaceByCode(code); }
-    };
-  });
-}
-
 function closeStatusModal(){ $("statusModal").classList.remove("open"); }
   // --- Liste des postes (occupés / vacants)
 // --- m² (occupés / vacants) — portée globale
