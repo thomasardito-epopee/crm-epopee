@@ -1160,50 +1160,127 @@ function renderDashboard(){
 }
 
 // === Modal helpers (GLOBAUX — en dehors de renderDashboard)
-function openStatusModal(status, items){
-  $("statusModalTitle").textContent = `${status} — ${items.length} espace(s)`;
-  const html = items.map(ep => {
-    const code = ep.code || "—";
-    const tenant = ep.tenant ? `<div class="badge">${ep.tenant}</div>` : "";
-    const area = ep.area ? `<div class="badge">${ep.area} m²</div>` : "";
-    let onThisFloor = false;
-    drawn.eachLayer(l => { if (layerProps(l).code === ep.code) onThisFloor = true; });
-    const goBtn = onThisFloor
-      ? `<button class="btn" data-goto="${code}" style="padding:4px 8px">Voir sur le plan</button>`
-      : `<span class="hint">Autre étage/bâtiment</span>`;
-    return `
-      <div class="rowlist">
-        <div><b>${code}</b> — ${ep.label || "?"}</div>
-        ${area}
-        ${tenant}
-        <div style="grid-column: 1 / -1; margin-top:4px">${goBtn}</div>
-      </div>`;
-  }).join("");
-  $("statusModalContent").innerHTML = html || "<div class='hint'>Aucun espace</div>";
-  $("statusModal").classList.add("open");
-  $("statusModalContent").querySelectorAll("[data-goto]").forEach(btn => {
-    btn.onclick = () => { focusSpaceByCode(btn.dataset.goto); };
-  });
-}
-function closeStatusModal(){ $("statusModal").classList.remove("open"); }
-function showStatusList(status){
-  const feats = getFeaturesForScope($("kpiScope").value);
-  const items = feats.map(fe => (fe.options && fe.options.ep) || {}).filter(ep => (ep.status === status));
-  openStatusModal(status, items);
-}
+
+// --- Dézoome un peu plus quand on focus un espace
 function focusSpaceByCode(code){
   let target = null;
   drawn.eachLayer(l => { if (layerProps(l).code === code) target = l; });
   if (target){
-    map.fitBounds(target.getBounds(), { padding:[50,50], maxZoom: -0,5 });
-                               
+    // padding plus large + évite de zoomer trop près
+    map.fitBounds(target.getBounds(), { padding:[120,120], maxZoom:-1 });
     target.openTooltip && target.openTooltip();
     closeStatusModal();
-  }else{
+  } else {
     const s = $("statusText"); const old = s.textContent;
     s.textContent = `« ${code} » n'est pas sur cet étage`;
     setTimeout(()=> s.textContent = old, 1200);
   }
+}
+
+// --- Bascule automatiquement vers b|f puis focus l’espace
+async function switchToKeyAndFocus(key, code){
+  const [b,f] = key.split("|");
+  if (!BUILDING_FLOORS[b] || !(BUILDING_FLOORS[b]||[]).includes(f)) return;
+
+  // Bascule sélecteurs
+  buildingSelect.value = b;
+  buildFloorOptions(b);
+  floorSelect.value = f;
+
+  // Recharge le plan puis focus
+  await onKeyChange();
+  focusSpaceByCode(code);
+}
+
+// --- Ouvre la modale avec une belle liste (items = [{ ep, key }])
+function openStatusModal(status, items){
+  $("statusModalTitle").textContent = `${status} — ${items.length} espace(s)`;
+
+  const html = items.map(({ep, key})=>{
+    const code   = ep.code || "—";
+    const label  = ep.label || "—";
+    const tenant = (ep.tenant || "").trim();
+    const area   = ep.area ? `${ep.area} m²` : "";
+    const onThisFloor = (key === currentKey) && (()=>{
+      let ok=false; drawn.eachLayer(l=>{ if(layerProps(l).code===ep.code) ok=true; });
+      return ok;
+    })();
+
+    const btn = onThisFloor
+      ? `<button class="btn pill" data-goto="${code}">Voir</button>`
+      : `<button class="btn pill ghost" data-goto="${code}" data-goto-key="${key}">Ouvrir et voir</button>`;
+
+    const place = (key!==currentKey)
+      ? `<span class="badge soft">${key.replace('|',' — ')}</span>`
+      : '';
+
+    return `
+      <div class="rowlist space-item">
+        <div class="left">
+          <div class="title">${code} — ${label}</div>
+          <div class="meta">
+            ${area ? `<span class="badge soft">${area}</span>` : ""}
+            ${tenant ? `<span class="badge">${tenant}</span>` : ""}
+            ${place}
+          </div>
+        </div>
+        <div class="right">${btn}</div>
+      </div>
+    `;
+  }).join("");
+
+  $("statusModalContent").innerHTML = html || "<div class='hint'>Aucun espace</div>";
+  $("statusModal").classList.add("open");
+
+  // Wiring boutons
+  $("statusModalContent").querySelectorAll("[data-goto]").forEach(btn=>{
+    btn.onclick = async () => {
+      const code = btn.dataset.goto;
+      const key  = btn.dataset.gotoKey;
+      if (key){ await switchToKeyAndFocus(key, code); }
+      else { focusSpaceByCode(code); }
+    };
+  });
+}
+
+function closeStatusModal(){ $("statusModal").classList.remove("open"); }
+
+// --- Liste par statut : récupère *avec la clé b|f* pour permettre la bascule auto
+function showStatusList(status){
+  const scope = $("kpiScope") ? $("kpiScope").value : "building";
+  const curB = buildingSelect.value;
+  const curF = floorSelect.value;
+  const curKey = keyFor(curB, curF);
+
+  const items = [];
+
+  function pushFromStore(key){
+    const store = (key === curKey) ? exportGeo() : loadFromCache(key);
+    const feats = (store && store.features) || [];
+    feats.forEach(fe=>{
+      const ep = (fe.options && fe.options.ep) || {};
+      if (ep.status === status){
+        items.push({ ep, key });
+      }
+    });
+  }
+
+  if (scope === "all"){
+    Object.keys(BUILDING_FLOORS).forEach(b=>{
+      (BUILDING_FLOORS[b]||[]).forEach(f=> pushFromStore(keyFor(b,f)));
+    });
+  } else { // "building"
+    (BUILDING_FLOORS[curB]||[]).forEach(f=> pushFromStore(keyFor(curB,f)));
+  }
+
+  // tri par code puis surface décroissante si dispo
+  items.sort((a,b)=>{
+    const aa = (a.ep.code||"").localeCompare(b.ep.code||"");
+    if (aa!==0) return aa;
+    return (b.ep.area||0) - (a.ep.area||0);
+  });
+
+  openStatusModal(status, items);
 }
 
 // initial hidden dashboard + shortcuts
