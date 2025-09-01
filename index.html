@@ -922,6 +922,26 @@ function euro(n){ const v=Number(n||0); const hasCents=Math.abs(v-Math.round(v))
 function wireBoardActions(){
   const closeBtn = $("boardClose");
   const popBtn = $("boardPop");
+  const backBtn = $("boardBack");
+if (backBtn && !backBtn.__wired){
+  backBtn.__wired = true;
+  backBtn.onclick = () => {
+    // Retour au panneau d’édition
+    // 1) si tu bascules via le bouton topbar, on peut simplement simuler le clic :
+    const t = $("btnAdminBoard");
+    if (t) { t.click(); return; }
+
+    // 2) sinon, fallback générique : on cache le board et on ré-affiche l’édition
+    const b = $("visitorBoard");
+    if (b){
+      b.style.display = "none";
+      b.classList.remove("fullscreen");
+    }
+    // réaffiche la section d’édition (si admin)
+    $("adminSection").style.display = isAdmin ? "block" : "none";
+  };
+}
+
 
   if (closeBtn && !closeBtn.__wired){
     closeBtn.__wired = true;
