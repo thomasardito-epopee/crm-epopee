@@ -1082,6 +1082,251 @@ function aggStats(features){
   const vacantCount   = (counts["Vacant"]||0);
   const occupiedPct   = total? Math.round(occupiedCount*1000/total)/10 : 0;
   const vacantPct     = total? Math.round(vacantCount*1000/total)/10 : 0;
+<script>
+// --- itère sur les clés (b|f) d'une portée donnée
+function forEachKeyInScope(scope, fn){
+  const curB = buildingSelect.value, curF = floorSelect.value, curKey = keyFor(curB,curF);
+  const isBuildingCode = !!BUILDING_FLOORS[scope];
+  const targetB = isBuildingCode ? scope : curB;
+  function push(k){
+    const store = (k===curKey) ? exportGeo() : loadFromCache(k);
+    const feats = (store && store.features) || [];
+    fn(k, feats);
+  }
+  if (scope==="all"){
+    Object.keys(BUILDING_FLOORS).forEach(b => (BUILDING_FLOORS[b]||[]).forEach(f => push(keyFor(b,f))));
+  } else if (isBuildingCode || scope==="building"){
+    (BUILDING_FLOORS[targetB]||[]).forEach(f => push(keyFor(targetB,f)));
+  } else {
+    push(curKey);
+  }
+}
+
+// --- stats par étage (taux d'occupation m²)
+function floorsStats(scope){
+  const map = new Map(); // key -> {b,f,occArea,totArea}
+  forEachKeyInScope(scope,(k,feats)=>{
+    const [b,f]=k.split("|");
+    let tot=0, occ=0;
+    feats.forEach(fe=>{
+      const ep = (fe.options && fe.options.ep) || {};
+      const isEvent = (ep.label === "Evenementiel");
+      const typeOk  = !filterEventOnly || isEvent;
+      const matches = activeStatuses.has(ep.status || "Vacant");
+      const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
+      const matchText = !searchText || text.includes(searchText);
+      if(!typeOk || !matches || !matchText) return;
+      const ar = Number(ep.area||0);
+      tot += ar;
+      if (ep.status==="Loué" || ep.status==="Préavis") occ += ar;
+    });
+    const o = map.get(k) || {b,f,occArea:0,totArea:0};
+    o.occArea += occ; o.totArea += tot;
+    map.set(k,o);
+  });
+  return [...map.values()].map(o => ({...o, rate: o.totArea ? Math.round(o.occArea*1000/o.totArea)/10 : 0}));
+}
+
+// --- CSV export helper
+function exportCSV(rows, headers, filename){
+  const head = headers.join(',');
+  const lines = rows.map(r => headers
+    .map(h => String(r[h] ?? '').replace(/"/g,'""'))
+    .map(v => `"${v}"`).join(',')
+  );
+  const csv = [head].concat(lines).join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+  setTimeout(()=> URL.revokeObjectURL(a.href), 0);
+}
+
+// --- rendu "plein écran" avancé
+function renderDashboardFull(){
+  const board = $("visitorBoard");
+  const scopeSel = board.querySelector('#kpiScopeFS');
+  const currentScope = scopeSel ? scopeSel.value : (BUILDING_FLOORS[buildingSelect.value] ? buildingSelect.value : "building");
+
+  const scopeOptions = [
+    ...Object.keys(BUILDING_FLOORS).map(b => `<option value="${b}"${currentScope===b?' selected':''}>Bâtiment ${b}</option>`),
+    `<option value="all"${currentScope==='all'?' selected':''}>Village (tous)</option>`
+  ].join('');
+
+  board.innerHTML = `
+    <div class="fs-toolbar">
+      <div class="fs-left">
+        <strong style="font-size:14px">Dashboard</strong>
+        <label>Vue :</label>
+        <select id="kpiScopeFS" class="select">${scopeOptions}</select>
+        <input id="fsFindCode" class="input" placeholder="Chercher un code (ex. AJ-B2)" style="width:200px">
+        <button class="btn" id="fsGoto">Voir sur le plan</button>
+      </div>
+      <div class="fs-right">
+        <label style="font-size:12px">Cible occupation</label>
+        <input type="range" id="fsOccTarget" min="50" max="100" step="1" value="85">
+        <span class="hint" id="fsOccLabel">85%</span>
+        <button class="btn" id="fsExport">Exporter CSV</button>
+        <button class="btn" id="boardBack">←</button>
+      </div>
+    </div>
+
+    <div class="grid-kpis-4" id="kpisFS"></div>
+
+    <div class="grid2" style="margin-top:10px">
+      <div class="card">
+        <h5>Répartition par statut (nb espaces)</h5>
+        <div class="canvas-wrap"><canvas id="fsStatus"></canvas></div>
+        <div id="fsLegendStatus" class="legend"></div>
+      </div>
+      <div class="card">
+        <h5>m² occupés vs vacants</h5>
+        <div class="canvas-wrap"><canvas id="fsArea"></canvas></div>
+        <div id="fsLegendArea" class="legend"></div>
+      </div>
+    </div>
+
+    <div class="grid2" style="margin-top:10px">
+      <div class="card">
+        <h5>Taux d’occupation par étage</h5>
+        <div class="canvas-wrap"><canvas id="fsByFloor"></canvas></div>
+      </div>
+      <div class="card">
+        <h5>Postes occupés vs vacants</h5>
+        <div class="canvas-wrap"><canvas id="fsPosts"></canvas></div>
+        <div id="fsLegendPosts" class="legend"></div>
+      </div>
+    </div>
+
+    <div class="grid2" style="margin-top:10px">
+      <div class="card">
+        <h5>Top 10 vacants (m²)</h5>
+        <div class="table tight" id="fsVacants"></div>
+      </div>
+      <div class="card">
+        <h5>Préavis à risque</h5>
+        <div class="table tight" id="fsPreavis"></div>
+      </div>
+    </div>
+  `;
+
+  $("kpiScopeFS").onchange = ()=> renderDashboardFull();
+  $("fsOccTarget").oninput = (e)=>{ $("fsOccLabel").textContent = e.target.value + "%"; renderDashboardFull(); };
+  $("fsGoto").onclick = ()=>{ const v=$("fsFindCode").value.trim(); if(v) focusSpaceByCode(v); };
+  // le bouton back est recâblé dans wireBoardActions()
+  wireBoardActions();
+
+  // --- données
+  const feats = getFeaturesForScope($("kpiScopeFS").value);
+  const featsFiltered = feats.filter(fe=>{
+    const ep = (fe.options && fe.options.ep) || {};
+    const matchesStatus = activeStatuses.has(ep.status || "Vacant");
+    const isEvent = (ep.label === "Evenementiel");
+    const typeOk = !filterEventOnly || isEvent;
+    const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
+    const matchText = !searchText || text.includes(searchText);
+    return matchesStatus && typeOk && matchText;
+  });
+  const S = aggStats(featsFiltered);
+
+  // KPI additionnels
+  const rentPerM2 = S.areaOcc ? (S.rentFacture / S.areaOcc) : 0;
+  const rentGap   = Math.max(0, S.rentPotentiel - S.rentFacture);
+  const preavisN  = S.counts["Préavis"] || 0;
+  const preavisA  = Math.round(S.area["Préavis"] || 0);
+  const maintA    = Math.round(S.area["Maintenance"] || 0);
+  const occTarget = parseInt($("fsOccTarget").value,10) || 85;
+  const needOccM2 = Math.max(0, Math.round(((occTarget/100) * (S.areaOcc + S.areaVac)) - S.areaOcc));
+  const addRev    = Math.round(needOccM2 * rentPerM2);
+
+  $("kpisFS").innerHTML = `
+    <div class="kpi card soft"><div class="v">${S.occupiedCount} <span class="subl">(${S.occupiedPct}%)</span></div><div class="l">Bureaux occupés</div></div>
+    <div class="kpi card soft"><div class="v">${S.vacantCount} <span class="subl">(${S.vacantPct}%)</span></div><div class="l">Bureaux vacants</div></div>
+    <div class="kpi card soft"><div class="v">${Math.round(S.areaOcc)} m²</div><div class="l">m² occupés</div></div>
+    <div class="kpi card soft"><div class="v">${Math.round(S.areaVac)} m²</div><div class="l">m² vacants</div></div>
+    <div class="kpi card soft"><div class="v">${preavisN} <span class="subl">${preavisA} m²</span></div><div class="l">Préavis</div></div>
+    <div class="kpi card soft"><div class="v">${maintA} m²</div><div class="l">Maintenance</div></div>
+    <div class="kpi card soft"><div class="v">${Math.round(rentPerM2)} €</div><div class="l">€/m² (occupés)</div></div>
+    <div class="kpi card soft"><div class="v">${euro(rentGap)} €</div><div class="l">Manque à gagner</div></div>
+    <div class="kpi card soft"><div class="v">${occTarget}%</div><div class="l">Objectif d'occupation</div></div>
+    <div class="kpi card soft"><div class="v">${needOccM2} m²</div><div class="l">m² à louer (objectif)</div></div>
+    <div class="kpi card soft"><div class="v">${euro(addRev)} €</div><div class="l">Revenu supp. estimé</div></div>
+    <div class="kpi card soft"><div class="v">${Math.round(S.euroPerPost)} €</div><div class="l">€ / poste (moyenne)</div></div>
+  `;
+
+  // Donut statuts
+  const statusLabels = ["Loué","Préavis","Vacant","Réservé","Maintenance"];
+  const statusParts  = statusLabels.map(s => S.counts[s] || 0);
+  const statusColors = statusLabels.map(s => STATUS_STYLES[s].fill);
+  drawDonut($("fsStatus"), statusParts, statusColors, String(S.totalSpaces||0));
+  $("fsLegendStatus").innerHTML = statusLabels.map((lab,i)=>{
+    const v = statusParts[i]||0; if(!v) return "";
+    const pct = Math.round(v*1000/(S.totalSpaces||1))/10;
+    return `<div class="item"><span class="dot" style="background:${statusColors[i]}"></span>${lab} — ${v} (${pct}%)</div>`;
+  }).join("");
+
+  // Donut m² occ/vac
+  const occ = S.areaOcc||0, vac = S.areaVac||0, totA=(occ+vac)||1;
+  const occPct = Math.round(occ*1000/totA)/10;
+  drawDonut($("fsArea"), [occ,vac], [STATUS_STYLES["Loué"].fill, STATUS_STYLES["Vacant"].fill], `${Math.round(occPct)}%`);
+  $("fsLegendArea").innerHTML = `
+    <div class="item"><span class="dot" style="background:${STATUS_STYLES["Loué"].fill}"></span>Occupés — ${Math.round(occ)} m² (${occPct}%)</div>
+    ${vac?`<div class="item"><span class="dot" style="background:${STATUS_STYLES["Vacant"].fill}"></span>Vacants — ${Math.round(vac)} m² (${Math.round(vac*1000/totA)/10}%)</div>`:""}
+  `;
+
+  // Par étage
+  const byFloor = floorsStats($("kpiScopeFS").value);
+  if (byFloor.length){
+    drawBars(
+      $("fsByFloor"),
+      byFloor.map(x => `${x.b} ${x.f}`),
+      byFloor.map(x => Math.round(x.rate)),
+      [STATUS_STYLES["Loué"].fill]
+    );
+  }
+
+  // Postes
+  const pOcc = S.occPosts||0, pVac=S.vacPosts||0, pTot=(pOcc+pVac)||1;
+  if (pOcc+pVac>0){
+    const pOccPct = Math.round(pOcc*1000/pTot)/10;
+    drawDonut($("fsPosts"), [pOcc,pVac], [STATUS_STYLES["Loué"].fill, STATUS_STYLES["Vacant"].fill], `${Math.round(pOccPct)}%`);
+    $("fsLegendPosts").innerHTML = `
+      <div class="item"><span class="dot" style="background:${STATUS_STYLES["Loué"].fill}"></span>Occupés — ${pOcc} (${pOccPct}%)</div>
+      ${pVac?`<div class="item"><span class="dot" style="background:${STATUS_STYLES["Vacant"].fill}"></span>Vacants — ${pVac} (${Math.round(pVac*1000/pTot)/10}%)</div>`:""}
+    `;
+  }
+
+  // Top 10 vacants
+  const vacants = featsFiltered
+    .map(fe => (fe.options && fe.options.ep) || {})
+    .filter(ep => ep.status==="Vacant")
+    .sort((a,b)=> (b.area||0)-(a.area||0))
+    .slice(0,10);
+  $("fsVacants").innerHTML = vacants.length
+    ? `<div class="table"><table><thead><tr><th>Code</th><th>Libellé</th><th>m²</th><th>Posts</th></tr></thead><tbody>${
+        vacants.map(v=> `<tr><td>${v.code||"—"}</td><td>${v.label||"—"}</td><td>${Math.round(v.area||0)}</td><td>${v.posts||0}</td></tr>`).join("")
+      }</tbody></table></div>`
+    : `<div class="hint">Aucun vacant</div>`;
+
+  // Préavis à risque
+  const preavis = featsFiltered
+    .map(fe => (fe.options && fe.options.ep) || {})
+    .filter(ep => ep.status==="Préavis")
+    .sort((a,b)=> (b.area||0)-(a.area||0));
+  $("fsPreavis").innerHTML = preavis.length
+    ? `<div class="table"><table><thead><tr><th>Code</th><th>Résident</th><th>m²</th><th>€ / mois</th></tr></thead><tbody>${
+        preavis.map(v=> `<tr><td>${v.code||"—"}</td><td>${v.tenant||"—"}</td><td>${Math.round(v.area||0)}</td><td>${euro(v.rent||0)}</td></tr>`).join("")
+      }</tbody></table></div>`
+    : `<div class="hint">Aucun préavis</div>`;
+
+  // Export CSV (vacants + préavis)
+  $("fsExport").onclick = ()=>{
+    const rows = []
+      .concat(vacants.map(v=> ({type:"Vacant", code:v.code||"", label:v.label||"", tenant:v.tenant||"", area:v.area||0, posts:v.posts||0, rent:v.rent||0})))
+      .concat(preavis.map(v=> ({type:"Préavis", code:v.code||"", label:v.label||"", tenant:v.tenant||"", area:v.area||0, posts:v.posts||0, rent:v.rent||0})));
+    exportCSV(rows, ["type","code","label","tenant","area","posts","rent"], "dashboard_export.csv");
+  };
+}
+</script>
 
   const tenantsArr = Object.entries(byTenant).map(([k,v])=>({tenant:k, ...v})).sort((a,b)=> b.count - a.count).slice(0,5);
   const tenantsAreaArr = Object.entries(byTenant).map(([k,v])=>({tenant:k, ...v})).sort((a,b)=> b.area - a.area).slice(0,5);
