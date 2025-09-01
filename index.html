@@ -399,11 +399,17 @@ $("zoomOut").onclick=()=> map.zoomOut();
 
 // Geoman toolbar
 map.pm.addControls({
-  position: 'topleft',
-  drawPolygon: true,
+  position: 'topright',
+  drawMarker: false,
+  drawCircle: false,
+  drawPolyline: false,
+  drawCircleMarker: false,
   drawRectangle: true,
+  drawPolygon: true,
   editMode: true,
-  removalMode: false, // désactive la gomme Geoman
+  dragMode: false,
+  removalMode: false,   // ✅ gomme Geoman active
+  cutPolygon: false
 });
 
 map.pm.setLang('fr');
