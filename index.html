@@ -1365,30 +1365,6 @@ function renderDashboardFull(){
 }
 </script>
 
-  const tenantsArr = Object.entries(byTenant).map(([k,v])=>({tenant:k, ...v})).sort((a,b)=> b.count - a.count).slice(0,5);
-  const tenantsAreaArr = Object.entries(byTenant).map(([k,v])=>({tenant:k, ...v})).sort((a,b)=> b.area - a.area).slice(0,5);
-  const tenantsRentArr = Object.entries(byTenant).map(([k,v])=>({tenant:k, ...v})).sort((a,b)=> (b.rent||0) - (a.rent||0)).slice(0,5);
-
-  const areaOcc = (area["Loué"]||0) + (area["Préavis"]||0);
-  const areaVac = (area["Vacant"]||0);
-
-  const totalPosts = Object.values(posts).reduce((a,b)=>a+b,0);
-  const occPosts   = (posts["Loué"]||0) + (posts["Préavis"]||0);
-  const vacPosts   = Math.max(0, totalPosts - occPosts);
-
-  const rentFacture   = (rent["Loué"]||0) + (rent["Préavis"]||0);
-  const rentPotentiel = rentFacture + reservedRentNonEvent;
-  const rentTotal     = Object.values(rent).reduce((a,b)=>a+b,0);
-  const euroPerPost   = totalPosts ? (rentFacture / totalPosts) : 0;
-
-  return {
-    totalSpaces: total, counts, area, posts, rent,
-    occupiedCount, vacantCount, occupiedPct, vacantPct,
-    tenantsArr, tenantsAreaArr, tenantsRentArr,
-    areaOcc, areaVac, totalPosts, occPosts, vacPosts,
-    rentFacture, rentPotentiel, rentTotal, euroPerPost,
-    reservedList
-  };
 }
 
 // Charts
