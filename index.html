@@ -398,6 +398,7 @@ $("zoomIn").onclick=()=> map.zoomIn();
 $("zoomOut").onclick=()=> map.zoomOut();
 
 // Geoman toolbar
+// Geoman toolbar
 map.pm.addControls({
   position: 'topright',
   drawMarker: false,
@@ -408,18 +409,18 @@ map.pm.addControls({
   drawPolygon: true,
   editMode: true,
   dragMode: false,
-  removalMode: true,   // ✅ gomme Geoman active
+  removalMode: true,   // gomme Geoman active
   cutPolygon: false
 });
 
-// Suppression via gomme Geoman — 1 seul handler, décalé d’un tick
-map.off('pm:remove'); // au cas où un ancien listener traîne
-map.on('pm:remove', () => {
-  // Laisse Geoman retirer la couche du FeatureGroup avant d’exporter
-  setTimeout(() => {
-    saveLocal();        // -> met à jour localStorage + POST /api/spaces/batch
-  }, 0);
+// --- suppression via gomme Geoman : 1 seul listener, après retrait de la couche
+map.off('pm:remove');                  // évite tout doublon résiduel
+map.on('pm:remove', () => {            // enregistre l’état après suppression
+  setTimeout(() => { saveLocal(); }, 0);   // saveLocal() -> POST /api/spaces/batch
 });
+
+map.pm.setLang('fr');
+map.pm.setPathOptions({ snappable:true, snapDistance:10 });
 
 map.pm.setLang('fr');
 map.pm.setPathOptions({ snappable: true, snapDistance: 10 });
