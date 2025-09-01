@@ -1100,11 +1100,22 @@ function renderDashboard(){
   const occPct = Math.round(occ*1000/totA)/10, vacPct = Math.round(vac*1000/totA)/10;
   drawDonut($("chartAreaOccVac"), [occ, vac], [STATUS_STYLES["Loué"].fill, STATUS_STYLES["Vacant"].fill], `${Math.round(occPct)}%`);
   $("legendArea").innerHTML = `
-    <div class="item"><span class="dot" style="background:${STATUS_STYLES["Loué"].fill}"></span>
-      Occupés — ${Math.round(occ)} m² (${occPct}%)</div>
-    ${vac>0 ? `<div class="item"><span class="dot" style="background:${STATUS_STYLES["Vacant"].fill}"></span>
-      Vacants — ${Math.round(vac)} m² (${vacPct}%)</div>` : ""}
-  `;
+  <div class="item" role="button" style="cursor:pointer" data-area="occupied">
+    <span class="dot" style="background:${STATUS_STYLES["Loué"].fill}"></span>
+    Occupés — ${Math.round(occ)} m² (${occPct}%)
+  </div>
+  ${vac>0 ? `
+  <div class="item" role="button" style="cursor:pointer" data-area="vacant">
+    <span class="dot" style="background:${STATUS_STYLES["Vacant"].fill}"></span>
+    Vacants — ${Math.round(vac)} m² (${vacPct}%)
+  </div>` : ""}
+`;
+
+// clic = ouvrir la liste m² occupés / m² vacants
+$("legendArea").querySelectorAll(".item").forEach(node=>{
+  node.onclick = () => showAreaList(node.dataset.area);
+});
+
 
   // Top 5 résidents
   const topSel = $("topMode");
