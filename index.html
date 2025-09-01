@@ -613,7 +613,6 @@ map.on('pm:create', e=>{
   selectLayer(l, true);           // Auto-sélection immédiate
   saveLocal();
 });
-map.on('pm:remove', ()=>{ saveLocal(); });
 map.on('pm:edit', ()=>{ saveLocal(); });
 
 function attachListeners(l){
