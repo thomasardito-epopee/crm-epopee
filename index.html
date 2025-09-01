@@ -136,12 +136,16 @@ canvas{width:100%; height:200px}
   /* ==== Améliorations Dashboard – plein écran uniquement ==== */
 .board.fullscreen{ padding:16px 18px; }
 
-.board.fullscreen .fs-toolbar{
-  position: sticky; top:8px;
-  display:flex; gap:8px; align-items:center; justify-content:space-between;
-  background:#fff; padding:6px 8px; border:1px solid var(--border);
-  border-radius:12px; box-shadow:0 6px 16px rgba(0,0,0,.04); margin-bottom:10px; z-index:10;
+.board.fullscreen{
+  position:fixed;
+  /* on laisse inset, mais on écrase le top juste après */
+  inset:12px;
+  left:12px; right:12px; bottom:12px;
+  top: calc(var(--topbar-h) + 12px); /* ← évite la barre du haut */
+  max-width:none; min-width:unset;
+  overflow:auto; z-index:3000;
 }
+
 .fs-left{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 .fs-right{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 .fs-toolbar .input, .fs-toolbar .select{ height:34px; padding:6px 10px; }
