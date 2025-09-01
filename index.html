@@ -1196,20 +1196,7 @@ function focusSpaceByCode(code){
     setTimeout(()=> s.textContent = old, 1200);
   }
 }
-    function openStatusModal(status, items){
-  $("statusModalTitle").textContent = `${status} — ${items.length} espace(s)`;
-
-  const html = items.map(({ep, key})=>{
-    const code   = ep.code || "—";
-    const label  = ep.label || "—";
-    const tenant = (ep.tenant || "").trim();
-    const area   = ep.area ? `${ep.area} m²` : "";
-
-    const onThisFloor = (key === currentKey) && (()=>{
-      let ok=false; drawn.eachLayer(l=>{ if(layerProps(l).code===ep.code) ok=true; });
-      return ok;
-    })();
-
+  
 function closeStatusModal(){ $("statusModal").classList.remove("open"); }
   // --- Liste des postes (occupés / vacants)
 // --- m² (occupés / vacants) — portée globale
