@@ -1171,7 +1171,7 @@ function focusSpaceByCode(code){
   let target = null;
   drawn.eachLayer(l => { if (layerProps(l).code === code) target = l; });
   if (target){
-    map.fitBounds(target.getBounds(), { padding:[40,40] });
+    map.fitBounds(target.getBounds(), { padding:[80,80], maxZoom: -1 });
     target.openTooltip && target.openTooltip();
     closeStatusModal();
   }else{
