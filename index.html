@@ -1109,22 +1109,21 @@ function drawBars(canvas, labels, values, colors = ["#0a84ff"]){
 function renderDashboard(){
   const board = $("visitorBoard");
   let scopeSel = board.querySelector('#kpiScope');
-  const curB = buildingSelect.value;
-  const scope = scopeSel ? scopeSel.value : 'building';
+ // construit la portée courante + les <option>
+const currentScope = scopeSel ? scopeSel.value : buildingSelect.value; // A, B, … ou "all"
+const scopeOptions = [
+  ...Object.keys(BUILDING_FLOORS).map(b =>
+    `<option value="${b}"${currentScope===b ? ' selected' : ''}>Bâtiment ${b}</option>`
+  ),
+  `<option value="all"${currentScope==='all' ? ' selected' : ''}>Statistiques du village</option>`
+].join('');
+
   board.innerHTML = `
     <h4>Dashboard</h4>
     <div class="sub">
       <div class="scope">
         <span>Vue :</span>
-       // juste avant board.innerHTML = `...`, prépare la valeur courante
-const curB = buildingSelect.value;
-const scope = (scopeSel ? scopeSel.value : curB);
-const buildingList = Object.keys(BUILDING_FLOORS);
-const scopeOptions =
-  buildingList.map(b =>
-    `<option value="${b}"${scope===b?' selected':''}>Bâtiment ${b}</option>`
-  ).join('') +
-  `<option value="all"${scope==='all'?' selected':''}>Statistiques du village</option>`;
+       <select id="kpiScope">${scopeOptions}</select>
       </div>
     </div>
    <div class="board-actions inpanel">
