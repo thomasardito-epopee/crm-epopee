@@ -1,11 +1,11 @@
 {
   "name": "crm-epopee",
   "private": true,
+  "version": "0.1.0",
   "scripts": {
-    "build:functions": "echo 'no build needed'"
+    "build": "echo \"no build needed\""
   },
   "dependencies": {
-    "@neondatabase/serverless": "^0.10.0",
     "pg": "^8.11.3"
   },
   "devDependencies": {
