@@ -1239,6 +1239,67 @@ const featsFiltered = feats.filter(fe=>{
 });
 const S = aggStats(featsFiltered);
 
+// --- Modale "liste par statut"
+function openStatusModal(status, items){
+  $("statusModalTitle").textContent = `${status} — ${items.length} espace(s)`;
+
+  // liste jolie + bouton "voir sur le plan" si l'espace est sur l'étage affiché
+  const html = items.map(ep => {
+    const code = ep.code || "—";
+    const tenant = ep.tenant ? `<div class="badge">${ep.tenant}</div>` : "";
+    const area = ep.area ? `<div class="badge">${ep.area} m²</div>` : "";
+    // Est-ce que la couche est visible sur la carte actuelle ?
+    let onThisFloor = false;
+    drawn.eachLayer(l => { if (layerProps(l).code === ep.code) onThisFloor = true; });
+    const goBtn = onThisFloor
+      ? `<button class="btn" data-goto="${code}" style="padding:4px 8px">Voir sur le plan</button>`
+      : `<span class="hint">Autre étage/bâtiment</span>`;
+
+    return `
+      <div class="rowlist">
+        <div><b>${code}</b> — ${ep.label || "?"}</div>
+        ${area}
+        ${tenant}
+        <div style="grid-column: 1 / -1; margin-top:4px">${goBtn}</div>
+      </div>`;
+  }).join("");
+
+  $("statusModalContent").innerHTML = html || "<div class='hint'>Aucun espace</div>";
+  $("statusModal").classList.add("open");
+
+  // wiring des boutons "Voir sur le plan"
+  $("statusModalContent").querySelectorAll("[data-goto]").forEach(btn => {
+    btn.onclick = () => { focusSpaceByCode(btn.dataset.goto); };
+  });
+}
+
+function closeStatusModal(){ $("statusModal").classList.remove("open"); }
+
+// Filtre par statut selon la portée du dashboard (bâtiment / tous)
+function showStatusList(status){
+  const feats = getFeaturesForScope($("kpiScope").value);
+  const items = feats
+    .map(fe => (fe.options && fe.options.ep) || {})
+    .filter(ep => (ep.status === status));
+  openStatusModal(status, items);
+}
+
+// Focus carte par code (si présent sur le plan affiché)
+function focusSpaceByCode(code){
+  let target = null;
+  drawn.eachLayer(l => { if (layerProps(l).code === code) target = l; });
+  if (target){
+    map.fitBounds(target.getBounds(), { padding:[40,40] });
+    target.openTooltip && target.openTooltip();
+    closeStatusModal();
+  }else{
+    // Rien sur l’étage courant
+    const s = $("statusText");
+    const old = s.textContent;
+    s.textContent = `« ${code} » n'est pas sur cet étage`;
+    setTimeout(()=> s.textContent = old, 1200);
+  }
+}
 
   const kpisEl = $("kpis");
   kpisEl.innerHTML = `
