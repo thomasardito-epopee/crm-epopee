@@ -1079,6 +1079,56 @@ function aggStats(features){
       reservedRentNonEvent += rentVal;
     }
   });
+// Itère sur les clés b|f d'une portée
+function forEachKeyInScope(scope, fn){
+  const curB = buildingSelect.value, curF = floorSelect.value;
+  const curKey = keyFor(curB,curF);
+  const isBuildingCode = !!BUILDING_FLOORS[scope];
+  const targetB = isBuildingCode ? scope : curB;
+
+  function push(k){
+    const store = (k===curKey) ? exportGeo() : loadFromCache(k);
+    const feats = (store && store.features) || [];
+    fn(k, feats);
+  }
+
+  if (scope==="all"){
+    Object.keys(BUILDING_FLOORS).forEach(b =>
+      (BUILDING_FLOORS[b]||[]).forEach(f => push(keyFor(b,f)))
+    );
+  } else if (isBuildingCode || scope==="building"){
+    (BUILDING_FLOORS[targetB]||[]).forEach(f => push(keyFor(targetB,f)));
+  } else {
+    push(curKey);
+  }
+}
+
+// Stats par étage (taux d’occupation m²)
+function floorsStats(scope){
+  const mapRates = new Map();
+  forEachKeyInScope(scope,(k,feats)=>{
+    const [b,f]=k.split("|");
+    let tot=0, occ=0;
+    feats.forEach(fe=>{
+      const ep = (fe.options && fe.options.ep) || {};
+      const isEvent = (ep.label === "Evenementiel");
+      const typeOk  = !filterEventOnly || isEvent;
+      const matches = activeStatuses.has(ep.status || "Vacant");
+      const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
+      const matchText = !searchText || text.includes(searchText);
+      if(!typeOk || !matches || !matchText) return;
+      const ar = Number(ep.area||0);
+      tot += ar;
+      if (ep.status==="Loué" || ep.status==="Préavis") occ += ar;
+    });
+    const o = mapRates.get(k) || {b,f,occArea:0,totArea:0};
+    o.occArea += occ; o.totArea += tot;
+    mapRates.set(k,o);
+  });
+  return [...mapRates.values()].map(o => ({
+    ...o, rate: o.totArea ? Math.round(o.occArea*1000/o.totArea)/10 : 0
+  }));
+}
 
   const occupiedCount = (counts["Loué"]||0) + (counts["Préavis"]||0);
   const vacantCount   = (counts["Vacant"]||0);
