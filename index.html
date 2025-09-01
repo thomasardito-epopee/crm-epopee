@@ -1890,7 +1890,8 @@ function suggestionsFor(q, limit=6){
   const qn = norm(q);
   if(qn.length<2) return [];
   const stats = collectTenantStats();
-  const arr = [...stats.values()].filter(o=> norm(o.name).includes(qn)).sort((a,b)=> b.count - a.count).slice(0,limit);
+  const arr = [...stats.values()].filter(...);
+[...suggest.querySelectorAll(".item")].forEach(...);
   return arr;
 }
 function positionSuggest(el){
