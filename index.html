@@ -1471,6 +1471,16 @@ document.addEventListener("click", (e)=>{
 function __openDashboardFull(){ const b=$("visitorBoard"); if(!b) return; b.classList.add("fullscreen"); b.style.display="block"; renderDashboard(); }
 document.addEventListener("DOMContentLoaded", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
 window.addEventListener("hashchange", ()=>{ if(location.hash==="#dashboard-full") __openDashboardFull(); });
+<!-- MODAL LISTE STATUT -->
+<div class="modal" id="statusModal" aria-hidden="true">
+  <div class="pad" role="dialog" aria-modal="true" style="max-width:600px;width:90%">
+    <h4 id="statusModalTitle">Espaces</h4>
+    <div id="statusModalContent" style="max-height:60vh;overflow:auto;margin-top:12px"></div>
+    <div style="text-align:right;margin-top:12px">
+      <button class="btn" onclick="closeStatusModal()">Fermer</button>
+    </div>
+  </div>
+</div>
 
 </script>
 </body>
