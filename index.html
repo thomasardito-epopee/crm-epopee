@@ -948,6 +948,7 @@ async function onKeyChange(){
   const b = buildingSelect.value, f = floorSelect.value;
   currentKey = keyFor(b,f);
   const data = await loadLocal(currentKey);
+  ensureFilters(); // reconstruit les puces après le preload + import
   importGeo(data || loadFromCache(currentKey) || { features: [] });
   await tryPreload(b,f);
   updateBoard();
