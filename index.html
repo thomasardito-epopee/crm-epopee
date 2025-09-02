@@ -859,6 +859,20 @@ $("fStatus").addEventListener('change', ()=>{
     setColor(hex);
   } else { setColor(ep.color); }
 });
+  $("fStatus").addEventListener('change', ()=>{
+  if(!currentLayer) return;
+  const ep = layerProps(currentLayer);
+  const prevDefault = STATUS_STYLES[ep.status||"Vacant"].fill;
+  if(!ep.color || ep.color === prevDefault){
+    const hex = STATUS_STYLES[$("fStatus").value].fill;
+    setColor(hex);
+  } else { setColor(ep.color); }
+
+  // ⬇⬇⬇ afficher/masquer bloc préavis
+  const isEvent = isEventLabel($("fLabel").value);
+  $("preavisRow").style.display = (!isEvent && $("fStatus").value === "Préavis") ? "grid" : "none";
+});
+
 
 $("btnApply").onclick = ()=>{
   if(!currentLayer) return;
