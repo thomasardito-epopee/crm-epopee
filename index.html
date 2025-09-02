@@ -1553,13 +1553,54 @@ function renderDashboardFull(){
     : `<div class="hint">Aucun préavis</div>`;
 
   // Export CSV
-  $("fsExport").onclick = ()=>{
-    const rows = []
-      .concat(vacants.map(v=> ({type:"Vacant", code:v.code||"", label:v.label||"", tenant:v.tenant||"", area:v.area||0, posts:v.posts||0, rent:v.rent||0})))
-      .concat(preavis.map(v=> ({type:"Préavis", code:v.code||"", label:v.label||"", tenant:v.tenant||"", area:v.area||0, posts:v.posts||0, rent:v.rent||0})));
-    exportCSV(rows, ["type","code","label","tenant","area","posts","rent"], "dashboard_export.csv");
-  };
-}
+  $("fsExport").onclick = () => {
+  const scope = $("kpiScopeFS").value;
+
+  // colonnes du CSV
+  const headers = [
+    "building","floor","code","label","status","tenant",
+    "area","posts","rent",
+    "is_event","pax_sit","pax_stand","day_price"
+  ];
+
+  const rows = [];
+
+  // on parcourt toutes les clés de la portée (Village / Bâtiment / Étage courant)
+  forEachKeyInScope(scope, (k, feats) => {
+    const [b, f] = k.split("|");
+    feats.forEach(fe => {
+      const ep = (fe.options && fe.options.ep) || {};
+      const status = ep.status || "Vacant";
+
+      // mêmes filtres que l’UI
+      const isEvent = isEventLabel(ep.label);
+      const matchesStatus = activeStatuses.has(status);
+      const typeOk = !filterEventOnly || isEvent;
+      const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
+      const matchText = !searchText || text.includes(searchText);
+      if (!matchesStatus || !typeOk || !matchText) return;
+
+      rows.push({
+        building: b,
+        floor: f,
+        code: ep.code || "",
+        label: ep.label || "",
+        status,
+        tenant: ep.tenant || "",
+        area: Number(ep.area || 0),
+        posts: isEvent ? 0 : (parseInt(ep.posts || 0, 10) || 0),
+        rent:  isEvent ? 0 : (parseFloat(String(ep.rent || 0).toString().replace(",",".")) || 0),
+        is_event: isEvent ? "yes" : "no",
+        pax_sit:   isEvent ? (parseInt(ep.paxSit   || 0, 10) || 0) : 0,
+        pax_stand: isEvent ? (parseInt(ep.paxStand || 0, 10) || 0) : 0,
+        day_price: isEvent ? (parseFloat(String(ep.dayPrice || 0).toString().replace(",",".")) || 0) : 0
+      });
+    });
+  });
+
+  exportCSV(rows, headers, `epopee_export_${scope}.csv`);
+};
+
 
 // Charts
 function drawDonut(canvas, parts, colors, centerText){
