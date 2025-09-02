@@ -1683,13 +1683,7 @@ function renderDashboardFull(){
     : `<div class="hint">Aucun préavis</div>`;
 
   // Export CSV
-  $("fsExport").onclick = ()=>{
-    const rows = []
-      .concat(vacants.map(v=> ({type:"Vacant", code:v.code||"", label:v.label||"", tenant:v.tenant||"", area:v.area||0, posts:v.posts||0, rent:v.rent||0})))
-      .concat(preavis.map(v=> ({type:"Préavis", code:v.code||"", label:v.label||"", tenant:v.tenant||"", area:v.area||0, posts:v.posts||0, rent:v.rent||0})));
-    exportCSV(rows, ["type","code","label","tenant","area","posts","rent"], "dashboard_export.csv");
-  };
-}
+ $("fsExport").onclick = () => exportDashboardXLSX($("kpiScopeFS").value);
 
 // Charts
 function drawDonut(canvas, parts, colors, centerText){
