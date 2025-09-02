@@ -841,6 +841,26 @@ function selectLayer(l, focusFirst=true){
     {duration:600}
   );
 
+  // 1) Initialiser les datepickers maintenant que les inputs existent
+initDatePickers();
+
+// 2) Pré-remplir à partir des props de la couche
+const ep = layerProps(currentLayer);
+if (ep.notice_start_date)       fpNotice.setDate(ep.notice_start_date, true, "Y-m-d");
+if (ep.reserved_arrival_date)   fpReserved.setDate(ep.reserved_arrival_date, true, "Y-m-d");
+if (ep.notice_start_date)       fpReserved.set("minDate", ep.notice_start_date);
+
+// 3) Affichage conditionnel selon le statut courant
+updateDateGroups();
+
+// 4) Rebrancher l'event sur le select Statut (à chaque ouverture du panneau)
+const stEl = document.getElementById("fStatus");
+if (stEl) {
+  // évite les doublons d'écouteurs si tu ouvres/fermes plusieurs fois
+  stEl.onchange = updateDateGroups;
+}
+
+  
   // ← NEW: pré-remplir les dates si présentes (ici, DANS la fonction)
   const ns = document.getElementById("fNoticeStart");
   const ra = document.getElementById("fReservedArrival");
