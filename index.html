@@ -69,6 +69,29 @@ html,body{height:100%;margin:0;font-family:Inter,-apple-system,BlinkMacSystemFon
   flex-shrink: 0;                 /* “Exporter” ne se compacte pas */
 }
 
+/* Champs date – style épuré */
+.input.date{
+  appearance:none;
+  -webkit-appearance:none;
+  -moz-appearance:none;
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:9px 12px;
+  height:40px;
+  font:inherit;
+  color:var(--text);
+}
+.input.date:focus{
+  outline:none;
+  box-shadow:0 0 0 3px rgba(10,132,255,.15);
+  border-color:transparent;
+}
+.input.date::-webkit-calendar-picker-indicator{
+  cursor:pointer;
+  opacity:.7;
+}
+
   
 .layout{display:grid;grid-template-columns:360px 1fr;height:calc(100vh - 56px);transition:grid-template-columns .24s ease;position:relative}
 aside.panel{background:var(--panel);border-right:1px solid var(--border);padding:14px;overflow:auto;z-index:1400}
