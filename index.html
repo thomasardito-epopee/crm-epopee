@@ -9,9 +9,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
 <link rel="icon" type="image/png" href="favicon.png"> <!-- fallback -->
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/fr.js"></script>
+
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -45,18 +43,6 @@ html,body{height:100%;margin:0;font-family:Inter,-apple-system,BlinkMacSystemFon
 .btn.success{background:var(--green);color:#fff;border-color:transparent}
 .hint{font-size:12px;color:var(--muted)}
 
-  .keypick{display:flex;align-items:center;gap:10px}
-.keypick label{font-size:12px;color:var(--muted)}
-.keypick .select{min-width:140px}
-
-
-  .date-row { display:grid; grid-template-columns: 1fr 1fr; gap:16px; align-items:end; }
-.hidden   { display:none !important; }
-
-.flatpickr-input, .flatpickr-input[readonly]{
-  background:#fff; border:1px solid #e5e7eb; border-radius:12px;
-  height:44px; padding:0 12px; font-size:14px; width:100%;
-}
   /* Espace entre la toolbar FS et les KPIs */
 .board.fullscreen .fs-toolbar{
   margin-bottom: 12px;    /* ↑ marge demandée */
@@ -396,25 +382,6 @@ body.board-mode #visitorBoard{
 <div class="app">
   <div class="topbar">
     <div class="brand">Épopée — Exploitation</div>
-    <div class="keypick">
-  <label for="buildingSelect">Bâtiment</label>
-  <select id="buildingSelect" class="select">
-    <option value="A">Bâtiment A</option>
-    <option value="B">Bâtiment B</option>
-    <option value="C">Bâtiment C</option>
-    <option value="D" selected>Bâtiment D</option>
-    <option value="E">Bâtiment E</option>
-    <option value="F">Bâtiment F</option>
-    <option value="G">Bâtiment G</option>
-    <option value="H">Bâtiment H</option>
-    <option value="I">Bâtiment I</option>
-    <option value="R">Bâtiment R</option>
-  </select>
-
-  <label for="floorSelect">Étage</label>
-  <select id="floorSelect" class="select"></select>
-</div>
-
     <div class="hint" id="statusText">Mode visiteur</div>
     <div>
       <button class="btn primary" id="btnSave">💾 Enregistrer</button>
@@ -425,6 +392,19 @@ body.board-mode #visitorBoard{
   <div class="layout" id="layout">
     <aside class="panel" id="leftPanel">
       <h3>Panneau de contrôle</h3>
+
+      <div class="row">
+        <div class="field">
+          <label>Bâtiment</label>
+          <select id="buildingSelect" class="select">
+            <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option><option value="G">G</option><option value="H">H</option><option value="I">I</option><option value="R">R</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Étage</label>
+          <select id="floorSelect" class="select"></select>
+        </div>
+      </div>
 
       <!-- UI de chargement du plan masquée (plans pré-chargés) -->
       <div class="field" style="display:none">
@@ -484,19 +464,7 @@ body.board-mode #visitorBoard{
           <div class="field"><label>Nombre de PAX debout</label><input id="fPaxStand" class="number" type="number" min="0" step="1" value="0"></div>
           <div class="field"><label>Prix (€) / jour</label><input id="fDayPrice" class="number" type="number" min="0" step="1" value="0"></div>
         </div>
-      
-
-    <!-- Dates de gestion (affichage conditionnel) -->
-<div class="row date-row">
-  <div class="field" id="grpNotice">
-    <label for="fNoticeStart">Préavis — date de départ</label>
-    <input type="text" id="fNoticeStart" placeholder="Choisir une date">
-  </div>
-  <div class="field" id="grpReserved">
-    <label for="fReservedArrival">Réservé — date d’arrivée</label>
-    <input type="text" id="fReservedArrival" placeholder="Choisir une date">
-  </div>
-</div>
+    
 
         <div class="actions"><button class="btn primary" id="btnApply">Appliquer</button></div>
       </div>
@@ -648,45 +616,6 @@ map.on('pm:remove', (e) => {
 map.pm.setLang('fr');
 map.pm.setPathOptions({ snappable:true, snapDistance:10 });
 
-let fpNotice=null, fpReserved=null;
-
-function initDatePickers(){
-  if (fpNotice?.destroy) fpNotice.destroy();
-  if (fpReserved?.destroy) fpReserved.destroy();
-
-  // Localisation FR
-  if (window.flatpickr && window.flatpickr.l10ns?.fr) {
-    flatpickr.localize(flatpickr.l10ns.fr);
-  }
-
-  fpNotice = flatpickr("#fNoticeStart", {
-    dateFormat: "Y-m-d",
-    altInput: true,
-    altFormat: "j F Y",
-    minDate: "today",
-    disableMobile: true
-  });
-
-  fpReserved = flatpickr("#fReservedArrival", {
-    dateFormat: "Y-m-d",
-    altInput: true,
-    altFormat: "j F Y",
-    disableMobile: true
-  });
-
-  // Arrivée >= début de préavis
-  fpNotice.config.onChange.push((sel)=>{
-    if (sel?.[0]) fpReserved.set("minDate", sel[0]);
-    else fpReserved.set("minDate", null);
-  });
-}
-
-function updateDateGroups(){
-  const st = document.getElementById("fStatus")?.value || "";
-  document.getElementById("grpNotice") .classList.toggle("hidden", st !== "Préavis");
-  document.getElementById("grpReserved").classList.toggle("hidden", st !== "Réservé");
-}
-
 // ===== Styling & data helpers
 function layerProps(l){ return l?.options?.ep || {}; }
 function setLayerProps(l, props){ l.options.ep = { ...(l.options.ep||{}), ...props }; applyStyle(l); }
@@ -767,14 +696,7 @@ async function loadLocal(k){
     const res = await fetch(`/api/spaces?building=${encodeURIComponent(building)}&floor=${encodeURIComponent(floor)}`);
     if(res.ok){
       const { items } = await res.json();
-    const features = (items || []).map(row => {
-  const geom = row.geom || {};
-  geom.options = geom.options || {};
-  geom.options.ep = geom.options.ep || {};
-  if (row.notice_start_date)      geom.options.ep.notice_start_date = row.notice_start_date;
-  if (row.reserved_arrival_date)  geom.options.ep.reserved_arrival_date = row.reserved_arrival_date;
-  return geom;
-});
+      const features = (items||[]).map(row => row.geom);
       const payload = { key:k, features };
       localStorage.setItem(storageKey(k), JSON.stringify(payload));
       return payload;
@@ -833,25 +755,10 @@ function selectLayer(l, focusFirst=true){
   syncEventUI && syncEventUI();
   if(isAdmin){ $("layout").classList.remove("collapsed"); }
   if(focusFirst){ setTimeout(()=> $("fCode").focus(), 0); }
-   $("colorPill").animate(
-    [{boxShadow:'inset 0 0 0 3px rgba(10,132,255,12)'},{boxShadow:'inset 0 0 0 8px rgba(10,132,255,2)'},{boxShadow:'inset 0 0 0 3px rgba(10,132,255,12)'}],
+  $("colorPill").animate(
+    [{boxShadow:'inset 0 0 0 3px rgba(10,132,255,.12)'},{boxShadow:'inset 0 0 0 8px rgba(10,132,255,.2)'},{boxShadow:'inset 0 0 0 3px rgba(10,132,255,.12)'}],
     {duration:600}
   );
-
-// 1) Initialiser les datepickers maintenant que les inputs existent
-initDatePickers();
-
-// 2) Pré-remplir depuis les props déjà lues plus haut
-if (ep.notice_start_date)     fpNotice.setDate(ep.notice_start_date, true, "Y-m-d");
-if (ep.reserved_arrival_date) fpReserved.setDate(ep.reserved_arrival_date, true, "Y-m-d");
-if (ep.notice_start_date)     fpReserved.set("minDate", ep.notice_start_date);
-
-// 3) Affichage conditionnel selon le statut courant
-updateDateGroups();
-
-// 4) Rebrancher le change du statut (évite les doublons)
-const stEl = document.getElementById("fStatus");
-if (stEl) stEl.onchange = updateDateGroups;
 }
 
 // interactions
@@ -907,33 +814,22 @@ $("btnApply").onclick = ()=>{
   if(!currentLayer) return;
   const __isEvent = ($("fLabel").value === "Evenementiel");
   setLayerProps(currentLayer, {
-    code:$("fCode").value.trim(),
-    tenant:$("fTenant").value.trim(),
-    label:$("fLabel").value,
-    status: __isEvent ? "Réservé" : $("fStatus").value,
-    color: colorInput.value,
-    area:  parseFloat($("fArea").value||"0")||0,
+    code:$("fCode").value.trim(), tenant:$("fTenant").value.trim(), label:$("fLabel").value,
+    status: __isEvent ? "Réservé" : $("fStatus").value, color:colorInput.value, area: parseFloat($("fArea").value||"0")||0,
     posts: __isEvent ? 0 : (parseInt(($("fPosts").value||"0"),10)||0),
-    rent:  __isEvent ? 0 : (parseFloat(String($("fRent").value||"0").replace(",", "."))||0),
-    paxSit:   __isEvent ? (parseInt(($("fPaxSit")?.value||"0"),10)||0) : 0,
+    rent: __isEvent ? 0 : (parseFloat(String($("fRent").value||"0").replace(",", "."))||0),
+    paxSit: __isEvent ? (parseInt(($("fPaxSit")?.value||"0"),10)||0) : 0,
     paxStand: __isEvent ? (parseInt(($("fPaxStand")?.value||"0"),10)||0) : 0,
-    dayPrice: __isEvent ? (parseFloat(String($("fDayPrice")?.value||"0").replace(",", "."))||0) : 0,
-
-    // dates
-    notice_start_date: (document.getElementById("fNoticeStart")?.value || null),
-    reserved_arrival_date: (document.getElementById("fReservedArrival")?.value || null)
+    dayPrice: __isEvent ? (parseFloat(String($("fDayPrice")?.value||"0").replace(",", "."))||0) : 0
   });
   saveLocal();
-
-  // feedback visuel (comme avant)
   const b=$("btnApply"); const orig=b.textContent;
   b.textContent="Appliqué ✓"; b.classList.add("success","flash");
   setTimeout(()=>{ b.textContent=orig; b.classList.remove("success","flash"); }, 900);
 };
 
-// Ces deux handlers doivent être EN DEHORS du onclick ci-dessus
 $("btnDelete").onclick = ()=>{ if(currentLayer){ drawn.removeLayer(currentLayer); currentLayer=null; saveLocal(); } };
-$("btnDup").onclick = ()=>{ if(!currentLayer) return; const p=toPlain(currentLayer); p.latlngs=p.latlngs.map(r=> r.map(ll=> L.latlng(ll.lat+20,ll.lng+20))); fromPlain(p); saveLocal(); };
+$("btnDup").onclick = ()=>{ if(!currentLayer) return; const p=toPlain(currentLayer); p.latlngs=p.latlngs.map(r=> r.map(ll=> L.latLng(ll.lat+20,ll.lng+20))); fromPlain(p); saveLocal(); };
 
 // Plan loading
 const planFile = $("planFile");
@@ -1421,11 +1317,11 @@ function floorsStats(scope){
     o.occArea += occ; o.totArea += tot;
     mapRates.set(k,o);
   });
-  
- return Array.from(mapRates.values()).map(o => ({
-  ...o,
-  rate: o.totArea ? Math.round(o.occArea*1000/o.totArea)/10 : 0
-}));
+  return [...mapRates.values()].map(o => ({
+    ...o,
+    rate: o.totArea ? Math.round(o.occArea*1000/o.totArea)/10 : 0
+  }));
+}
 
 // --- CSV export helper
 function exportCSV(rows, headers, filename){
@@ -2196,7 +2092,7 @@ function suggestionsFor(q, limit=6){
   const qn = norm(q);
   if (qn.length < 2) return [];
   const stats = collectTenantStats();
-const arr = Array.from(stats.values())
+  const arr = [...stats.values()]
     .filter(it => norm(it.name).includes(qn))
     .sort((a,b) => (b.count - a.count) || a.name.localeCompare(b.name))
     .slice(0, limit);
@@ -2212,7 +2108,7 @@ function showSuggest(items){
   suggest.innerHTML = items.map(it=> `<div class="item" role="option"><span class="icon">🏷️</span>${it.name}</div>`).join("");
   positionSuggest(tnInput);
   suggest.style.display="block";
-  [...suggest.querySelectorAll(".item")]
+  [...suggest.querySelectorAll(".item")].forEach((node)=>{
     node.onmousedown = (e)=>{
       e.preventDefault();
       tnInput.value = node.textContent.replace("🏷️","").trim();
