@@ -1344,6 +1344,149 @@ function exportCSV(rows, headers, filename){
   setTimeout(()=> URL.revokeObjectURL(a.href), 0);
 }
 
+  // ---- Helpers nombre
+function __num(v){ return parseFloat(String(v ?? 0).toString().replace(',', '.')) || 0; }
+function __int(v){ return parseInt(v ?? 0, 10) || 0; }
+
+// ---- Récupère toutes les features avec la clé b|f, en respectant les filtres actuels
+function collectItemsWithKey(scope){
+  const items = [];
+  forEachKeyInScope(scope, (key, feats)=>{
+    feats.forEach(fe=>{
+      const ep = (fe.options && fe.options.ep) || {};
+      const matchesStatus = activeStatuses.has(ep.status || "Vacant");
+      const isEvent = (ep.label === "Evenementiel");
+      const typeOk = !filterEventOnly || isEvent;
+      const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
+      const matchText = !searchText || text.includes(searchText);
+      if (matchesStatus && matchText && typeOk){
+        items.push({ ep, key });
+      }
+    });
+  });
+  return items;
+}
+
+// ---- Construit toutes les tables prêtes à exporter (selon la portée)
+function buildExportTables(scope){
+  const items = collectItemsWithKey(scope);
+
+  // Table "Espaces (tous)"
+  const allRows = items.map(({ep, key})=>{
+    const [batiment, etage] = key.split('|');
+    return {
+      batiment, etage,
+      code: ep.code || '',
+      libelle: ep.label || '',
+      statut: ep.status || '',
+      resident: ep.tenant || '',
+      m2: __num(ep.area),
+      postes: __int(ep.posts),
+      loyer_mensuel: __num(ep.rent),
+      evenementiel: (ep.label === "Evenementiel") ? "Oui" : "Non"
+    };
+  });
+
+  // Découpes
+  const vacants = allRows.filter(r => r.statut === "Vacant")
+                         .sort((a,b)=> b.m2 - a.m2);
+  const preavis = allRows.filter(r => r.statut === "Préavis")
+                         .sort((a,b)=> b.m2 - a.m2);
+  const reserves = allRows.filter(r => r.statut === "Réservé")
+                          .sort((a,b)=> b.m2 - a.m2);
+
+  // Agrégat par résident
+  const byTenant = new Map();
+  allRows.forEach(r=>{
+    const t = (r.resident || "").trim();
+    if (!t || t.toLowerCase()==="vacant") return;
+    const g = byTenant.get(t) || {resident:t, nb_espaces:0, m2:0, postes:0, loyer_total:0};
+    g.nb_espaces += 1; g.m2 += r.m2; g.postes += r.postes; g.loyer_total += r.loyer_mensuel;
+    byTenant.set(t, g);
+  });
+  const tenants = [...byTenant.values()]
+    .sort((a,b)=> (b.loyer_total - a.loyer_total) || (b.m2 - a.m2));
+
+  // Par étage (réutilise floorsStats qui tient compte des filtres)
+  const floors = floorsStats(scope).map(x => ({
+    batiment: x.b, etage: x.f,
+    m2_occupes: Math.round(x.occArea),
+    m2_total: Math.round(x.totArea),
+    taux_occupation: x.rate
+  }));
+
+  // KPI synthèse (reprend la logique du dashboard plein écran)
+  const feats = getFeaturesForScope(scope);
+  const featsFiltered = feats.filter(fe=>{
+    const ep = (fe.options && fe.options.ep) || {};
+    const matchesStatus = activeStatuses.has(ep.status || "Vacant");
+    const isEvent = (ep.label === "Evenementiel");
+    const typeOk = !filterEventOnly || isEvent;
+    const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
+    const matchText = !searchText || text.includes(searchText);
+    return matchesStatus && typeOk && matchText;
+  });
+  const S = aggStats(featsFiltered);
+
+  const occTarget = (__int(document.getElementById('fsOccTarget')?.value) || 85);
+  const totalArea = (S.areaOcc||0) + (S.areaVac||0);
+  const needOccM2 = Math.max(0, Math.round(((occTarget/100) * totalArea) - (S.areaOcc||0)));
+  const mrrFacture = S.rentFacture || 0;
+  const mrrRisk = (S.rent && S.rent["Préavis"]) || 0;
+  const rentPot = S.rentPotentiel || 0;
+  const rentGap = Math.max(0, Math.round(rentPot - mrrFacture));
+  const addRev = Math.round(needOccM2 * ((S.areaOcc||0) ? (mrrFacture / S.areaOcc) : 0));
+
+  const synthese = [
+    { kpi:"Bureaux occupés", valeur: S.occupiedCount, pourcentage: S.occupiedPct },
+    { kpi:"Bureaux vacants", valeur: S.vacantCount,   pourcentage: S.vacantPct },
+    { kpi:"m² occupés",      valeur: Math.round(S.areaOcc) },
+    { kpi:"m² vacants",      valeur: Math.round(S.areaVac) },
+    { kpi:"MRR facturé (€/mois)", valeur: mrrFacture },
+    { kpi:"MRR à risque — préavis", valeur: mrrRisk },
+    { kpi:"Manque à gagner (potentiel – facturé)", valeur: rentGap },
+    { kpi:"Cible d’occupation", valeur: occTarget, unite:"%" },
+    { kpi:"m² à louer pour atteindre l’objectif", valeur: needOccM2 },
+    { kpi:"Revenu supp. estimé", valeur: addRev },
+    { kpi:"Préavis (m²)", valeur: Math.round(S.area["Préavis"]||0) },
+    { kpi:"Maintenance (m²)", valeur: Math.round(S.area["Maintenance"]||0) },
+    { kpi:"Paramètres export", valeur:`scope=${scope}; filtres=${[...activeStatuses].join('|')}; eventOnly=${filterEventOnly?'oui':'non'}; recherche="${searchText||''}"` },
+    { kpi:"Horodatage", valeur:new Date().toISOString() }
+  ];
+
+  const occVac = [
+    { type:"Occupés (m²)", valeur: Math.round(S.areaOcc||0) },
+    { type:"Vacants (m²)", valeur: Math.round(S.areaVac||0) }
+  ];
+
+  return { synthese, allRows, vacants, preavis, reserves, floors, tenants, occVac };
+}
+
+// ---- Création du classeur et téléchargement
+function exportDashboardXLSX(scope){
+  if (!window.XLSX){ alert("La librairie Excel n’est pas chargée."); return; }
+  const { synthese, allRows, vacants, preavis, reserves, floors, tenants, occVac } = buildExportTables(scope);
+
+  const wb = XLSX.utils.book_new();
+  function addSheet(name, rows){
+    const ws = XLSX.utils.json_to_sheet(rows);
+    XLSX.utils.book_append_sheet(wb, ws, name.slice(0,31));
+  }
+  addSheet("Synthèse KPI", synthese);
+  addSheet("Espaces (tous)", allRows);
+  addSheet("Vacants", vacants);
+  addSheet("Préavis", preavis);
+  addSheet("Réservés", reserves);
+  addSheet("Par étage", floors);
+  addSheet("Par résident", tenants);
+  addSheet("Occ_Vac m2", occVac);
+
+  const today = new Date().toISOString().slice(0,10);
+  const file = `dashboard_${scope}_${today}.xlsx`;
+  XLSX.writeFile(wb, file);
+}
+
+  
 // --- rendu "plein écran" avancé
 function renderDashboardFull(){
   const board = $("visitorBoard");
