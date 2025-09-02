@@ -1091,6 +1091,77 @@ $("btnAdminBoard").onclick = ()=>{
 
 
 function euro(n){ const v=Number(n||0); const hasCents=Math.abs(v-Math.round(v))>1e-6; return v.toLocaleString('fr-FR',{minimumFractionDigits:hasCents?2:0, maximumFractionDigits:2}); }
+// === Charts (global) — utilisées par renderDashboard() ET renderDashboardFull()
+function drawDonut(canvas, parts, colors, centerText){
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width = canvas.clientWidth * devicePixelRatio;
+  const H = canvas.height = 200 * devicePixelRatio;
+  const cx=W/2, cy=H/2, r=Math.min(W,H)*0.36, r2=r*0.66;
+  const total = parts.reduce((a,b)=>a+b,0) || 1;
+  let a0 = -Math.PI/2;
+  ctx.clearRect(0,0,W,H);
+  parts.forEach((v,i)=>{
+    const ang = v/total * Math.PI*2;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,a0,a0+ang); ctx.closePath();
+    ctx.fillStyle = colors[i%colors.length]; ctx.fill();
+    a0 += ang;
+  });
+  ctx.globalCompositeOperation='destination-out';
+  ctx.beginPath(); ctx.arc(cx,cy,r2,0,Math.PI*2); ctx.fill();
+  ctx.globalCompositeOperation='source-over';
+  ctx.fillStyle = "#1c1c1e"; ctx.font = `${Math.round(r*0.28)}px SF Pro, Inter, system-ui`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(centerText, cx, cy);
+}
+
+function drawBars(canvas, labels, values, colors = ["#0a84ff"], onBarClick){
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width = canvas.clientWidth * devicePixelRatio;
+  const H = canvas.height = 200 * devicePixelRatio;
+  ctx.clearRect(0,0,W,H);
+
+  const max = Math.max(...values, 1);
+  const mL = 10*devicePixelRatio, mR = 10*devicePixelRatio, mT = 10*devicePixelRatio, mB = 24*devicePixelRatio;
+  const plotW = W - mL - mR, plotH = H - mT - mB;
+  const n = values.length; const gap = plotW*0.08/(n||1); const bw = (plotW - gap*(n+1)) / (n||1);
+  const baseY = mT + plotH;
+
+  ctx.fillStyle = "#e5e5ea"; ctx.fillRect(mL, baseY, plotW, 1*devicePixelRatio);
+
+  const hitboxes = [];
+  values.forEach((v,i)=>{
+    const x = mL + gap + i*(bw+gap);
+    const h = v/max * (plotH-6*devicePixelRatio);
+    const y = baseY - h;
+
+    ctx.fillStyle = colors[i % colors.length];
+    const radius = 8*devicePixelRatio; const w=bw, r=Math.min(radius, w/2, h);
+    ctx.beginPath();
+    ctx.moveTo(x, y+r); ctx.arcTo(x, y, x+r, y, r); ctx.lineTo(x+w-r, y); ctx.arcTo(x+w, y, x+w, y+r, r);
+    ctx.lineTo(x+w, y+h); ctx.lineTo(x, y+h); ctx.closePath(); ctx.fill();
+
+    ctx.fillStyle = "#1c1c1e"; ctx.font = `${12*devicePixelRatio}px Inter, system-ui`; ctx.textAlign='center';
+    let ty = y - 6*devicePixelRatio; if (ty < mT + 10*devicePixelRatio) ty = y + 14*devicePixelRatio;
+    ctx.fillText(String(v), x+w/2, ty);
+
+    ctx.fillStyle = "#3a3a3c"; ctx.font = `${11*devicePixelRatio}px Inter, system-ui`;
+    ctx.fillText(labels[i].slice(0,18), x+w/2, baseY + 14*devicePixelRatio);
+
+    hitboxes.push({x, y, w, h, index:i});
+  });
+
+  // Clicks
+  canvas.__barHitboxes = hitboxes;
+  canvas.onclick = onBarClick
+    ? (e)=>{
+        const r = canvas.getBoundingClientRect();
+        const px = (e.clientX - r.left) * devicePixelRatio;
+        const py = (e.clientY - r.top)  * devicePixelRatio;
+        const hit = (canvas.__barHitboxes||[]).find(b => px>=b.x && px<=b.x+b.w && py>=b.y && py<=b.y+b.h);
+        if(hit) onBarClick(hit.index, labels[hit.index]);
+      }
+    : null;
+}
 
 function wireBoardActions(){
   const b       = $("visitorBoard");
