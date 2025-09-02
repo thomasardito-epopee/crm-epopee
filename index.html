@@ -2196,7 +2196,7 @@ function suggestionsFor(q, limit=6){
   const qn = norm(q);
   if (qn.length < 2) return [];
   const stats = collectTenantStats();
-  const arr = [...stats.values()]
+const arr = Array.from(stats.values())
     .filter(it => norm(it.name).includes(qn))
     .sort((a,b) => (b.count - a.count) || a.name.localeCompare(b.name))
     .slice(0, limit);
