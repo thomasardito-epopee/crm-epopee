@@ -769,17 +769,21 @@ function selectLayer(l, focusFirst=true){
   syncEventUI && syncEventUI();
   if(isAdmin){ $("layout").classList.remove("collapsed"); }
   if(focusFirst){ setTimeout(()=> $("fCode").focus(), 0); }
-  $("colorPill").animate(
-    [{boxShadow:'inset 0 0 0 3px rgba(10,132,255,.12)'},{boxShadow:'inset 0 0 0 8px rgba(10,132,255,.2)'},{boxShadow:'inset 0 0 0 3px rgba(10,132,255,.12)'}],
+   $("colorPill").animate(
+    [{boxShadow:'inset 0 0 0 3px rgba(10,132,255,12)'},{boxShadow:'inset 0 0 0 8px rgba(10,132,255,2)'},{boxShadow:'inset 0 0 0 3px rgba(10,132,255,12)'}],
     {duration:600}
   );
-}
-  // ← NEW: pré-remplir les dates si présentes
+
+  // ← NEW: pré-remplir les dates si présentes (ici, DANS la fonction)
   const ns = document.getElementById("fNoticeStart");
   const ra = document.getElementById("fReservedArrival");
   if (ns) ns.value = ep.notice_start_date || "";
   if (ra) ra.value = ep.reserved_arrival_date || "";
-  if (ns && ra) { ra.min = ns.value || ""; ns.addEventListener("change", ()=>{ ra.min = ns.value || ""; }); } // contrainte simple
+  if (ns && ra) {
+    ra.min = ns.value || "";
+    ns.addEventListener("change", ()=>{ ra.min = ns.value || ""; });
+  }
+}
 
   syncEventUI && syncEventUI();
 
