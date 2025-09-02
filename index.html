@@ -1685,14 +1685,26 @@ function renderDashboardFull(){
       }</tbody></table></div>`
     : `<div class="hint">Aucun préavis</div>`;
 
-  // Export CSV
-  $("fsExport").onclick = ()=>{
-    const rows = []
-      .concat(vacants.map(v=> ({type:"Vacant", code:v.code||"", label:v.label||"", tenant:v.tenant||"", area:v.area||0, posts:v.posts||0, rent:v.rent||0})))
-      .concat(preavis.map(v=> ({type:"Préavis", code:v.code||"", label:v.label||"", tenant:v.tenant||"", area:v.area||0, posts:v.posts||0, rent:v.rent||0})));
-    exportCSV(rows, ["type","code","label","tenant","area","posts","rent"], "dashboard_export.csv");
-  };
-}
+  // Remplace entièrement le bloc actuel qui fait le CSV (rows = vacants + preavis)
+$("fsExport").onclick = ()=>{
+  const scope = document.getElementById("kpiScopeFS")?.value
+    || (window.BUILDING_FLOORS?.[document.getElementById('buildingSelect')?.value]
+        ? document.getElementById('buildingSelect').value
+        : "building");
+
+  // On réutilise ta logique de construction centralisée
+  const { allRows } = buildExportTables(scope);
+
+  // En-têtes riches (tous les champs utiles)
+  const headers = [
+    "batiment","etage","code","libelle","statut","resident",
+    "m2","postes","loyer_mensuel","evenementiel"
+  ];
+
+  const today = new Date().toISOString().slice(0,10);
+  exportCSV(allRows, headers, `espaces_${scope}_${today}.csv`);
+};
+
 
 // Charts
 function drawDonut(canvas, parts, colors, centerText){
