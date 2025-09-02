@@ -149,6 +149,42 @@ canvas{width:100%; height:200px}
 .fs-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .fs-left    { flex:0 0 auto; display:flex; align-items:center; gap:8px; } /* ne s'étire plus */
 .fs-right   { display:flex; align-items:center; gap:8px; }
+  /* ---- Toolbar du dashboard en plein écran : ne pas passer sous les actions ---- */
+.board.fullscreen .fs-toolbar{
+  display: grid;
+  grid-template-columns: auto 1fr;  /* gauche + droite */
+  align-items: center;
+  gap: 12px;
+  padding-right: 120px;             /* réserve la place des boutons ✕ / ⤢ */
+}
+
+.board.fullscreen .fs-left{
+  display:flex; align-items:center; gap:8px;
+}
+
+.board.fullscreen .fs-right{
+  display:flex; align-items:center; gap:8px;
+  justify-content: flex-end;        /* pousse à gauche des actions */
+  flex-wrap: wrap;                  /* évite tout chevauchement en petit écran */
+}
+
+/* Compacter les contrôles */
+.board.fullscreen #kpiScopeFS{
+  width: auto !important; min-width: 150px; max-width: 220px;
+}
+.board.fullscreen #fsOccTarget{ width: 260px; max-width: 32vw; }
+.board.fullscreen #fsOccLabel{ white-space: nowrap; }
+
+/* En écrans plus étroits, la ligne passe sur 2 rangées proprement */
+@media (max-width: 1100px){
+  .board.fullscreen .fs-toolbar{
+    grid-template-columns: 1fr;
+    row-gap: 8px;
+    padding-right: 80px;            /* un peu moins de réserve */
+  }
+  .board.fullscreen .fs-right{ justify-content:flex-start; }
+}
+
 
 .fs-toolbar .select,
 #kpiScopeFS{
