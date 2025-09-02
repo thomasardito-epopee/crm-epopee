@@ -662,7 +662,13 @@ function applyStyle(l){
     if(ep.posts) extra += ` · ${ep.posts} postes`;
     if(Number(ep.rent)>0) extra += ` · ${euro(ep.rent)} €/mois`;
   }
+
   if(ep.area) extra += ` · ${ep.area} m²`;
+   if(ep.status === "Préavis"){
+    if(ep.noticeDate) extra += ` · préavis ${ep.noticeDate}`;
+    if(ep.exitDate)   extra += ` → sortie ${ep.exitDate}`;
+  }
+
   l.bindTooltip(`${(ep.code||"—")} · ${(ep.label||"Bureau")}${ep.tenant ? " — "+ep.tenant : ""}${extra}`, { sticky:true });
   updateGreying();
 }
