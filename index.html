@@ -1555,6 +1555,10 @@ function renderDashboardFull(){
   $("kpiScopeFS").onchange = ()=> renderDashboardFull();
   $("fsOccTarget").oninput = (e)=>{ $("fsOccLabel").textContent = e.target.value + "%"; renderDashboardFull(); };
   wireBoardActions();
+ 
+  document.getElementById("fsExport").onclick = () =>
+  exportDashboardXLSX(document.getElementById("kpiScopeFS").value);
+
 
   // --- données & calculs
   const feats = getFeaturesForScope($("kpiScopeFS").value);
