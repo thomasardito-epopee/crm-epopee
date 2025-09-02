@@ -23,7 +23,6 @@
   pdfjsLib.GlobalWorkerOptions.workerSrc =
     "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 </script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
 :root{
@@ -654,18 +653,16 @@ function toPlain(l){
 function fromPlain(o){
   let l;
   if (o.type === 'rect') {
-  let bounds = o.bounds;
-  if (!bounds && Array.isArray(o.latlngs)) {
-    const pts  = (o.latlngs[0] || o.latlngs).flat();
-    const lats = pts.map(p=>p.lat), lngs = pts.map(p=>p.lng);
-    bounds = [ L.latLng(Math.min(...lats), Math.min(...lngs)),
-               L.latLng(Math.max(...lats), Math.max(...lngs)) ];
+    let bounds = o.bounds;
+    if (!bounds && Array.isArray(o.latlngs)) {
+      const pts = (o.latlngs[0] || o.latlngs).flat();
+      const lats = pts.map(p=>p.lat), lngs = pts.map(p=>p.lng);
+      bounds = [ L.latLng(Math.min(...lats), Math.min(...lngs)), L.latLng(Math.max(...lats), Math.max(...lngs)) ];
+    }
+    l = L.rectangle(bounds, { pmIgnore:false });
+  } else {
+    l = L.polygon(o.latlngs, { pmIgnore:false });
   }
-  l = L.rectangle(bounds, { pmIgnore:false });
-} else {
-  l = L.polygon(o.latlngs, { pmIgnore:false });
-}
-
   l.options.ep = (o.options && o.options.ep) || {};
   l.addTo(drawn); attachListeners(l); applyStyle(l);
 }
@@ -1093,77 +1090,6 @@ $("btnAdminBoard").onclick = ()=>{
 
 
 function euro(n){ const v=Number(n||0); const hasCents=Math.abs(v-Math.round(v))>1e-6; return v.toLocaleString('fr-FR',{minimumFractionDigits:hasCents?2:0, maximumFractionDigits:2}); }
-// === Charts (global) — utilisées par renderDashboard() ET renderDashboardFull()
-function drawDonut(canvas, parts, colors, centerText){
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width = canvas.clientWidth * devicePixelRatio;
-  const H = canvas.height = 200 * devicePixelRatio;
-  const cx=W/2, cy=H/2, r=Math.min(W,H)*0.36, r2=r*0.66;
-  const total = parts.reduce((a,b)=>a+b,0) || 1;
-  let a0 = -Math.PI/2;
-  ctx.clearRect(0,0,W,H);
-  parts.forEach((v,i)=>{
-    const ang = v/total * Math.PI*2;
-    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,a0,a0+ang); ctx.closePath();
-    ctx.fillStyle = colors[i%colors.length]; ctx.fill();
-    a0 += ang;
-  });
-  ctx.globalCompositeOperation='destination-out';
-  ctx.beginPath(); ctx.arc(cx,cy,r2,0,Math.PI*2); ctx.fill();
-  ctx.globalCompositeOperation='source-over';
-  ctx.fillStyle = "#1c1c1e"; ctx.font = `${Math.round(r*0.28)}px SF Pro, Inter, system-ui`;
-  ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.fillText(centerText, cx, cy);
-}
-
-function drawBars(canvas, labels, values, colors = ["#0a84ff"], onBarClick){
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width = canvas.clientWidth * devicePixelRatio;
-  const H = canvas.height = 200 * devicePixelRatio;
-  ctx.clearRect(0,0,W,H);
-
-  const max = Math.max(...values, 1);
-  const mL = 10*devicePixelRatio, mR = 10*devicePixelRatio, mT = 10*devicePixelRatio, mB = 24*devicePixelRatio;
-  const plotW = W - mL - mR, plotH = H - mT - mB;
-  const n = values.length; const gap = plotW*0.08/(n||1); const bw = (plotW - gap*(n+1)) / (n||1);
-  const baseY = mT + plotH;
-
-  ctx.fillStyle = "#e5e5ea"; ctx.fillRect(mL, baseY, plotW, 1*devicePixelRatio);
-
-  const hitboxes = [];
-  values.forEach((v,i)=>{
-    const x = mL + gap + i*(bw+gap);
-    const h = v/max * (plotH-6*devicePixelRatio);
-    const y = baseY - h;
-
-    ctx.fillStyle = colors[i % colors.length];
-    const radius = 8*devicePixelRatio; const w=bw, r=Math.min(radius, w/2, h);
-    ctx.beginPath();
-    ctx.moveTo(x, y+r); ctx.arcTo(x, y, x+r, y, r); ctx.lineTo(x+w-r, y); ctx.arcTo(x+w, y, x+w, y+r, r);
-    ctx.lineTo(x+w, y+h); ctx.lineTo(x, y+h); ctx.closePath(); ctx.fill();
-
-    ctx.fillStyle = "#1c1c1e"; ctx.font = `${12*devicePixelRatio}px Inter, system-ui`; ctx.textAlign='center';
-    let ty = y - 6*devicePixelRatio; if (ty < mT + 10*devicePixelRatio) ty = y + 14*devicePixelRatio;
-    ctx.fillText(String(v), x+w/2, ty);
-
-    ctx.fillStyle = "#3a3a3c"; ctx.font = `${11*devicePixelRatio}px Inter, system-ui`;
-    ctx.fillText(labels[i].slice(0,18), x+w/2, baseY + 14*devicePixelRatio);
-
-    hitboxes.push({x, y, w, h, index:i});
-  });
-
-  // Clicks
-  canvas.__barHitboxes = hitboxes;
-  canvas.onclick = onBarClick
-    ? (e)=>{
-        const r = canvas.getBoundingClientRect();
-        const px = (e.clientX - r.left) * devicePixelRatio;
-        const py = (e.clientY - r.top)  * devicePixelRatio;
-        const hit = (canvas.__barHitboxes||[]).find(b => px>=b.x && px<=b.x+b.w && py>=b.y && py<=b.y+b.h);
-        if(hit) onBarClick(hit.index, labels[hit.index]);
-      }
-    : null;
-}
 
 function wireBoardActions(){
   const b       = $("visitorBoard");
@@ -1369,6 +1295,7 @@ function forEachKeyInScope(scope, fn){
   }
 }
 
+// (indépendant) — taux d’occupation par étage (en m²)
 function floorsStats(scope){
   const mapRates = new Map();
   forEachKeyInScope(scope,(k,feats)=>{
@@ -1386,7 +1313,7 @@ function floorsStats(scope){
       tot += ar;
       if (ep.status==="Loué" || ep.status==="Préavis") occ += ar;
     });
-    const o = mapRates.get(k) || { b, f, occArea:0, totArea:0 };
+    const o = mapRates.get(k) || {b,f,occArea:0,totArea:0};
     o.occArea += occ; o.totArea += tot;
     mapRates.set(k,o);
   });
@@ -1396,7 +1323,13 @@ function floorsStats(scope){
   }));
 }
 
+// --- CSV export helper
+function exportCSV(rows, headers, filename){
+  // …
+}
 
+
+// --- CSV export helper
 function exportCSV(rows, headers, filename){
   const head = headers.join(',');
   const lines = rows.map(r => headers
@@ -1410,149 +1343,6 @@ function exportCSV(rows, headers, filename){
   setTimeout(()=> URL.revokeObjectURL(a.href), 0);
 }
 
-  // ---- Helpers nombre
-function __num(v){ return parseFloat(String(v ?? 0).toString().replace(',', '.')) || 0; }
-function __int(v){ return parseInt(v ?? 0, 10) || 0; }
-
-// ---- Récupère toutes les features avec la clé b|f, en respectant les filtres actuels
-function collectItemsWithKey(scope){
-  const items = [];
-  forEachKeyInScope(scope, (key, feats)=>{
-    feats.forEach(fe=>{
-      const ep = (fe.options && fe.options.ep) || {};
-      const matchesStatus = activeStatuses.has(ep.status || "Vacant");
-      const isEvent = (ep.label === "Evenementiel");
-      const typeOk = !filterEventOnly || isEvent;
-      const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
-      const matchText = !searchText || text.includes(searchText);
-      if (matchesStatus && matchText && typeOk){
-        items.push({ ep, key });
-      }
-    });
-  });
-  return items;
-}
-
-// ---- Construit toutes les tables prêtes à exporter (selon la portée)
-function buildExportTables(scope){
-  const items = collectItemsWithKey(scope);
-
-  // Table "Espaces (tous)"
-  const allRows = items.map(({ep, key})=>{
-    const [batiment, etage] = key.split('|');
-    return {
-      batiment, etage,
-      code: ep.code || '',
-      libelle: ep.label || '',
-      statut: ep.status || '',
-      resident: ep.tenant || '',
-      m2: __num(ep.area),
-      postes: __int(ep.posts),
-      loyer_mensuel: __num(ep.rent),
-      evenementiel: (ep.label === "Evenementiel") ? "Oui" : "Non"
-    };
-  });
-
-  // Découpes
-  const vacants = allRows.filter(r => r.statut === "Vacant")
-                         .sort((a,b)=> b.m2 - a.m2);
-  const preavis = allRows.filter(r => r.statut === "Préavis")
-                         .sort((a,b)=> b.m2 - a.m2);
-  const reserves = allRows.filter(r => r.statut === "Réservé")
-                          .sort((a,b)=> b.m2 - a.m2);
-
-  // Agrégat par résident
-  const byTenant = new Map();
-  allRows.forEach(r=>{
-    const t = (r.resident || "").trim();
-    if (!t || t.toLowerCase()==="vacant") return;
-    const g = byTenant.get(t) || {resident:t, nb_espaces:0, m2:0, postes:0, loyer_total:0};
-    g.nb_espaces += 1; g.m2 += r.m2; g.postes += r.postes; g.loyer_total += r.loyer_mensuel;
-    byTenant.set(t, g);
-  });
-  const tenants = [...byTenant.values()]
-    .sort((a,b)=> (b.loyer_total - a.loyer_total) || (b.m2 - a.m2));
-
-  // Par étage (réutilise floorsStats qui tient compte des filtres)
-  const floors = floorsStats(scope).map(x => ({
-    batiment: x.b, etage: x.f,
-    m2_occupes: Math.round(x.occArea),
-    m2_total: Math.round(x.totArea),
-    taux_occupation: x.rate
-  }));
-
-  // KPI synthèse (reprend la logique du dashboard plein écran)
-  const feats = getFeaturesForScope(scope);
-  const featsFiltered = feats.filter(fe=>{
-    const ep = (fe.options && fe.options.ep) || {};
-    const matchesStatus = activeStatuses.has(ep.status || "Vacant");
-    const isEvent = (ep.label === "Evenementiel");
-    const typeOk = !filterEventOnly || isEvent;
-    const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
-    const matchText = !searchText || text.includes(searchText);
-    return matchesStatus && typeOk && matchText;
-  });
-  const S = aggStats(featsFiltered);
-
-  const occTarget = (__int(document.getElementById('fsOccTarget')?.value) || 85);
-  const totalArea = (S.areaOcc||0) + (S.areaVac||0);
-  const needOccM2 = Math.max(0, Math.round(((occTarget/100) * totalArea) - (S.areaOcc||0)));
-  const mrrFacture = S.rentFacture || 0;
-  const mrrRisk = (S.rent && S.rent["Préavis"]) || 0;
-  const rentPot = S.rentPotentiel || 0;
-  const rentGap = Math.max(0, Math.round(rentPot - mrrFacture));
-  const addRev = Math.round(needOccM2 * ((S.areaOcc||0) ? (mrrFacture / S.areaOcc) : 0));
-
-  const synthese = [
-    { kpi:"Bureaux occupés", valeur: S.occupiedCount, pourcentage: S.occupiedPct },
-    { kpi:"Bureaux vacants", valeur: S.vacantCount,   pourcentage: S.vacantPct },
-    { kpi:"m² occupés",      valeur: Math.round(S.areaOcc) },
-    { kpi:"m² vacants",      valeur: Math.round(S.areaVac) },
-    { kpi:"MRR facturé (€/mois)", valeur: mrrFacture },
-    { kpi:"MRR à risque — préavis", valeur: mrrRisk },
-    { kpi:"Manque à gagner (potentiel – facturé)", valeur: rentGap },
-    { kpi:"Cible d’occupation", valeur: occTarget, unite:"%" },
-    { kpi:"m² à louer pour atteindre l’objectif", valeur: needOccM2 },
-    { kpi:"Revenu supp. estimé", valeur: addRev },
-    { kpi:"Préavis (m²)", valeur: Math.round(S.area["Préavis"]||0) },
-    { kpi:"Maintenance (m²)", valeur: Math.round(S.area["Maintenance"]||0) },
-    { kpi:"Paramètres export", valeur:`scope=${scope}; filtres=${[...activeStatuses].join('|')}; eventOnly=${filterEventOnly?'oui':'non'}; recherche="${searchText||''}"` },
-    { kpi:"Horodatage", valeur:new Date().toISOString() }
-  ];
-
-  const occVac = [
-    { type:"Occupés (m²)", valeur: Math.round(S.areaOcc||0) },
-    { type:"Vacants (m²)", valeur: Math.round(S.areaVac||0) }
-  ];
-
-  return { synthese, allRows, vacants, preavis, reserves, floors, tenants, occVac };
-}
-
-// ---- Création du classeur et téléchargement
-function exportDashboardXLSX(scope){
-  if (!window.XLSX){ alert("La librairie Excel n’est pas chargée."); return; }
-  const { synthese, allRows, vacants, preavis, reserves, floors, tenants, occVac } = buildExportTables(scope);
-
-  const wb = XLSX.utils.book_new();
-  function addSheet(name, rows){
-    const ws = XLSX.utils.json_to_sheet(rows);
-    XLSX.utils.book_append_sheet(wb, ws, name.slice(0,31));
-  }
-  addSheet("Synthèse KPI", synthese);
-  addSheet("Espaces (tous)", allRows);
-  addSheet("Vacants", vacants);
-  addSheet("Préavis", preavis);
-  addSheet("Réservés", reserves);
-  addSheet("Par étage", floors);
-  addSheet("Par résident", tenants);
-  addSheet("Occ_Vac m2", occVac);
-
-  const today = new Date().toISOString().slice(0,10);
-  const file = `dashboard_${scope}_${today}.xlsx`;
-  XLSX.writeFile(wb, file);
-}
-
-  
 // --- rendu "plein écran" avancé
 function renderDashboardFull(){
   const board = $("visitorBoard");
@@ -1579,7 +1369,7 @@ function renderDashboardFull(){
   <label style="font-size:12px">Cible occupation</label>
   <input type="range" id="fsOccTarget" min="50" max="100" step="1" value="85">
   <span class="hint" id="fsOccLabel">85%</span>
-  <button class="btn" id="fsExport">Exporter Excel</button>
+  <button class="btn" id="fsExport">Exporter CSV</button>
 </div>
     </div>
     <div class="grid-kpis-4" id="kpisFS"></div>
@@ -1749,7 +1539,13 @@ function renderDashboardFull(){
     : `<div class="hint">Aucun préavis</div>`;
 
   // Export CSV
- $("fsExport").onclick = () => exportDashboardXLSX($("kpiScopeFS").value);
+  $("fsExport").onclick = ()=>{
+    const rows = []
+      .concat(vacants.map(v=> ({type:"Vacant", code:v.code||"", label:v.label||"", tenant:v.tenant||"", area:v.area||0, posts:v.posts||0, rent:v.rent||0})))
+      .concat(preavis.map(v=> ({type:"Préavis", code:v.code||"", label:v.label||"", tenant:v.tenant||"", area:v.area||0, posts:v.posts||0, rent:v.rent||0})));
+    exportCSV(rows, ["type","code","label","tenant","area","posts","rent"], "dashboard_export.csv");
+  };
+}
 
 // Charts
 function drawDonut(canvas, parts, colors, centerText){
