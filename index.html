@@ -2303,6 +2303,160 @@ document.addEventListener("click", (e)=>{
   document.addEventListener('DOMContentLoaded', syncTopbarHeight);
 </script>
 
+<script>
+(() => {
+  /* ========= Helpers export ========= */
+  const __num = (v) => parseFloat(String(v ?? 0).toString().replace(',', '.')) || 0;
+  const __int = (v) => parseInt(v ?? 0, 10) || 0;
+
+  // Sélecteurs utilitaires déjà présents ailleurs
+  const $ = (id) => document.getElementById(id);
+
+  // ---- Parcourt les clés b|f de la portée donnée (utilise celles déjà définies si présentes)
+  function forEachKeyInScope(scope, fn){
+    const buildingSelect = $("buildingSelect");
+    const floorSelect    = $("floorSelect");
+    const BUILDING_FLOORS = window.BUILDING_FLOORS || {};
+    const keyFor = (b,f)=>`${b}|${f}`;
+    const curB = buildingSelect.value, curF = floorSelect.value;
+    const curKey = keyFor(curB,curF);
+    const isBuildingCode = !!BUILDING_FLOORS[scope];
+    const targetB = isBuildingCode ? scope : curB;
+
+    function push(k){
+      const store = (k===curKey) ? (window.exportGeo?.() || {features:[]}) : (window.loadFromCache?.(k) || null);
+      const feats = (store && store.features) || [];
+      fn(k, feats);
+    }
+
+    if (scope==="all"){
+      Object.keys(BUILDING_FLOORS).forEach(b =>
+        (BUILDING_FLOORS[b]||[]).forEach(f => push(keyFor(b,f)))
+      );
+    } else if (isBuildingCode || scope==="building"){
+      (BUILDING_FLOORS[targetB]||[]).forEach(f => push(keyFor(targetB,f)));
+    } else {
+      push(curKey);
+    }
+  }
+
+  // ---- Taux d’occupation par étage en respectant les filtres courants
+  function floorsStats(scope){
+    const BUILDING_FLOORS = window.BUILDING_FLOORS || {};
+    const mapRates = new Map();
+    const activeStatuses = window.activeStatuses || new Set(Object.keys(window.STATUS_STYLES || {}));
+    const filterEventOnly = !!window.filterEventOnly;
+    const searchText = (window.searchText || "").toLowerCase();
+
+    forEachKeyInScope(scope,(k,feats)=>{
+      const [b,f]=k.split("|");
+      let tot=0, occ=0;
+      feats.forEach(fe=>{
+        const ep = (fe.options && fe.options.ep) || {};
+        const isEvent = String(ep.label||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase() === "evenementiel";
+        const typeOk  = !filterEventOnly || isEvent;
+        const matches = activeStatuses.has(ep.status || "Vacant");
+        const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
+        const matchText = !searchText || text.includes(searchText);
+        if(!typeOk || !matches || !matchText) return;
+        const ar = Number(ep.area||0);
+        tot += ar;
+        if (ep.status==="Loué" || ep.status==="Préavis") occ += ar;
+      });
+      const o = mapRates.get(k) || { b, f, occArea:0, totArea:0 };
+      o.occArea += occ; o.totArea += tot;
+      mapRates.set(k,o);
+    });
+    return [...mapRates.values()].map(o => ({
+      ...o,
+      rate: o.totArea ? Math.round(o.occArea*1000/o.totArea)/10 : 0
+    }));
+  }
+
+  // ---- Récupération des features selon la portée (réutilise ton storage)
+  function getFeaturesForScope(scope){
+    const buildingSelect = $("buildingSelect");
+    const floorSelect    = $("floorSelect");
+    const BUILDING_FLOORS = window.BUILDING_FLOORS || {};
+    const keyFor = (b,f)=>`${b}|${f}`;
+    const all = [];
+    const curB = buildingSelect.value;
+    const curF = floorSelect.value;
+    const curKey = keyFor(curB, curF);
+    const isBuildingCode = !!BUILDING_FLOORS[scope];
+    const targetB = isBuildingCode ? scope : curB;
+
+    function pushFromStore(k){
+      if (k === curKey) {
+        (window.exportGeo?.().features || []).forEach(fe => all.push(fe));
+      } else {
+        const st = window.loadFromCache?.(k);
+        if (st && st.features) st.features.forEach(fe => all.push(fe));
+      }
+    }
+    if (scope === "all"){
+      Object.keys(BUILDING_FLOORS).forEach(b =>
+        (BUILDING_FLOORS[b]||[]).forEach(f => pushFromStore(keyFor(b,f)))
+      );
+    } else if (isBuildingCode || scope === "building"){
+      (BUILDING_FLOORS[targetB] || []).forEach(f => pushFromStore(keyFor(targetB, f)));
+    } else {
+      (window.exportGeo?.().features || []).forEach(fe => all.push(fe));
+    }
+    return all;
+  }
+
+  // ---- Agrégations (copie sûre de ta logique existante)
+  function aggStats(features){
+    const counts = { Loué:0, Vacant:0, Préavis:0, Réservé:0, Maintenance:0 };
+    const area   = { Loué:0, Vacant:0, Préavis:0, Réservé:0, Maintenance:0 };
+    const posts  = { Loué:0, Vacant:0, Préavis:0, Réservé:0, Maintenance:0 };
+    const rent   = { Loué:0, Vacant:0, Préavis:0, Réservé:0, Maintenance:0 };
+    const byTenant = {};
+    const reservedList = [];
+    let reservedRentNonEvent = 0;
+
+    features.forEach(fe=>{
+      const ep = (fe.options && fe.options.ep) || {};
+      const st = ep.status || "Vacant";
+      const isEvent = (ep.label === "Evenementiel");
+      const ar       = Number(ep.area||0);
+      const postsVal = parseInt(ep.posts||0,10) || 0;
+      const rentVal  = parseFloat(String(ep.rent||0).toString().replace(",", ".")) || 0;
+
+      counts[st] = (counts[st]||0)+1;
+      area[st]   = (area[st]  ||0)+ar;
+      posts[st]  = (posts[st] ||0)+postsVal;
+      rent[st]   = (rent[st]  ||0)+rentVal;
+
+      const tenant = (ep.tenant||"").trim();
+      if(tenant && tenant.toLowerCase()!=="vacant"){
+        if(!byTenant[tenant]) byTenant[tenant]={count:0, area:0, posts:0, rent:0};
+        byTenant[tenant].count += 1;
+        byTenant[tenant].area  += ar;
+        byTenant[tenant].posts += postsVal;
+        byTenant[tenant].rent  += rentVal;
+      }
+
+      if(st === "Réservé" && !isEvent){
+        reservedList.push({code: ep.code||"—", label: ep.label||"Bureau", area: ar});
+        reservedRentNonEvent += rentVal;
+      }
+    });
+
+    const total = features.length;
+    const occupiedCount = (counts["Loué"]||0) + (counts["Préavis"]||0);
+    const vacantCount   = (counts["Vacant"]||0);
+    const occupiedPct   = total? Math.round(occupiedCount*1000/total)/10 : 0;
+    const vacantPct     = total? Math.round(vacantCount*1000/total)/10 : 0;
+
+    const tenantsArr = Object.entries(byTenant).map(([k,v])=>({tenant:k, ...v}))
+      .sort((a,b)=> b.count - a.count).slice(0,5);
+    const tenantsAreaArr = Object.entries(byTenant).map(([k,v])=>({tenant:k, ...v}))
+      .sort((a,b)=> b.area - a.area).slice(0,5);
+    const tenantsRentArr = Object.entrie
+
+
 
 </body>
 </html>
