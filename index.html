@@ -464,6 +464,20 @@ body.board-mode #visitorBoard{
           <div class="field"><label>Nombre de PAX debout</label><input id="fPaxStand" class="number" type="number" min="0" step="1" value="0"></div>
           <div class="field"><label>Prix (€) / jour</label><input id="fDayPrice" class="number" type="number" min="0" step="1" value="0"></div>
         </div>
+        <!-- Dates de gestion -->
+<div class="row">
+  <div class="field">
+    <label for="fNoticeStart">Préavis – date de départ</label>
+    <input type="date" id="fNoticeStart">
+    <div class="hint">Facultatif</div>
+  </div>
+  <div class="field">
+    <label for="fReservedArrival">Réservé – date d’arrivée</label>
+    <input type="date" id="fReservedArrival">
+    <div class="hint">Facultatif</div>
+  </div>
+</div>
+
     
 
         <div class="actions"><button class="btn primary" id="btnApply">Appliquer</button></div>
