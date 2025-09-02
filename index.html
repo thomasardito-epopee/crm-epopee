@@ -608,6 +608,39 @@ map = L.map("map", { crs: L.CRS.Simple, zoomControl:false, minZoom:-4, maxZoom:4
 drawn.addTo(map);
 $("zoomIn").onclick=()=> map.zoomIn();
 $("zoomOut").onclick=()=> map.zoomOut();
+<script>
+// ... après:
+map = L.map("map", { crs: L.CRS.Simple, zoomControl:false, minZoom:-4, maxZoom:4, zoomSnap:0.1, zoomDelta:0.5, inertia:true });
+
+// 🔧 SHIM Geoman : évite le crash si le CDN ne répond pas
+(function guardGeoman(){
+  // si le plugin n'est pas chargé, map.pm est undefined → on insère des no-op
+  if (!map.pm) map.pm = {};
+  const fns = [
+    "addControls","setLang","setPathOptions",
+    "enableDraw","disableDraw",
+    "enableGlobalEditMode","disableGlobalEditMode","globalEditModeEnabled",
+    "disableGlobalRemovalMode"
+  ];
+  fns.forEach(fn => { if (typeof map.pm[fn] !== "function") map.pm[fn] = ()=>{}; });
+
+  // si la toolbar n'existe pas et que le plugin est bien chargé plus tard,
+  // on (re)monte proprement les contrôles
+  window.addEventListener("load", () => {
+    try {
+      if (L && L.PM && map.pm && typeof map.pm.addControls === "function") {
+        map.pm.addControls({
+          position: 'topright',
+          drawMarker:false, drawCircle:false, drawPolyline:false, drawCircleMarker:false,
+          drawRectangle:true, drawPolygon:true, editMode:true, dragMode:false, removalMode:true, cutPolygon:false
+        });
+        map.pm.setLang('fr');
+        map.pm.setPathOptions({ snappable:true, snapDistance:10 });
+      }
+    } catch(_) {}
+  });
+})();
+</script>
 
 // Geoman toolbar
 map.pm.addControls({
