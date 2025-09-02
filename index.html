@@ -709,6 +709,18 @@ function normalStyleFor(l){
   const fill = isEvent ? "#ff7ab6" : (ep.color || (STATUS_STYLES[ep.status || "Vacant"]?.fill || "#0a84ff"));
   return { color: fill, opacity:1, fillColor: fill, fillOpacity:.35, weight:2 };
 }
+  <script>
+function persistEntry(iso){
+  try{
+    if(!window.currentLayer) return;
+    // on stocke la date d'entrée dans les props du layer
+    setLayerProps(currentLayer, { entryDate: iso || '' });
+    // et on sauvegarde
+    if (typeof saveLocal === 'function') saveLocal();
+  }catch(_){}
+}
+</script>
+
 function greyStyle(){ return { color:"#8e8e93", opacity:1, fillColor:"#b1b2b5", fillOpacity:.35, weight:1 }; }
 function applyStyle(l){
   l.setStyle(normalStyleFor(l));
