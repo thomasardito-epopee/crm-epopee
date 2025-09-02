@@ -984,6 +984,38 @@ function wireBoardActions(){
     };
   }
 
+  // ↗ Plein écran
+popBtn.onclick = () => {
+  document.body.classList.add('dashboard-fullscreen');   // <—
+  const b = $("visitorBoard");
+  b.classList.remove("in-panel");
+  b.classList.add("fullscreen");
+  b.style.display = "block";
+  renderDashboard();
+  wireBoardActions();
+};
+
+// ⤢ Réduire
+minBtn.onclick = () => {
+  document.body.classList.remove('dashboard-fullscreen'); // <—
+  const b = $("visitorBoard");
+  b.classList.remove("fullscreen");
+  ...
+};
+
+// ✕ Fermer
+closeBtn.onclick = () => {
+  document.body.classList.remove('dashboard-fullscreen'); // <—
+  const b = $("visitorBoard");
+  ...
+};
+
+// ← Revenir à l’édition (depuis le plein écran)
+backBtn.onclick = () => {
+  document.body.classList.remove('dashboard-fullscreen'); // <—
+  ...
+};
+
   // ↗ Plein écran (overlay)
   if (popBtn && !popBtn.__wired){
     popBtn.__wired = true;
