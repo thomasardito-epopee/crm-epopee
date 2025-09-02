@@ -2349,39 +2349,6 @@ document.addEventListener("click", (e)=>{
     }
   }
 
-  // ---- Taux d’occupation par étage en respectant les filtres courants
-  function floorsStats(scope){
-    const BUILDING_FLOORS = window.BUILDING_FLOORS || {};
-    const mapRates = new Map();
-    const activeStatuses = window.activeStatuses || new Set(Object.keys(window.STATUS_STYLES || {}));
-    const filterEventOnly = !!window.filterEventOnly;
-    const searchText = (window.searchText || "").toLowerCase();
-
-    forEachKeyInScope(scope,(k,feats)=>{
-      const [b,f]=k.split("|");
-      let tot=0, occ=0;
-      feats.forEach(fe=>{
-        const ep = (fe.options && fe.options.ep) || {};
-        const isEvent = String(ep.label||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase() === "evenementiel";
-        const typeOk  = !filterEventOnly || isEvent;
-        const matches = activeStatuses.has(ep.status || "Vacant");
-        const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
-        const matchText = !searchText || text.includes(searchText);
-        if(!typeOk || !matches || !matchText) return;
-        const ar = Number(ep.area||0);
-        tot += ar;
-        if (ep.status==="Loué" || ep.status==="Préavis") occ += ar;
-      });
-      const o = mapRates.get(k) || { b, f, occArea:0, totArea:0 };
-      o.occArea += occ; o.totArea += tot;
-      mapRates.set(k,o);
-    });
-    return [...mapRates.values()].map(o => ({
-      ...o,
-      rate: o.totArea ? Math.round(o.occArea*1000/o.totArea)/10 : 0
-    }));
-  }
-
   // ---- Récupération des features selon la portée (réutilise ton storage)
   function getFeaturesForScope(scope){
     const buildingSelect = $("buildingSelect");
