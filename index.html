@@ -757,6 +757,9 @@ function syncEventUI(){
     }
   }
 }
+  // Affichage du bloc préavis uniquement si non événementiel + statut "Préavis"
+  const showPreavis = !isEvent && ($("fStatus").value === "Préavis");
+  $("preavisRow").style.display = showPreavis ? "grid" : "none";
   <!-- Préavis: visible uniquement si fStatus === "Préavis" et non Evenementiel -->
 <div class="row3" id="preavisRow" style="display:none">
   <div class="field">
