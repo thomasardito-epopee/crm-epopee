@@ -1314,7 +1314,7 @@ function floorsStats(scope){
       tot += ar;
       if (ep.status==="Loué" || ep.status==="Préavis") occ += ar;
     });
-    const o = mapRates.get(k) || {b,f,occArea:0,totArea:0};
+    const o = mapRates.get(k) || { b, f, occArea:0, totArea:0 };
     o.occArea += occ; o.totArea += tot;
     mapRates.set(k,o);
   });
