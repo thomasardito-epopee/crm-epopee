@@ -823,33 +823,21 @@ function selectLayer(l, focusFirst=true){
   // 1) Initialiser les datepickers maintenant que les inputs existent
 initDatePickers();
 
-// 2) Pré-remplir à partir des props de la couche
+// 1) init maintenant que les inputs existent dans le DOM
+initDatePickers();
+
+// 2) pré-remplir
 const ep = layerProps(currentLayer);
 if (ep.notice_start_date)       fpNotice.setDate(ep.notice_start_date, true, "Y-m-d");
 if (ep.reserved_arrival_date)   fpReserved.setDate(ep.reserved_arrival_date, true, "Y-m-d");
 if (ep.notice_start_date)       fpReserved.set("minDate", ep.notice_start_date);
 
-// 3) Affichage conditionnel selon le statut courant
+// 3) afficher le bon calendrier selon le statut
 updateDateGroups();
 
-// 4) Rebrancher l'event sur le select Statut (à chaque ouverture du panneau)
+// 4) rebrancher le change du statut (évite doublons)
 const stEl = document.getElementById("fStatus");
-if (stEl) {
-  // évite les doublons d'écouteurs si tu ouvres/fermes plusieurs fois
-  stEl.onchange = updateDateGroups;
-}
-
-  
-  // ← NEW: pré-remplir les dates si présentes (ici, DANS la fonction)
-  const ns = document.getElementById("fNoticeStart");
-  const ra = document.getElementById("fReservedArrival");
-  if (ns) ns.value = ep.notice_start_date || "";
-  if (ra) ra.value = ep.reserved_arrival_date || "";
-  if (ns && ra) {
-    ra.min = ns.value || "";
-    ns.addEventListener("change", ()=>{ ra.min = ns.value || ""; });
-  }
-}
+if (stEl) stEl.onchange = updateDateGroups;
 
   syncEventUI && syncEventUI();
 
