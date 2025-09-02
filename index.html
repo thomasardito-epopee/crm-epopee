@@ -2035,13 +2035,14 @@ document.addEventListener("click", (e)=>{
   </div>
 </div>
   <script>
-  function __openDashboardFull(){
-    const b=document.getElementById("visitorBoard");
-    if(!b) return;
-    b.classList.add("fullscreen");
-    b.style.display="block";
-    renderDashboard();
-  }
+ function __openDashboardFull(){
+  const b = document.getElementById("visitorBoard");
+  if(!b) return;
+  document.body.classList.add('dashboard-fullscreen');   // <—
+  b.classList.add("fullscreen");
+  b.style.display = "block";
+  renderDashboard();
+}
   document.addEventListener("DOMContentLoaded", ()=>{
     if(location.hash==="#dashboard-full") __openDashboardFull();
   });
