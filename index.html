@@ -832,6 +832,11 @@ function rebuildTypeChips(){
   chk.onchange = (e)=>{ filterEventOnly = !e.target.checked; updateGreying(); };
 }
 
+  function ensureFilters(){
+  rebuildStatusChips();
+  rebuildTypeChips();
+  updateGreying();
+}
 
   function updateGreying(){
   drawn.getLayers().forEach(l=>{
