@@ -814,26 +814,21 @@ function selectLayer(l, focusFirst=true){
     {duration:600}
   );
 
-  // 1) Initialiser les datepickers maintenant que les inputs existent
+// 1) Initialiser les datepickers maintenant que les inputs existent
 initDatePickers();
 
-// 1) init maintenant que les inputs existent dans le DOM
-initDatePickers();
+// 2) Pré-remplir depuis les props déjà lues plus haut
+if (ep.notice_start_date)     fpNotice.setDate(ep.notice_start_date, true, "Y-m-d");
+if (ep.reserved_arrival_date) fpReserved.setDate(ep.reserved_arrival_date, true, "Y-m-d");
+if (ep.notice_start_date)     fpReserved.set("minDate", ep.notice_start_date);
 
-// 2) pré-remplir
-const ep = layerProps(currentLayer);
-if (ep.notice_start_date)       fpNotice.setDate(ep.notice_start_date, true, "Y-m-d");
-if (ep.reserved_arrival_date)   fpReserved.setDate(ep.reserved_arrival_date, true, "Y-m-d");
-if (ep.notice_start_date)       fpReserved.set("minDate", ep.notice_start_date);
-
-// 3) afficher le bon calendrier selon le statut
+// 3) Affichage conditionnel selon le statut courant
 updateDateGroups();
 
-// 4) rebrancher le change du statut (évite doublons)
+// 4) Rebrancher le change du statut (évite les doublons)
 const stEl = document.getElementById("fStatus");
 if (stEl) stEl.onchange = updateDateGroups;
-
-  syncEventUI && syncEventUI();
+}
 
 // interactions
 map.on('pm:create', e=>{
