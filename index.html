@@ -831,16 +831,19 @@ function rebuildTypeChips(){
 }
 
 
-function rebuildStatusChips(){
-  const wrap = $("statusChips"); wrap.innerHTML="";
-  ALL_STATUSES.forEach(s=>{
-    const id=`chip_${s}`;
-    const lab=document.createElement('label'); lab.className="chip";
-    lab.innerHTML=`<input type="checkbox" id="${id}" checked> ${s}`; wrap.appendChild(lab);
-    $(id).onchange = e=>{ if(e.target.checked) activeStatuses.add(s); else activeStatuses.delete(s); updateGreying(); };
-  });
+function rebuildTypeChips(){
+  const wrap = $("typeChips"); if(!wrap) return;
+  wrap.innerHTML="";
+  const id="chip_event_type";
+  const lab=document.createElement("label"); lab.className="chip";
+  lab.innerHTML=`<input type="checkbox" id="${id}" checked> Événementiel`;
+  wrap.appendChild(lab);
+
+  const chk = $(id);
+  // sync état initial (case cochée = on montre tout)
+  filterEventOnly = !chk.checked;
+  chk.onchange = (e)=>{ filterEventOnly = !e.target.checked; updateGreying(); };
 }
-$("searchInput").oninput = e=>{ searchText=e.target.value.trim().toLowerCase(); updateGreying(); };
 
   function updateGreying(){
   drawn.getLayers().forEach(l=>{
