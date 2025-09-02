@@ -710,7 +710,14 @@ async function loadLocal(k){
     const res = await fetch(`/api/spaces?building=${encodeURIComponent(building)}&floor=${encodeURIComponent(floor)}`);
     if(res.ok){
       const { items } = await res.json();
-      const features = (items||[]).map(row => row.geom);
+    const features = (items || []).map(row => {
+  const geom = row.geom || {};
+  geom.options = geom.options || {};
+  geom.options.ep = geom.options.ep || {};
+  if (row.notice_start_date)      geom.options.ep.notice_start_date = row.notice_start_date;
+  if (row.reserved_arrival_date)  geom.options.ep.reserved_arrival_date = row.reserved_arrival_date;
+  return geom;
+});
       const payload = { key:k, features };
       localStorage.setItem(storageKey(k), JSON.stringify(payload));
       return payload;
