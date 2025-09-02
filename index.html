@@ -1563,8 +1563,8 @@ function renderDashboardFull(){
   $("fsOccTarget").oninput = (e)=>{ $("fsOccLabel").textContent = e.target.value + "%"; renderDashboardFull(); };
   wireBoardActions();
  
-  + document.getElementById("fsExport").onclick = () =>
-+   exportEspacesCSV(document.getElementById("kpiScopeFS").value);
+  document.getElementById("fsExport").onclick = () =>
+exportEspacesCSV(document.getElementById("kpiScopeFS").value);
 
 
 
