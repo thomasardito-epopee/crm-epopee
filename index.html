@@ -500,7 +500,8 @@ let isAdmin = false;
 let activeStatuses = new Set(ALL_STATUSES);
 let searchText = "";
 let currentKey = "";
-let filterEventOnly = true; // on démarre en "tout afficher"
+let filterEventOnly = false; // tout afficher par défaut
+
 
 // ===== Helpers
 const $ = (id)=>document.getElementById(id);
