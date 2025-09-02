@@ -835,18 +835,20 @@ function rebuildStatusChips(){
   });
 }
 $("searchInput").oninput = e=>{ searchText=e.target.value.trim().toLowerCase(); updateGreying(); };
-function updateGreying(){
+
+  function updateGreying(){
   drawn.getLayers().forEach(l=>{
-    const ep=layerProps(l);
-    const matches=activeStatuses.has(ep.status||"Vacant");
-    const text=`${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
+    const ep = layerProps(l);
+    const matches = activeStatuses.has(ep.status || "Vacant");
+    const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
     const matchText = !searchText || text.includes(searchText);
-    const typeOk = !filterEventOnly || (ep.label === "Evenementiel");
+    const isEvent = isEventLabel(ep.label);
+    const typeOk = !filterEventOnly || isEvent; // décoché => filterEventOnly=true => événementiel uniquement
     const ok = matches && matchText && typeOk;
-    if(ok){ l.setStyle(normalStyleFor(l)); }
-    else{ l.setStyle(greyStyle()); }
+    l.setStyle(ok ? normalStyleFor(l) : greyStyle());
   });
 }
+
 
 // ===== Visitor/Admin
 const padModal=$("padModal"), pinDots=$("pinDots").querySelectorAll('.dot'), keysGrid=$("keys");
