@@ -149,47 +149,6 @@ canvas{width:100%; height:200px}
 .fs-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .fs-left    { flex:0 0 auto; display:flex; align-items:center; gap:8px; } /* ne s'étire plus */
 .fs-right   { display:flex; align-items:center; gap:8px; }
-  /* Espace sous la ligne "Bâtiment / Cible occupation / Exporter CSV" */
-.board.fullscreen .fs-toolbar{
-  margin-bottom: 12px; /* ajuste 8–16px à ton goût */
-}
-
-  /* ---- Toolbar du dashboard en plein écran : ne pas passer sous les actions ---- */
-.board.fullscreen .fs-toolbar{
-  display: grid;
-  grid-template-columns: auto 1fr;  /* gauche + droite */
-  align-items: center;
-  gap: 12px;
-  padding-right: 120px;             /* réserve la place des boutons ✕ / ⤢ */
-}
-
-.board.fullscreen .fs-left{
-  display:flex; align-items:center; gap:8px;
-}
-
-.board.fullscreen .fs-right{
-  display:flex; align-items:center; gap:8px;
-  justify-content: flex-end;        /* pousse à gauche des actions */
-  flex-wrap: wrap;                  /* évite tout chevauchement en petit écran */
-}
-
-/* Compacter les contrôles */
-.board.fullscreen #kpiScopeFS{
-  width: auto !important; min-width: 150px; max-width: 220px;
-}
-.board.fullscreen #fsOccTarget{ width: 260px; max-width: 32vw; }
-.board.fullscreen #fsOccLabel{ white-space: nowrap; }
-
-/* En écrans plus étroits, la ligne passe sur 2 rangées proprement */
-@media (max-width: 1100px){
-  .board.fullscreen .fs-toolbar{
-    grid-template-columns: 1fr;
-    row-gap: 8px;
-    padding-right: 80px;            /* un peu moins de réserve */
-  }
-  .board.fullscreen .fs-right{ justify-content:flex-start; }
-}
-
 
 .fs-toolbar .select,
 #kpiScopeFS{
@@ -1553,54 +1512,13 @@ function renderDashboardFull(){
     : `<div class="hint">Aucun préavis</div>`;
 
   // Export CSV
-  $("fsExport").onclick = () => {
-  const scope = $("kpiScopeFS").value;
-
-  // colonnes du CSV
-  const headers = [
-    "building","floor","code","label","status","tenant",
-    "area","posts","rent",
-    "is_event","pax_sit","pax_stand","day_price"
-  ];
-
-  const rows = [];
-
-  // on parcourt toutes les clés de la portée (Village / Bâtiment / Étage courant)
-  forEachKeyInScope(scope, (k, feats) => {
-    const [b, f] = k.split("|");
-    feats.forEach(fe => {
-      const ep = (fe.options && fe.options.ep) || {};
-      const status = ep.status || "Vacant";
-
-      // mêmes filtres que l’UI
-      const isEvent = isEventLabel(ep.label);
-      const matchesStatus = activeStatuses.has(status);
-      const typeOk = !filterEventOnly || isEvent;
-      const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
-      const matchText = !searchText || text.includes(searchText);
-      if (!matchesStatus || !typeOk || !matchText) return;
-
-      rows.push({
-        building: b,
-        floor: f,
-        code: ep.code || "",
-        label: ep.label || "",
-        status,
-        tenant: ep.tenant || "",
-        area: Number(ep.area || 0),
-        posts: isEvent ? 0 : (parseInt(ep.posts || 0, 10) || 0),
-        rent:  isEvent ? 0 : (parseFloat(String(ep.rent || 0).toString().replace(",",".")) || 0),
-        is_event: isEvent ? "yes" : "no",
-        pax_sit:   isEvent ? (parseInt(ep.paxSit   || 0, 10) || 0) : 0,
-        pax_stand: isEvent ? (parseInt(ep.paxStand || 0, 10) || 0) : 0,
-        day_price: isEvent ? (parseFloat(String(ep.dayPrice || 0).toString().replace(",",".")) || 0) : 0
-      });
-    });
-  });
-
-  exportCSV(rows, headers, `epopee_export_${scope}.csv`);
-};
-
+  $("fsExport").onclick = ()=>{
+    const rows = []
+      .concat(vacants.map(v=> ({type:"Vacant", code:v.code||"", label:v.label||"", tenant:v.tenant||"", area:v.area||0, posts:v.posts||0, rent:v.rent||0})))
+      .concat(preavis.map(v=> ({type:"Préavis", code:v.code||"", label:v.label||"", tenant:v.tenant||"", area:v.area||0, posts:v.posts||0, rent:v.rent||0})));
+    exportCSV(rows, ["type","code","label","tenant","area","posts","rent"], "dashboard_export.csv");
+  };
+}
 
 // Charts
 function drawDonut(canvas, parts, colors, centerText){
