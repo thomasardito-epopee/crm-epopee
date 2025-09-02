@@ -1421,11 +1421,11 @@ function floorsStats(scope){
     o.occArea += occ; o.totArea += tot;
     mapRates.set(k,o);
   });
-  return [...mapRates.values()].map(o => ({
-    ...o,
-    rate: o.totArea ? Math.round(o.occArea*1000/o.totArea)/10 : 0
-  }));
-}
+  
+ return Array.from(mapRates.values()).map(o => ({
+  ...o,
+  rate: o.totArea ? Math.round(o.occArea*1000/o.totArea)/10 : 0
+}));
 
 // --- CSV export helper
 function exportCSV(rows, headers, filename){
