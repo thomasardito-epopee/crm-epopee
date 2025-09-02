@@ -823,27 +823,15 @@ function rebuildTypeChips(){
   wrap.innerHTML="";
   const id="chip_event_type";
   const lab=document.createElement("label"); lab.className="chip";
-  // par défaut: coché = on montre tout
-  lab.innerHTML=`<input type="checkbox" id="${id}" checked> Événementiel`;
-  wrap.appendChild(lab);
-  // décoché => mode "événementiel uniquement"
-  $(id).onchange = (e)=>{ filterEventOnly = !e.target.checked; updateGreying(); };
-}
-
-
-function rebuildTypeChips(){
-  const wrap = $("typeChips"); if(!wrap) return;
-  wrap.innerHTML="";
-  const id="chip_event_type";
-  const lab=document.createElement("label"); lab.className="chip";
   lab.innerHTML=`<input type="checkbox" id="${id}" checked> Événementiel`;
   wrap.appendChild(lab);
 
   const chk = $(id);
-  // sync état initial (case cochée = on montre tout)
-  filterEventOnly = !chk.checked;
+  // Sync immédiat de l’état global avec la case déjà cochée
+  filterEventOnly = !chk.checked;      // -> false puisque cochée
   chk.onchange = (e)=>{ filterEventOnly = !e.target.checked; updateGreying(); };
 }
+
 
   function updateGreying(){
   drawn.getLayers().forEach(l=>{
