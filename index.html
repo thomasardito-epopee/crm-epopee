@@ -2212,7 +2212,7 @@ function showSuggest(items){
   suggest.innerHTML = items.map(it=> `<div class="item" role="option"><span class="icon">🏷️</span>${it.name}</div>`).join("");
   positionSuggest(tnInput);
   suggest.style.display="block";
-  [...suggest.querySelectorAll(".item")].forEach((node)=>{
+  [...suggest.querySelectorAll(".item")]
     node.onmousedown = (e)=>{
       e.preventDefault();
       tnInput.value = node.textContent.replace("🏷️","").trim();
