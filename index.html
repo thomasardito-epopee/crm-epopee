@@ -818,7 +818,26 @@ function setBaseImage(src, dim){
   map.fitBounds(bounds, {padding:[20,20]});
   wireBoardActions();
 }
+  
+function rebuildStatusChips(){
+  const wrap = $("statusChips"); if(!wrap) return;
+  wrap.innerHTML = "";
+  ALL_STATUSES.forEach(s=>{
+    const id = "chip_status_" + s;
+    const lab = document.createElement("label");
+    lab.className = "chip";
+    lab.innerHTML = `<input type="checkbox" id="${id}" checked> ${s}`;
+    wrap.appendChild(lab);
 
+    const chk = $(id);
+    chk.onchange = (e)=>{
+      if(e.target.checked) activeStatuses.add(s);
+      else activeStatuses.delete(s);
+      updateGreying();
+    };
+  });
+}
+  
 function rebuildTypeChips(){
   const wrap = $("typeChips"); if(!wrap) return;
   wrap.innerHTML="";
