@@ -43,6 +43,33 @@ html,body{height:100%;margin:0;font-family:Inter,-apple-system,BlinkMacSystemFon
 .btn.success{background:var(--green);color:#fff;border-color:transparent}
 .hint{font-size:12px;color:var(--muted)}
 
+  /* Espace entre la toolbar FS et les KPIs */
+.board.fullscreen .fs-toolbar{
+  margin-bottom: 12px;    /* ↑ marge demandée */
+}
+/* Garde une zone libre à droite pour les boutons ronds de la board-actions */
+.board.fullscreen .fs-toolbar{
+  padding-right: 96px;    /* réserve ~2 boutons + marge */
+}
+
+/* Centre le bloc slider + bouton Export */
+.fs-right{
+  flex: 1 1 auto;                 /* s’étire comme la partie gauche */
+  justify-content: center;        /* → centré */
+  gap: 8px;
+}
+
+/* largeur du slider en FS + évite qu’il rapetisse */
+.fs-right #fsOccTarget{
+  width: 240px;                   /* un peu plus confortable */
+  flex: 0 0 240px;
+}
+
+.fs-right .btn{
+  flex-shrink: 0;                 /* “Exporter” ne se compacte pas */
+}
+
+  
 .layout{display:grid;grid-template-columns:360px 1fr;height:calc(100vh - 56px);transition:grid-template-columns .24s ease;position:relative}
 aside.panel{background:var(--panel);border-right:1px solid var(--border);padding:14px;overflow:auto;z-index:1400}
 .layout.collapsed{grid-template-columns:0 1fr}
