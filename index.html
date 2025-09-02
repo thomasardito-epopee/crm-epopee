@@ -3042,6 +3042,95 @@ document.addEventListener('DOMContentLoaded', function(){
   window.openEpopeeDashboard = openDashboard;
 })();
 </script>
+<script>
+/* DASHBOARD+ overlay — drop-in, ajoute un bouton flottant en bas-droite
+   -> colle ce <script> avant </body> sur la page plan (pas sur ta route /dashboard)
+   -> clique le bouton "Dashboard+" qui apparaît pour ouvrir l'overlay  */
+(function(){function I(s){const e=document.createElement("style");e.textContent=s,document.head.appendChild(e)}
+I(`.epdash-fab{position:fixed;right:18px;bottom:18px;z-index:9999;background:#111827;color:#fff;border:none;border-radius:999px;padding:10px 14px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.2);cursor:pointer}
+.epdash-fab:hover{background:#0f172a}.epdash-overlay{position:fixed;inset:0;background:rgba(17,24,39,.5);backdrop-filter:blur(2px);display:flex;align-items:flex-start;justify-content:center;padding:32px;z-index:9999}
+.epdash-sheet{width:min(1200px,96vw);max-height:92vh;overflow:auto;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.2);padding:20px 22px 24px}
+.epdash-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:8px}.epdash-head h2{font-size:20px;font-weight:700;margin:0}
+.epdash-actions{display:flex;align-items:center;gap:12px}.switch{display:flex;align-items:center;gap:8px;font-size:13px;color:#475569}.switch input{accent-color:#111827}
+.btn.ghost{border:1px solid #e5e7eb;padding:8px 12px;border-radius:10px;background:#fff;cursor:pointer}.btn.ghost:hover{background:#f8fafc}
+.epdash-hero{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:8px 0 16px}.kpi{background:#0f172a;color:#fff;border-radius:14px;padding:12px}.kpi-title{font-size:12px;opacity:.8}
+.kpi-value{font-size:22px;font-weight:700;margin-top:6px}.kpi-hint{font-size:12px;opacity:.7;margin-top:2px}#kpi-delta.pos{color:#22c55e}#kpi-delta.neg{color:#ef4444}
+.epdash-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.card{background:#fff;border:1px solid #eef2f7;border-radius:14px}
+.card-head{padding:12px 14px;border-bottom:1px solid #eef2f7;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.card-head h3{margin:0;font-size:15px;font-weight:700;color:#0f172a}.card-head .inline{display:flex;align-items:center;gap:8px;font-size:12px}.card-body{padding:14px}.card.span-2{grid-column:span 2}
+.statuts{display:flex;align-items:center;gap:18px}.legend .dot{width:10px;height:10px;border-radius:999px;display:inline-block;margin-right:8px}.legend div{font-size:13px;color:#334155;margin-bottom:4px}
+.bars .bar{display:grid;grid-template-columns:80px 1fr 60px;gap:10px;align-items:center;margin:8px 0}.bar-bg{height:10px;background:#f1f5f9;border-radius:20px;overflow:hidden}.bar-fill{height:100%;background:#0ea5e9;border-radius:20px}
+.top-list{display:grid;gap:8px}.top-row{display:grid;grid-template-columns:1.2fr .6fr .6fr .4fr;gap:8px;font-size:13px}.top-row .name{font-weight:600;color:#0f172a}.top-row .m2,.top-row .eur,.top-row .lots{text-align:right;color:#334155}
+.kpi-big{font-size:28px;font-weight:800;color:#0f172a;margin-bottom:6px}.list .row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px dashed #e5e7eb;font-size:13px}
+.list .separator{height:1px;background:#e5e7eb;margin:8px 0}.tbl{width:100%;border-collapse:collapse;font-size:13px}.tbl th,.tbl td{padding:8px 10px;border-bottom:1px solid #eef2f7}
+.tbl th{background:#f8fafc;text-align:left;color:#334155}.tbl .r{text-align:right}.tbl .c{text-align:center}.tt-badge{display:inline-block;padding:2px 6px;border-radius:999px;background:#e2f6ff;color:#0369a1;font-size:12px;font-weight:600}
+.tt-badge.alert{background:#fee2e2;color:#b91c1c}.muted{color:#64748b;font-size:12px;margin-top:6px}@media(max-width:980px){.epdash-hero{grid-template-columns:1fr 1fr}.epdash-grid{grid-template-columns:1fr}}`);
+const FR='fr-FR', n0=n=>isFinite(n)?new Intl.NumberFormat(FR,{maximumFractionDigits:0}).format(n):'—', e0=n=>isFinite(n)?new Intl.NumberFormat(FR,{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n):'—', d0=i=>{try{if(!i)return'—';const[y,m,d]=i.split('-').map(Number);return new Date(y,m-1,d).toLocaleDateString(FR)}catch{return i||'—'}}, t0=()=>{const t=new Date;return t.setHours(0,0,0,0),t}, du=i=>{try{const t=t0(),d=new Date(i+'T00:00:00');return Math.floor((d-t)/86400000)}catch{return NaN}}, norm=s=>{try{return(s||'').toString().normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase()}catch{return(s||'').toString().toLowerCase()}};
+function layers(){try{if(typeof getAllLayers=='function'){const a=getAllLayers();if(Array.isArray(a))return a.filter(l=>l&&l.options&&l.options.ep)}}catch{}try{if(window.map&&typeof map.eachLayer=='function'){const o=[];map.eachLayer(l=>{l&&l.options&&l.options.ep&&o.push(l)});if(o.length)return o}}catch{}const o=[];for(const k of Object.keys(window)){const v=window[k];v&&v.options&&v.options.ep&&o.push(v)}return o}
+function EP(l){const e=l?.options?.ep||{};return{code:e.code||e.id||'',company:e.company||e.companyName||e.nomEntreprise||'',label:e.label||e.type||'',status:e.status||'',area:+e.area||+e.surface||0,rent:+e.rent||+e.loyer||0,posts:+e.posts||+e.postes||0,exitDate:e.exitDate||'',entryDate:e.entryDate||'',building:e.building||''}}
+const sum=(a,k)=>a.reduce((t,x)=>t+(+x[k]||0),0), grp=(a,k)=>{const m=new Map;for(const x of a){const key=(x[k]||'')+'';m.has(key)||m.set(key,[]);m.get(key).push(x)}return m}, S=e=>norm(e.status), L=e=>S(e)=='loue'||S(e)=='loué', V=e=>S(e)=='vacant', P=e=>S(e)=='preavis'||S(e)=='préavis', R=e=>S(e)=='reserve'||S(e)=='réservé', M=e=>S(e)=='maintenance', E=e=>{const l=norm(e.label);return l=='evenementiel'||l=='événementiel'};
+function collect(fn=()=>true){return layers().map(EP).filter(fn)}
+function openDash(){if(document.getElementById('ep-dashboard'))return;const el=document.createElement('div');el.id='ep-dashboard',el.className='epdash-overlay',el.innerHTML=`
+<div class="epdash-sheet"><div class="epdash-head"><h2>Dashboard</h2><div class="epdash-actions"><label class="switch"><input id="incRes" type="checkbox"><span>Inclure Réservé</span></label><button id="closeDash" class="btn ghost">Fermer</button></div></div>
+<div class="epdash-hero">
+  <div class="kpi"><div class="kpi-title">Taux d’occupation (m²)</div><div class="kpi-value" id="kpi-occ">—</div></div>
+  <div class="kpi"><div class="kpi-title">Rent Roll actuel</div><div class="kpi-value" id="kpi-rent">—</div><div class="kpi-hint">€/mois (Loué)</div></div>
+  <div class="kpi"><div class="kpi-title">Sorties ≤ 60 j</div><div class="kpi-value" id="kpi-out60">—</div><div class="kpi-hint">m² | € (Préavis)</div></div>
+  <div class="kpi"><div class="kpi-title">Entrées ≤ 60 j</div><div class="kpi-value" id="kpi-in60">—</div><div class="kpi-hint">m² | € (Réservé)</div></div>
+  <div class="kpi"><div class="kpi-title">Delta net 60 j</div><div class="kpi-value" id="kpi-delta">—</div></div>
+</div>
+<div class="epdash-grid">
+  <section class="card"><div class="card-head"><h3>Statuts des espaces</h3></div><div class="card-body statuts"><canvas id="donut" width="220" height="220"></canvas><div class="legend" id="legend"></div></div></section>
+  <section class="card"><div class="card-head"><h3>Vacants vs Occupés</h3></div><div class="card-body"><div class="bars"><div class="bar"><span>Occupés</span><div class="bar-bg"><div id="barOcc" class="bar-fill"></div></div><div id="barOccVal" class="bar-val">—</div></div><div class="bar"><span>Vacants</span><div class="bar-bg"><div id="barVac" class="bar-fill"></div></div><div id="barVacVal" class="bar-val">—</div></div></div></div></section>
+  <section class="card"><div class="card-head"><h3>Top 5 entreprises</h3><div class="inline"><select id="topMode"><option value="eur">en € / mois</option><option value="m2">en m²</option></select><label class="switch"><input id="topInc" type="checkbox"><span>Inclure Réservé/Préavis</span></label></div></div><div class="card-body"><div id="top5" class="top-list"></div></div></section>
+  <section class="card"><div class="card-head"><h3>Prix moyen €/poste</h3><div class="inline"><select id="ppScope"><option value="global">Global</option><option value="label">Par libellé</option><option value="building">Par bâtiment</option></select></div></div><div class="card-body"><div id="ppVal" class="kpi-big">—</div><div id="ppList" class="list"></div></div></section>
+  <section class="card"><div class="card-head"><h3>Prochains départs (Préavis)</h3></div><div class="card-body"><table class="tbl" id="tbOut"><thead><tr><th>Lot</th><th>Entreprise</th><th class="r">m²</th><th class="r">€/mois</th><th class="c">⏳</th><th class="r">Sortie</th></tr></thead><tbody></tbody></table></div></section>
+  <section class="card"><div class="card-head"><h3>Prochaines arrivées (Réservé)</h3></div><div class="card-body"><table class="tbl" id="tbIn"><thead><tr><th>Lot</th><th>Entreprise</th><th class="r">m²</th><th class="r">€/mois</th><th class="c">⏳</th><th class="r">Entrée</th></tr></thead><tbody></tbody></table></div></section>
+  <section class="card span-2"><div class="card-head"><h3>Évolution & prévision du Rent Roll (€/mois)</h3></div><div class="card-body"><canvas id="rrLine" width="960" height="260"></canvas><div class="muted">Solide = réalisé (si dispo). Pointillé = projection : + Réservé (entryDate) − Préavis (exitDate).</div></div></section>
+  <section class="card"><div class="card-head"><h3>Événementiel</h3></div><div class="card-body"><div id="evt" class="list"></div><div class="muted">Pour planning 30j et € évènementiel, prévoir eventStart/eventEnd/pax.</div></div></section>
+</div></div>`;
+document.body.appendChild(el);el.querySelector('#closeDash').onclick=()=>el.remove();
+el.querySelector('#incRes').onchange=refreshAll;el.querySelector('#topMode').onchange=refreshTop5;el.querySelector('#topInc').onchange=refreshTop5;el.querySelector('#ppScope').onchange=refreshPP;refreshAll()}
+function withRes(a){const inc=document.getElementById('incRes')?.checked;return inc?a.filter(x=>L(x)||R(x)):a.filter(L)}
+function refreshHero(){const all=collect(), allM2=sum(all,'area'), occM2=sum(withRes(all),'area'), tOcc=allM2?(occM2/allM2):0, rent=sum(all.filter(L),'rent'),
+outs=all.filter(x=>P(x)&&x.exitDate&&du(x.exitDate)>=0&&du(x.exitDate)<=60), ins=all.filter(x=>R(x)&&x.entryDate&&du(x.entryDate)>=0&&du(x.entryDate)<=60),
+outM2=sum(outs,'area'), outE=sum(outs,'rent'), inM2=sum(ins,'area'), inE=sum(ins,'rent'), dM2=inM2-outM2, dE=inE-outE;
+document.getElementById('kpi-occ').textContent=(tOcc*100).toFixed(1)+'%';document.getElementById('kpi-rent').textContent=e0(rent);
+document.getElementById('kpi-out60').textContent=`${n0(outM2)} | ${e0(outE)}`;document.getElementById('kpi-in60').textContent=`${n0(inM2)} | ${e0(inE)}`;
+const d=document.getElementById('kpi-delta');d.textContent=`${n0(dM2)} | ${e0(dE)}`;d.classList.toggle('neg',dE<0||dM2<0);d.classList.toggle('pos',dE>0||dM2>0)}
+function refreshStatuts(){const a=collect(), parts=[{k:'Loué',v:sum(a.filter(L),'area'),c:'#22c55e'},{k:'Vacant',v:sum(a.filter(V),'area'),c:'#94a3b8'},{k:'Préavis',v:sum(a.filter(P),'area'),c:'#ef4444'},{k:'Réservé',v:sum(a.filter(R),'area'),c:'#06b6d4'},{k:'Maint.',v:sum(a.filter(M),'area'),c:'#f59e0b'},{k:'Événementiel',v:sum(a.filter(E),'area'),c:'#8b5cf6'}].filter(x=>x.v>0),
+tot=parts.reduce((t,x)=>t+x.v,0)||1, cv=document.getElementById('donut'), ctx=cv.getContext('2d'), cx=cv.width/2,cy=cv.height/2,r=90,t=20;ctx.clearRect(0,0,cv.width,cv.height);let a0=-Math.PI/2;
+for(const p of parts){const ang=(p.v/tot)*Math.PI*2;ctx.beginPath();ctx.arc(cx,cy,r,a0,a0+ang);ctx.arc(cx,cy,r-t,a0+ang,a0,true);ctx.closePath();ctx.fillStyle=p.c;ctx.fill();a0+=ang}
+document.getElementById('legend').innerHTML=parts.map(p=>`<div><span class="dot" style="background:${p.c}"></span>${p.k} · ${n0(p.v)} m²</div>`).join('')}
+function refreshVac(){const all=collect(), occ=sum(withRes(all),'area'), vac=sum(all.filter(V),'area'), tot=occ+vac||1;document.getElementById('barOcc').style.width=(occ/tot*100).toFixed(1)+'%';
+document.getElementById('barVac').style.width=(vac/tot*100).toFixed(1)+'%';document.getElementById('barOccVal').textContent=`${n0(occ)} m²`;document.getElementById('barVacVal').textContent=`${n0(vac)} m²`}
+function refreshTop5(){const mode=document.getElementById('topMode').value, inc=document.getElementById('topInc').checked;let pool=collect();pool=inc?pool.filter(x=>L(x)||R(x)||P(x)):pool.filter(L);
+const g=grp(pool,'company');const rows=[];for(const [c,arr] of g){if(!c)continue;rows.push({c,m2:sum(arr,'area'),eur:sum(arr,'rent'),lots:arr.length})}
+rows.sort((a,b)=>mode==='eur'?b.eur-a.eur:b.m2-a.m2);const top=rows.slice(0,5);document.getElementById('top5').innerHTML=top.map(r=>`<div class="top-row"><div class="name">${r.c}</div><div class="m2">${n0(r.m2)} m²</div><div class="eur">${e0(r.eur)}</div><div class="lots">${r.lots} lot${r.lots>1?'s':''}</div></div>`).join('')}
+function refreshPP(){const scope=document.getElementById('ppScope').value, loue=collect(L).filter(x=>(+x.posts||0)>0), totE=sum(loue,'rent'), totP=loue.reduce((t,x)=>t+(+x.posts||0),0), val=totP?(totE/totP):0;
+document.getElementById('ppVal').textContent=e0(val);const host=document.getElementById('ppList');if(scope==='global'){host.innerHTML='';return}const key=scope==='label'?'label':'building', by={};
+for(const x of loue){const k=scope==='label'?(x.label||'—'):(x.building||(x.code||'').split('-')[0]||'—');by[k]||(by[k]={e:0,p:0});by[k].e+=(+x.rent||0);by[k].p+=(+x.posts||0)}
+const rows=Object.keys(by).map(k=>({k,v:by[k].p?by[k].e/by[k].p:0})).sort((a,b)=>b.v-a.v);host.innerHTML=rows.map(r=>`<div class="row"><span>${r.k}</span><span>${e0(r.v)}</span></div>`).join('')}
+function refreshTables(){const all=collect(), outs=all.filter(x=>P(x)&&x.exitDate).map(x=>({code:x.code,company:x.company||'—',m2:+x.area||0,eur:+x.rent||0,d:du(x.exitDate),date:x.exitDate})).sort((a,b)=>a.d-b.d).slice(0,50),
+ins=all.filter(x=>R(x)&&x.entryDate).map(x=>({code:x.code,company:x.company||'—',m2:+x.area||0,eur:+x.rent||0,d:du(x.entryDate),date:x.entryDate})).sort((a,b)=>a.d-b.d).slice(0,50),
+tbS=document.querySelector('#tbOut tbody'),tbE=document.querySelector('#tbIn tbody');
+tbS.innerHTML=outs.map(r=>`<tr data-code="${r.code}"><td>${r.code||'—'}</td><td>${r.company}</td><td class="r">${n0(r.m2)}</td><td class="r">${e0(r.eur)}</td><td class="c"><span class="tt-badge ${r.d<0?'alert':''}">⏳ ${r.d<0?Math.abs(r.d)+' j dépassé':r.d+' j'}</span></td><td class="r">${d0(r.date)}</td></tr>`).join('');
+tbE.innerHTML=ins.map(r=>`<tr data-code="${r.code}"><td>${r.code||'—'}</td><td>${r.company}</td><td class="r">${n0(r.m2)}</td><td class="r">${e0(r.eur)}</td><td class="c"><span class="tt-badge ${r.d<0?'alert':''}">⏳ ${r.d<0?Math.abs(r.d)+' j dépassé':r.d+' j'}</span></td><td class="r">${d0(r.date)}</td></tr>`).join('')}
+function mkey(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)}
+function refreshLine(){const all=collect(), now=sum(all.filter(L),'rent'), months=[], start=new Date;start.setDate(1),start.setHours(0,0,0,0);for(let i=-2;i<=9;i++)months.push(new Date(start.getFullYear(),start.getMonth()+i,1));
+const deltas=new Map, add=(k,v)=>deltas.set(k,(deltas.get(k)||0)+v);for(const x of all){if(P(x)&&x.exitDate){const d=new Date(x.exitDate+'T00:00:00');add(mkey(new Date(d.getFullYear(),d.getMonth()+1,1)),-(+x.rent||0))}if(R(x)&&x.entryDate){const d=new Date(x.entryDate+'T00:00:00');add(mkey(new Date(d.getFullYear(),d.getMonth(),1)),+(+x.rent||0))}}
+const proj=[];let base=now;for(const m of months){base+=(deltas.get(mkey(m))||0),proj.push({x:m,y:Math.max(0,base)})}const cv=document.getElementById('rrLine'),ctx=cv.getContext('2d');ctx.clearRect(0,0,cv.width,cv.height);
+const pad={l:50,r:20,t:10,b:30},W=cv.width-pad.l-pad.r,H=cv.height-pad.t-pad.b,xs=months.map(d=>d.getTime()),ys=proj.map(p=>p.y),minY=0,maxY=Math.max(...ys,now)*1.1||1e4,xOf=t=>pad.l+((t-xs[0])/(xs[xs.length-1]-xs[0]))*W,yOf=v=>pad.t+H-((v-minY)/(maxY-minY))*H;
+ctx.strokeStyle='#e5e7eb',ctx.lineWidth=1,ctx.setLineDash([3,3]);for(let i=0;i<=4;i++){const yy=pad.t+(H*i/4);ctx.beginPath(),ctx.moveTo(pad.l,yy),ctx.lineTo(pad.l+W,yy),ctx.stroke()}ctx.setLineDash([]);
+ctx.fillStyle='#64748b',ctx.font='12px ui-sans-serif, system-ui, -apple-system',months.forEach(d=>{const x=xOf(d.getTime());ctx.fillText(d.toLocaleDateString('fr-FR',{month:'short'}),x-10,pad.t+H+18)});
+ctx.strokeStyle='#0ea5e9',ctx.setLineDash([6,4]),ctx.lineWidth=2,ctx.beginPath(),proj.forEach((p,i)=>{const x=xOf(p.x.getTime()),y=yOf(p.y);i?ctx.lineTo(x,y):ctx.moveTo(x,y)}),ctx.stroke(),ctx.setLineDash([]);
+ctx.fillStyle='#111827';const x0=xOf(months[2].getTime()),y0=yOf(now);ctx.beginPath(),ctx.arc(x0,y0,3,0,2*Math.PI),ctx.fill()}
+function refreshEvt(){const ev=collect(E), m2=sum(ev,'area'), cnt=ev.length, rows=ev.map(x=>({n:x.code||'—',sit:+x.paxSit||+x.paxAssis||0,st:+x.paxStand||+x.paxDebout||0})).sort((a,b)=>(b.sit+b.st)-(a.sit+a.st)).slice(0,8);
+document.getElementById('evt').innerHTML=`<div class="row"><span>m² événementiels actifs</span><span>${n0(m2)}</span></div><div class="row"><span>Espaces événementiels</span><span>${n0(cnt)}</span></div><div class="separator"></div>${rows.map(r=>`<div class="row"><span>${r.n}</span><span>${r.sit} assis • ${r.st} debout</span></div>`).join('')}`}
+function refreshAll(){refreshHero(),refreshStatuts(),refreshVac(),refreshTop5(),refreshPP(),refreshTables(),refreshLine(),refreshEvt()}
+function attachFAB(){if(document.getElementById('epdash-fab'))return;const b=document.createElement('button');b.id='epdash-fab',b.className='epdash-fab',b.textContent='Dashboard+',b.onclick=openDash,document.body.appendChild(b)}
+document.addEventListener('DOMContentLoaded',attachFAB);window.openEpopeeDashboard=openDash})();
+</script>
 
 </body>
 </html>
