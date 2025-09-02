@@ -156,8 +156,37 @@ canvas{width:100%; height:200px}
   overflow:auto; z-index:3000;
 }
 
-.fs-left{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-.fs-right{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+/* Toolbar du dashboard en plein écran */
+.fs-toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;              /* peut passer à 2 lignes si vraiment pas de place */
+}
+
+.fs-left{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:1 1 auto;               /* prend la place disponible */
+  min-width:340px;             /* évite que “Bâtiment A” se ratatine */
+}
+
+.fs-right{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:0 0 auto;
+  flex-wrap:nowrap;            /* garde slider + bouton sur une seule ligne */
+}
+
+.fs-right #fsOccTarget{ width:220px; flex:0 0 220px; }
+.fs-right .btn{ flex-shrink:0; }
+
+/* Enlève la petite flèche (bouton icône) près d'“Exporter CSV” s’il existe */
+.fs-toolbar .iconbtn{ display:none !important; }
+
 .fs-toolbar .input, .fs-toolbar .select{ height:34px; padding:6px 10px; }
 
 .grid-kpis-4{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
