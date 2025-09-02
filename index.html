@@ -145,6 +145,23 @@ canvas{width:100%; height:200px}
 
   /* ==== Améliorations Dashboard – plein écran uniquement ==== */
 .board.fullscreen{ padding:16px 18px; }
+  /* Compacter la ligne "Bâtiment A" dans la toolbar FS */
+.fs-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.fs-left    { flex:0 0 auto; display:flex; align-items:center; gap:8px; } /* ne s'étire plus */
+.fs-right   { display:flex; align-items:center; gap:8px; }
+
+.fs-toolbar .select,
+#kpiScopeFS{
+  width:auto !important;     /* écrase le width:100% global */
+  min-width:160px;
+  max-width:220px;           /* ajuste si tu veux plus/moins court */
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+#fsOccTarget{ width:220px; } /* slider raisonnable */
+
 
 .board.fullscreen{
   position:fixed;
