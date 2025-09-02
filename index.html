@@ -149,6 +149,11 @@ canvas{width:100%; height:200px}
 .fs-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .fs-left    { flex:0 0 auto; display:flex; align-items:center; gap:8px; } /* ne s'étire plus */
 .fs-right   { display:flex; align-items:center; gap:8px; }
+  /* Espace sous la ligne "Bâtiment / Cible occupation / Exporter CSV" */
+.board.fullscreen .fs-toolbar{
+  margin-bottom: 12px; /* ajuste 8–16px à ton goût */
+}
+
   /* ---- Toolbar du dashboard en plein écran : ne pas passer sous les actions ---- */
 .board.fullscreen .fs-toolbar{
   display: grid;
