@@ -1296,7 +1296,8 @@ function forEachKeyInScope(scope, fn){
   }
 }
 
-// (indépendant) — taux d’occupation par étage (en m²)
+/* ==================== PATCH START ==================== */
+/* 1) floorsStats : version corrigée (spreads) */
 function floorsStats(scope){
   const mapRates = new Map();
   forEachKeyInScope(scope,(k,feats)=>{
@@ -1304,12 +1305,14 @@ function floorsStats(scope){
     let tot=0, occ=0;
     feats.forEach(fe=>{
       const ep = (fe.options && fe.options.ep) || {};
-      const isEvent = (ep.label === "Evenementiel");
+      // respect des filtres actuels
+      const isEvent = String(ep.label||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase()==="evenementiel";
       const typeOk  = !filterEventOnly || isEvent;
       const matches = activeStatuses.has(ep.status || "Vacant");
-      const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
+      const text    = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
       const matchText = !searchText || text.includes(searchText);
       if(!typeOk || !matches || !matchText) return;
+
       const ar = Number(ep.area||0);
       tot += ar;
       if (ep.status==="Loué" || ep.status==="Préavis") occ += ar;
@@ -1324,12 +1327,11 @@ function floorsStats(scope){
   }));
 }
 
-  <script>
-/* ========= Helpers export ========= */
+/* 2) === Helpers export / tables / Excel (sans <script> imbriqué) === */
 function __num(v){ return parseFloat(String(v ?? 0).toString().replace(',', '.')) || 0; }
 function __int(v){ return parseInt(v ?? 0, 10) || 0; }
 
-/* Récupère toutes les features avec leur clé b|f en respectant les filtres actifs */
+/* collecte filtrée + clé b|f */
 function collectItemsWithKey(scope){
   const items = [];
   forEachKeyInScope(scope, (key, feats)=>{
@@ -1338,7 +1340,7 @@ function collectItemsWithKey(scope){
       const matchesStatus = activeStatuses.has(ep.status || "Vacant");
       const isEvent = (ep.label === "Evenementiel");
       const typeOk = !filterEventOnly || isEvent;
-      const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();  // ✅ backticks
+      const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
       const matchText = !searchText || text.includes(searchText);
       if (matchesStatus && matchText && typeOk){
         items.push({ ep, key });
@@ -1348,11 +1350,11 @@ function collectItemsWithKey(scope){
   return items;
 }
 
-/* Construit toutes les tables d’export à partir de la portée */
+/* construit toutes les feuilles pour l’export */
 function buildExportTables(scope){
   const items = collectItemsWithKey(scope);
 
-  // Feuille "Espaces (tous)"
+  // Espaces (tous)
   const allRows = items.map(({ep, key})=>{
     const [batiment, etage] = key.split('|');
     return {
@@ -1368,12 +1370,12 @@ function buildExportTables(scope){
     };
   });
 
-  // Sous-ensembles
+  // découpes
   const vacants  = allRows.filter(r => r.statut === "Vacant").sort((a,b)=> b.m2 - a.m2);
   const preavis  = allRows.filter(r => r.statut === "Préavis").sort((a,b)=> b.m2 - a.m2);
   const reserves = allRows.filter(r => r.statut === "Réservé").sort((a,b)=> b.m2 - a.m2);
 
-  // Par résident
+  // par résident
   const byTenant = new Map();
   allRows.forEach(r=>{
     const t = (r.resident || "").trim();
@@ -1385,7 +1387,7 @@ function buildExportTables(scope){
   const tenants = [...byTenant.values()]
     .sort((a,b)=> (b.loyer_total - a.loyer_total) || (b.m2 - a.m2));
 
-  // Par étage (utilise floorsStats qui respecte les filtres)
+  // par étage (respecte les filtres)
   const floors = floorsStats(scope).map(x => ({
     batiment: x.b, etage: x.f,
     m2_occupes: Math.round(x.occArea),
@@ -1393,13 +1395,13 @@ function buildExportTables(scope){
     taux_occupation: x.rate
   }));
 
-  // KPI de synthèse (reprend la logique du dashboard)
+  // KPI synthèse (reprend dashboard + filtres)
   const feats = getFeaturesForScope(scope).filter(fe=>{
     const ep = (fe.options && fe.options.ep) || {};
     const matchesStatus = activeStatuses.has(ep.status || "Vacant");
     const isEvent = (ep.label === "Evenementiel");
     const typeOk = !filterEventOnly || isEvent;
-    const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();  // ✅ backticks
+    const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
     const matchText = !searchText || text.includes(searchText);
     return matchesStatus && typeOk && matchText;
   });
@@ -1427,7 +1429,7 @@ function buildExportTables(scope){
     { kpi:"Revenu supp. estimé", valeur: addRev },
     { kpi:"Préavis (m²)", valeur: Math.round(S.area["Préavis"]||0) },
     { kpi:"Maintenance (m²)", valeur: Math.round(S.area["Maintenance"]||0) },
-    { kpi:"Paramètres export", valeur: `scope=${scope}; filtres=${[...activeStatuses].join('|')}; eventOnly=${filterEventOnly?'oui':'non'}; recherche="${searchText||''}"` },  // ✅ backticks
+    { kpi:"Paramètres export", valeur: `scope=${scope}; filtres=${[...activeStatuses].join('|')}; eventOnly=${filterEventOnly?'oui':'non'}; recherche="${searchText||''}"` },
     { kpi:"Horodatage", valeur:new Date().toISOString() }
   ];
 
@@ -1439,7 +1441,7 @@ function buildExportTables(scope){
   return { synthese, allRows, vacants, preavis, reserves, floors, tenants, occVac };
 }
 
-/* Création du classeur et téléchargement */
+/* export Excel multi-onglets */
 function exportDashboardXLSX(scope){
   if (!window.XLSX){ alert("La librairie Excel n’est pas chargée."); return; }
   const { synthese, allRows, vacants, preavis, reserves, floors, tenants, occVac } = buildExportTables(scope);
@@ -1459,10 +1461,9 @@ function exportDashboardXLSX(scope){
   add("Occ_Vac m2",     occVac);
 
   const today = new Date().toISOString().slice(0,10);
-  XLSX.writeFile(wb, `dashboard_${scope}_${today}.xlsx`);  // ✅ backticks
+  XLSX.writeFile(wb, `dashboard_${scope}_${today}.xlsx`);
 }
-</script>
-
+/* ==================== PATCH END ==================== */
   
 // --- CSV export helper
 function exportCSV(rows, headers, filename){
