@@ -391,6 +391,25 @@ body.board-mode #visitorBoard{
 <div class="app">
   <div class="topbar">
     <div class="brand">Épopée — Exploitation</div>
+    <div class="keypick">
+  <label for="buildingSelect">Bâtiment</label>
+  <select id="buildingSelect" class="select">
+    <option value="A">Bâtiment A</option>
+    <option value="B">Bâtiment B</option>
+    <option value="C">Bâtiment C</option>
+    <option value="D" selected>Bâtiment D</option>
+    <option value="E">Bâtiment E</option>
+    <option value="F">Bâtiment F</option>
+    <option value="G">Bâtiment G</option>
+    <option value="H">Bâtiment H</option>
+    <option value="I">Bâtiment I</option>
+    <option value="R">Bâtiment R</option>
+  </select>
+
+  <label for="floorSelect">Étage</label>
+  <select id="floorSelect" class="select"></select>
+</div>
+
     <div class="hint" id="statusText">Mode visiteur</div>
     <div>
       <button class="btn primary" id="btnSave">💾 Enregistrer</button>
