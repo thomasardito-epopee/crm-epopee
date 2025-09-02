@@ -812,16 +812,23 @@ function setBaseImage(src, dim){
   wireBoardActions();
 }
 
-// ===== Filters — GREY non matching
 function rebuildTypeChips(){
   const wrap = $("typeChips"); if(!wrap) return;
   wrap.innerHTML="";
   const id="chip_event_type";
   const lab=document.createElement("label"); lab.className="chip";
-  lab.innerHTML=`<input type="checkbox" id="${id}"> Événementiel`;
+  lab.innerHTML=`<input type="checkbox" id="${id}" checked> Événementiel`;
   wrap.appendChild(lab);
-  $(id).onchange = (e)=>{ filterEventOnly = !!e.target.checked; updateGreying(); };
+
+  const cb = $(id);
+  filterEventOnly = true;     // coché par défaut → on affiche l’événementiel
+  cb.checked = true;
+  cb.onchange = (e)=>{ filterEventOnly = !!e.target.checked; updateGreying(); };
+
+  // applique immédiatement l’état par défaut
+  updateGreying();
 }
+
 function rebuildStatusChips(){
   const wrap = $("statusChips"); wrap.innerHTML="";
   ALL_STATUSES.forEach(s=>{
