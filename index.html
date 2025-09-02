@@ -871,6 +871,8 @@ $("btnApply").onclick = ()=>{
     paxSit: __isEvent ? (parseInt(($("fPaxSit")?.value||"0"),10)||0) : 0,
     paxStand: __isEvent ? (parseInt(($("fPaxStand")?.value||"0"),10)||0) : 0,
     dayPrice: __isEvent ? (parseFloat(String($("fDayPrice")?.value||"0").replace(",", "."))||0) : 0
+noticeDate: (!$("fLabel") || isEventLabel($("fLabel").value)) ? "" : ($("fStatus").value==="Préavis" ? $("fNoticeDate").value : ""),
+    exitDate:   (!$("fLabel") || isEventLabel($("fLabel").value)) ? "" : ($("fStatus").value==="Préavis" ? $("fExitDate").value   : "")
   });
   saveLocal();
   const b=$("btnApply"); const orig=b.textContent;
