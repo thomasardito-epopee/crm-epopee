@@ -1338,7 +1338,7 @@ function collectItemsWithKey(scope){
       const matchesStatus = activeStatuses.has(ep.status || "Vacant");
       const isEvent = (ep.label === "Evenementiel");
       const typeOk = !filterEventOnly || isEvent;
-      const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
+      const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();  // ✅ backticks
       const matchText = !searchText || text.includes(searchText);
       if (matchesStatus && matchText && typeOk){
         items.push({ ep, key });
@@ -1399,7 +1399,7 @@ function buildExportTables(scope){
     const matchesStatus = activeStatuses.has(ep.status || "Vacant");
     const isEvent = (ep.label === "Evenementiel");
     const typeOk = !filterEventOnly || isEvent;
-    const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();
+    const text = `${ep.code||""} ${ep.label||""} ${ep.tenant||""}`.toLowerCase();  // ✅ backticks
     const matchText = !searchText || text.includes(searchText);
     return matchesStatus && typeOk && matchText;
   });
@@ -1427,7 +1427,7 @@ function buildExportTables(scope){
     { kpi:"Revenu supp. estimé", valeur: addRev },
     { kpi:"Préavis (m²)", valeur: Math.round(S.area["Préavis"]||0) },
     { kpi:"Maintenance (m²)", valeur: Math.round(S.area["Maintenance"]||0) },
-    { kpi:"Paramètres export", valeur:`scope=${scope}; filtres=${[...activeStatuses].join('|')}; eventOnly=${filterEventOnly?'oui':'non'}; recherche="${searchText||''}"` },
+    { kpi:"Paramètres export", valeur: `scope=${scope}; filtres=${[...activeStatuses].join('|')}; eventOnly=${filterEventOnly?'oui':'non'}; recherche="${searchText||''}"` },  // ✅ backticks
     { kpi:"Horodatage", valeur:new Date().toISOString() }
   ];
 
@@ -1459,9 +1459,10 @@ function exportDashboardXLSX(scope){
   add("Occ_Vac m2",     occVac);
 
   const today = new Date().toISOString().slice(0,10);
-  XLSX.writeFile(wb, `dashboard_${scope}_${today}.xlsx`);
+  XLSX.writeFile(wb, `dashboard_${scope}_${today}.xlsx`);  // ✅ backticks
 }
 </script>
+
   
 // --- CSV export helper
 function exportCSV(rows, headers, filename){
