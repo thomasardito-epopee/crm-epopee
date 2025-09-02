@@ -639,6 +639,12 @@ function setLabelValue(val){
   sel.value = val || "Bureau";
 }
 
+  function isEventLabel(lbl){
+  return String(lbl||"")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .trim().toLowerCase() === "evenementiel";
+}
+
 // Event UI
 function syncEventUI(){
   const isEvent = ($("fLabel").value === "Evenementiel");
