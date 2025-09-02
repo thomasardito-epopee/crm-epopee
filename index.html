@@ -1367,7 +1367,6 @@ function forEachKeyInScope(scope, fn){
   }
 }
 
-// (indépendant) — taux d’occupation par étage (en m²)
 function floorsStats(scope){
   const mapRates = new Map();
   forEachKeyInScope(scope,(k,feats)=>{
@@ -1385,7 +1384,7 @@ function floorsStats(scope){
       tot += ar;
       if (ep.status==="Loué" || ep.status==="Préavis") occ += ar;
     });
-    const o = mapRates.get(k) || {b,f,occArea:0,totArea:0};
+    const o = mapRates.get(k) || { b, f, occArea:0, totArea:0 };
     o.occArea += occ; o.totArea += tot;
     mapRates.set(k,o);
   });
@@ -1394,6 +1393,7 @@ function floorsStats(scope){
     rate: o.totArea ? Math.round(o.occArea*1000/o.totArea)/10 : 0
   }));
 }
+
 
 // --- CSV export helper
 function exportCSV(rows, headers, filename){
