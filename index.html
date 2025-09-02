@@ -734,6 +734,22 @@ function syncEventUI(){
     }
   }
 }
+  <!-- Préavis: visible uniquement si fStatus === "Préavis" et non Evenementiel -->
+<div class="row3" id="preavisRow" style="display:none">
+  <div class="field">
+    <label>Date de préavis</label>
+    <input id="fNoticeDate" class="input date" type="date">
+  </div>
+  <div class="field">
+    <label>Date de sortie</label>
+    <input id="fExitDate" class="input date" type="date">
+  </div>
+  <div class="field">
+    <label>&nbsp;</label>
+    <div class="hint">Renseigne ces dates pour les lots en préavis.</div>
+  </div>
+</div>
+
 $("fLabel").addEventListener("change", syncEventUI);
 
 // Select helper
