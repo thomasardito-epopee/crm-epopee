@@ -630,15 +630,18 @@ map.on('pm:remove', (e) => {
 map.pm.setLang('fr');
 map.pm.setPathOptions({ snappable:true, snapDistance:10 });
 
-  // === Calendriers (Flatpickr) ===
-let fpNotice = null, fpReserved = null;
+let fpNotice=null, fpReserved=null;
 
 function initDatePickers(){
-  if (fpNotice && fpNotice.destroy) fpNotice.destroy();
-  if (fpReserved && fpReserved.destroy) fpReserved.destroy();
+  if (fpNotice?.destroy) fpNotice.destroy();
+  if (fpReserved?.destroy) fpReserved.destroy();
+
+  // Localisation FR
+  if (window.flatpickr && window.flatpickr.l10ns?.fr) {
+    flatpickr.localize(flatpickr.l10ns.fr);
+  }
 
   fpNotice = flatpickr("#fNoticeStart", {
-    locale: flatpickr.l10ns.fr,
     dateFormat: "Y-m-d",
     altInput: true,
     altFormat: "j F Y",
@@ -647,23 +650,24 @@ function initDatePickers(){
   });
 
   fpReserved = flatpickr("#fReservedArrival", {
-    locale: flatpickr.l10ns.fr,
     dateFormat: "Y-m-d",
     altInput: true,
     altFormat: "j F Y",
     disableMobile: true
   });
 
+  // Arrivée >= début de préavis
   fpNotice.config.onChange.push((sel)=>{
-    if (sel && sel[0]) fpReserved.set("minDate", sel[0]);
+    if (sel?.[0]) fpReserved.set("minDate", sel[0]);
     else fpReserved.set("minDate", null);
   });
 }
 
 function updateDateGroups(){
   const st = document.getElementById("fStatus")?.value || "";
-  document.getElementById("grpNotice").classList.toggle("hidden", st !== "Préavis");
-  document.getElementById("grpReserved").classList.toggle("hidden", st
+  document.getElementById("grpNotice") .classList.toggle("hidden", st !== "Préavis");
+  document.getElementById("grpReserved").classList.toggle("hidden", st !== "Réservé");
+}
 
 // ===== Styling & data helpers
 function layerProps(l){ return l?.options?.ep || {}; }
