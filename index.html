@@ -142,6 +142,10 @@ canvas{width:100%; height:200px}
 .board .iconbtn{width:32px;height:32px;border-radius:999px;border:1px solid var(--border);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.08);font-size:16px;line-height:1}
 .board .iconbtn:hover{background:#f5f5f7}
 .board.fullscreen{position:fixed;inset:12px;max-width:none;min-width:unset;left:12px;right:12px;top:12px;bottom:12px;overflow:auto;z-index:3000}
+/* Réserve de la place sous les boutons d'action du board */
+.board .board-actions { height: 32px; }                 /* hauteur réelle des boutons */
+.board .board-actions + .fs-toolbar { margin-top: 40px; }/* pousse la toolbar sous eux */
+.board.fullscreen .fs-toolbar { padding-right: 120px; }  /* déjà présent chez toi, garde-le */
 
   /* ==== Améliorations Dashboard – plein écran uniquement ==== */
 .board.fullscreen{ padding:16px 18px; }
