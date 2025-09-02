@@ -654,16 +654,18 @@ function toPlain(l){
 function fromPlain(o){
   let l;
   if (o.type === 'rect') {
-    let bounds = o.bounds;
-    if (!bounds && Array.isArray(o.latlngs)) {
-      const pts = (o.latlngs[0] || o.latlngs).flat();
-      const lats = pts.map(p=>p.lat), lngs = pts.map(p=>p.lng);
-      bounds = [ L.latLng(Math.min(...lats), Math.min(...lngs)), L.latLng(Math.max(...lats), Math.max(...lngs)) ];
-    }
-    l = L.rectangle(bounds, { pmIgnore:false });
-  } else {
-    l = L.polygon(o.latlngs, { pmIgnore:false });
+  let bounds = o.bounds;
+  if (!bounds && Array.isArray(o.latlngs)) {
+    const pts  = (o.latlngs[0] || o.latlngs).flat();
+    const lats = pts.map(p=>p.lat), lngs = pts.map(p=>p.lng);
+    bounds = [ L.latLng(Math.min(...lats), Math.min(...lngs)),
+               L.latLng(Math.max(...lats), Math.max(...lngs)) ];
   }
+  l = L.rectangle(bounds, { pmIgnore:false });
+} else {
+  l = L.polygon(o.latlngs, { pmIgnore:false });
+}
+
   l.options.ep = (o.options && o.options.ep) || {};
   l.addTo(drawn); attachListeners(l); applyStyle(l);
 }
