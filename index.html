@@ -500,7 +500,7 @@ let isAdmin = false;
 let activeStatuses = new Set(ALL_STATUSES);
 let searchText = "";
 let currentKey = "";
-let filterEventOnly = true;  // Type : afficher l’Événementiel (coché par défaut)
+let filterEventOnly = false; // on démarre en "tout afficher"
 
 // ===== Helpers
 const $ = (id)=>document.getElementById(id);
