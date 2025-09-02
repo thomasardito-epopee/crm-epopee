@@ -800,6 +800,14 @@ function selectLayer(l, focusFirst=true){
   $("colorPill").animate(
     [{boxShadow:'inset 0 0 0 3px rgba(10,132,255,.12)'},{boxShadow:'inset 0 0 0 8px rgba(10,132,255,.2)'},{boxShadow:'inset 0 0 0 3px rgba(10,132,255,.12)'}],
     {duration:600}
+      // Dates de préavis (si présentes)
+  $("fNoticeDate").value = ep.noticeDate || "";
+  $("fExitDate").value   = ep.exitDate   || "";
+
+  // Assure l'état d'affichage correct au chargement
+  const isEvent = isEventLabel($("fLabel").value);
+  $("preavisRow").style.display = (!isEvent && $("fStatus").value === "Préavis") ? "grid" : "none";
+
   );
 }
 
