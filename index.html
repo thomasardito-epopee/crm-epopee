@@ -852,13 +852,21 @@ $("btnApply").onclick = ()=>{
     paxStand: __isEvent ? (parseInt(($("fPaxStand")?.value||"0"),10)||0) : 0,
     dayPrice: __isEvent ? (parseFloat(String($("fDayPrice")?.value||"0").replace(",", "."))||0) : 0,
 
-    // ← NEW: les 2 dates
+    // dates
     notice_start_date: (document.getElementById("fNoticeStart")?.value || null),
     reserved_arrival_date: (document.getElementById("fReservedArrival")?.value || null)
   });
   saveLocal();
+
+  // feedback visuel (comme avant)
+  const b=$("btnApply"); const orig=b.textContent;
+  b.textContent="Appliqué ✓"; b.classList.add("success","flash");
+  setTimeout(()=>{ b.textContent=orig; b.classList.remove("success","flash"); }, 900);
+};
+
+// Ces deux handlers doivent être EN DEHORS du onclick ci-dessus
 $("btnDelete").onclick = ()=>{ if(currentLayer){ drawn.removeLayer(currentLayer); currentLayer=null; saveLocal(); } };
-$("btnDup").onclick = ()=>{ if(!currentLayer) return; const p=toPlain(currentLayer); p.latlngs=p.latlngs.map(r=> r.map(ll=> L.latLng(ll.lat+20,ll.lng+20))); fromPlain(p); saveLocal(); };
+$("btnDup").onclick = ()=>{ if(!currentLayer) return; const p=toPlain(currentLayer); p.latlngs=p.latlngs.map(r=> r.map(ll=> L.latlng(ll.lat+20,ll.lng+20))); fromPlain(p); saveLocal(); };
 
 // Plan loading
 const planFile = $("planFile");
