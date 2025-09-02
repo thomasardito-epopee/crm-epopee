@@ -1463,6 +1463,17 @@ function exportDashboardXLSX(scope){
   const today = new Date().toISOString().slice(0,10);
   XLSX.writeFile(wb, `dashboard_${scope}_${today}.xlsx`);
 }
+
+function exportEspacesCSV(scope){
+  const { allRows } = buildExportTables(scope);
+  const headers = [
+    "batiment","etage","code","libelle","statut","resident",
+    "m2","postes","loyer_mensuel","evenementiel"
+  ];
+  const today = new Date().toISOString().slice(0,10);
+  exportCSV(allRows, headers, `espaces_${scope}_${today}.csv`);
+}
+
 /* ==================== PATCH END ==================== */
   
 // --- CSV export helper
