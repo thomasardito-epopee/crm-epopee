@@ -2636,16 +2636,16 @@ document.addEventListener("click", (e)=>{
   // ---- Expose pour les boutons
   window.exportDashboardXLSX = exportDashboardXLSX;
 
-  // ---- Câblage des boutons si présents
-  document.addEventListener("click", (e)=>{
-    const t = e.target;
-    if (t && t.id === "fsExport"){
-      const sel = document.getElementById("kpiScopeFS") || document.getElementById("kpiScope");
-      const scope = sel ? sel.value : (window.BUILDING_FLOORS?.[document.getElementById('buildingSelect')?.value] ? document.getElementById('buildingSelect').value : "building");
-      exportDashboardXLSX(scope);
-    }
-  });
-})();
+  // ❌ à supprimer / commenter
+document.addEventListener("click", (e)=>{
+  const t = e.target;
+  if (t && t.id === "fsExport"){
+    const sel = document.getElementById("kpiScopeFS") || document.getElementById("kpiScope");
+    const scope = sel ? sel.value : (window.BUILDING_FLOORS?.[document.getElementById('buildingSelect')?.value] ? document.getElementById('buildingSelect').value : "building");
+    exportDashboardXLSX(scope);
+  }
+});
+
 </script>
 
 </body>
