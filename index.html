@@ -905,6 +905,31 @@ $("adminSection").style.display = showEdition ? "block" : "none";
   mountGeoman();
 }
 syncMode();
+// ⌦ Hotkey: Delete/Backspace pour supprimer la forme sélectionnée
+let __wiredDeleteHotkey = false;
+function wireDeleteHotkey(){
+  if (__wiredDeleteHotkey) return;
+  __wiredDeleteHotkey = true;
+
+  document.addEventListener('keydown', (e) => {
+    if (!isAdmin) return;                             // seulement en mode admin
+    if (padModal && padModal.classList.contains('open')) return; // pas quand le PIN est ouvert
+    if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+
+    // ne pas intercepter quand on tape dans un champ
+    const a = document.activeElement;
+    if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable)) return;
+
+    if (currentLayer){
+      e.preventDefault();           // évite "page précédente" avec Backspace
+      drawn.removeLayer(currentLayer);
+      currentLayer = null;
+      saveLocal();
+    }
+  });
+}
+document.addEventListener('DOMContentLoaded', wireDeleteHotkey);
+// (tu peux aussi simplement appeler wireDeleteHotkey(); ici, ça marche pareil)
 
 // Drawer
 document.getElementById("drawerToggle").onclick = ()=>{ document.getElementById("layout").classList.toggle("collapsed"); };
