@@ -1,4 +1,4 @@
-// netlify/functions/save-floor.js
+// netlify/functions/spaces.js
 import { Pool } from 'pg';
 
 const pool = new Pool({
@@ -10,34 +10,80 @@ const ok  = (data) => ({ statusCode: 200, headers: { 'Cache-Control': 'no-store'
 const err = (c, m)   => ({ statusCode: c, body: m });
 
 export async function handler(event) {
-  const url = new URL(event.rawUrl);
-  const building = url.searchParams.get('building');
-  const floor    = url.searchParams.get('floor');
-  if (!building || !floor) return err(400, 'Missing building/floor');
-
+  // --- LIST (public) ---
   if (event.httpMethod === 'GET') {
+    const url = new URL(event.rawUrl);
+    const building = url.searchParams.get('building');
+    const floor    = url.searchParams.get('floor');
+    if (!building || !floor) return err(400, 'Missing building/floor');
+
     const { rows } = await pool.query(
-      'SELECT layout FROM floor_layouts WHERE building=$1 AND floor=$2',
+      `SELECT code,label,status,rent,area,posts,color,geom,updated_at,created_at
+         FROM spaces
+        WHERE building=$1 AND floor=$2
+     ORDER BY updated_at DESC NULLS LAST, created_at DESC
+        LIMIT 200`,
       [building, floor],
     );
-    return ok({ layout: rows[0]?.layout ?? {} });
+    return ok({ items: rows });
   }
 
-  if (event.httpMethod === 'POST') {
+  // --- UPSERT/DELETE BATCH (admin) ---
+  if (event.httpMethod === 'POST' && event.path.endsWith('/batch')) {
     const token =
       event.headers['x-admin-token'] ||
       (event.headers['authorization'] || '').replace(/^Bearer\s+/,'');
     if (!token || token !== process.env.ADMIN_TOKEN) return err(401, 'Unauthorized');
 
-    const { layout = {} } = JSON.parse(event.body || '{}');
-    await pool.query(
-      `INSERT INTO floor_layouts (building,floor,layout)
-       VALUES ($1,$2,$3)
-       ON CONFLICT (building,floor) DO UPDATE
-       SET layout=EXCLUDED.layout, updated_at=now()`,
-      [building, floor, layout],
-    );
-    return ok({ saved: true });
+    const { items = [] } = JSON.parse(event.body || '{}');
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      const upsertSql = `
+        INSERT INTO spaces (building,floor,code,label,status,rent,area,posts,color,geom)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+        ON CONFLICT (building,floor,code) DO UPDATE SET
+          label = EXCLUDED.label,
+          status= EXCLUDED.status,
+          rent  = EXCLUDED.rent,
+          area  = EXCLUDED.area,
+          posts = EXCLUDED.posts,
+          color = EXCLUDED.color,
+          geom  = EXCLUDED.geom,
+          updated_at = now()
+        RETURNING building,floor,code,updated_at,created_at;
+      `;
+
+      const results = [];
+      for (const it of items) {
+        if (it.action === 'upsert') {
+          const s = it.space || {};
+          const params = [
+            s.building, s.floor, s.code,
+            s.label ?? null, s.status ?? null,
+            s.rent ?? 0, s.area ?? 0, s.posts ?? 0,
+            s.color ?? null, s.geom ?? null,
+          ];
+          const { rows } = await client.query(upsertSql, params);
+          results.push(rows[0]);
+        } else if (it.action === 'delete') {
+          await client.query(
+            'DELETE FROM spaces WHERE building=$1 AND floor=$2 AND code=$3',
+            [it.building, it.floor, it.code],
+          );
+        }
+      }
+
+      await client.query('COMMIT');
+      return ok({ items: results });
+    } catch (e) {
+      await client.query('ROLLBACK');
+      return err(500, e.message);
+    } finally {
+      client.release();
+    }
   }
 
   if (event.httpMethod === 'OPTIONS') return ok({});
