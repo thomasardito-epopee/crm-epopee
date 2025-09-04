@@ -1,91 +1,79 @@
-// netlify/functions/spaces.js
-const { Pool } = require('pg');
-
-const DB_URL =
-  process.env.DATABASE_URL ||
-  process.env.NEON_DB_URL ||
-  process.env.NETLIFY_DATABASE_URL;
+import { Pool } from 'pg';
 
 const pool = new Pool({
-  connectionString: DB_URL,
-  ssl: { rejectUnauthorized: false }, // Neon
+  connectionString: process.env.NEON_DB_URL, // URL "pooled"
+  ssl: { rejectUnauthorized: false }
 });
 
-// util
-const json = (status, body) => ({
-  statusCode: status,
-  headers: { 'content-type': 'application/json; charset=utf-8' },
-  body: JSON.stringify(body),
-});
+export async function handler(event) {
+  if (event.httpMethod === 'POST' && event.path.endsWith('/batch')) {
+    const { items = [] } = JSON.parse(event.body || '{}');
 
-exports.handler = async (event) => {
-  // CORS simple si besoin
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 204, headers: { 'access-control-allow-origin': '*' } };
-  }
-
-  const client = await pool.connect();
-  try {
-    // Assure la table (idempotent)
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS spaces (
-        id BIGSERIAL PRIMARY KEY,
-        building TEXT NOT NULL,
-        floor    TEXT NOT NULL,
-        geom     JSONB NOT NULL,
-        created_at TIMESTAMPTZ DEFAULT now()
-      );
-    `);
-
-    // ----- READ (GET /api/spaces?building=&floor=)
-    if (event.httpMethod === 'GET') {
-      const { building, floor } = event.queryStringParameters || {};
-      if (!building || !floor) return json(400, { error: 'building & floor requis' });
-
-      const { rows } = await client.query(
-        'SELECT id, geom FROM spaces WHERE building=$1 AND floor=$2 ORDER BY id ASC',
-        [building, floor]
-      );
-      return json(200, { items: rows });
-    }
-
-    // ----- WRITE (POST /api/spaces/batch)
-    if (event.httpMethod === 'POST') {
-      // Auth simple par jeton
-      const hdr = (event.headers && (event.headers.authorization || event.headers.Authorization)) || '';
-      const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : '';
-      if (!process.env.ADMIN_TOKEN || token !== process.env.ADMIN_TOKEN) {
-        return json(401, { error: 'Unauthorized' });
-      }
-
-      let payload;
-      try { payload = JSON.parse(event.body || '{}'); }
-      catch { return json(400, { error: 'JSON invalide' }); }
-
-      const { building, floor, features } = payload || {};
-      if (!building || !floor || !Array.isArray(features)) {
-        return json(400, { error: 'building, floor et features[] requis' });
-      }
-
+    const client = await pool.connect();
+    try {
       await client.query('BEGIN');
-      await client.query('DELETE FROM spaces WHERE building=$1 AND floor=$2', [building, floor]);
-      for (const fe of features) {
-        await client.query(
-          'INSERT INTO spaces (building, floor, geom) VALUES ($1,$2,$3::jsonb)',
-          [building, floor, JSON.stringify(fe)]
-        );
+
+      const text = `
+        INSERT INTO spaces
+          (building, floor, code, label, status, rent, area, posts, color, geom)
+        VALUES
+          ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+        ON CONFLICT (building, floor, code) DO UPDATE SET
+          label  = EXCLUDED.label,
+          status = EXCLUDED.status,
+          rent   = EXCLUDED.rent,
+          area   = EXCLUDED.area,
+          posts  = EXCLUDED.posts,
+          color  = EXCLUDED.color,
+          geom   = EXCLUDED.geom
+        RETURNING building,floor,code,updated_at,created_at;
+      `;
+
+      const results = [];
+      for (const it of items) {
+        if (it.action === 'upsert') {
+          const s = it.space || {};
+          const params = [
+            s.building, s.floor, s.code,
+            s.label ?? null, s.status ?? null,
+            s.rent ?? 0, s.area ?? 0, s.posts ?? 0,
+            s.color ?? null, s.geom ?? null // texte/JSON si pas de PostGIS
+          ];
+          const { rows } = await client.query(text, params);
+          results.push(rows[0]);
+        } else if (it.action === 'delete') {
+          await client.query(
+            'DELETE FROM spaces WHERE building=$1 AND floor=$2 AND code=$3',
+            [it.building, it.floor, it.code]
+          );
+        }
       }
       await client.query('COMMIT');
-      return json(200, { ok: true, count: features.length });
+      return { statusCode: 200, body: JSON.stringify({ items: results }) };
+    } catch (e) {
+      await client.query('ROLLBACK');
+      return { statusCode: 500, body: JSON.stringify({ error: e.message }) };
+    } finally {
+      client.release();
     }
-
-    return json(405, { error: 'Method Not Allowed' });
-  } catch (err) {
-    console.error('Function error:', err);
-    try { await client.query('ROLLBACK'); } catch {}
-    // 500 (Netlify renverra 502 si rien n’est renvoyé)
-    return json(500, { error: 'server_error', detail: String(err && err.message || err) });
-  } finally {
-    client.release();
   }
-};
+
+  // GET /api/spaces?building=A&floor=RDJ
+  if (event.httpMethod === 'GET') {
+    const url = new URL(event.rawUrl);
+    const building = url.searchParams.get('building');
+    const floor = url.searchParams.get('floor');
+
+    const { rows } = await pool.query(
+      `SELECT code,label,status,rent,area,posts,color,geom,updated_at,created_at
+       FROM spaces
+       WHERE building=$1 AND floor=$2
+       ORDER BY updated_at DESC NULLS LAST, created_at DESC
+       LIMIT 200`,
+      [building, floor]
+    );
+    return { statusCode: 200, body: JSON.stringify({ items: rows }) };
+  }
+
+  return { statusCode: 405, body: 'Method Not Allowed' };
+}
