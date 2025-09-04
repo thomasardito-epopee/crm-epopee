@@ -86,7 +86,7 @@ aside.panel{background:var(--panel);border-right:1px solid var(--border);padding
 .actions{display:flex;gap:8px;flex-wrap:wrap}
 .actions .btn{padding:8px 10px;border-radius:10px}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{display:flex;align-items:center;gap:4px;background:#fff;border:1px solid var(--border);border-radius:999px;padding:6px 10px;font-size:13px}
+.chip{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--border);border-radius:999px;padding:6px 10px;font-size:13px}
 .chip input{accent-color:var(--blue)}
 
 #map{width:100%;height:100%;position:relative;background:#fafafa;z-index:100}
@@ -142,7 +142,7 @@ body.visitor .leaflet-pm-toolbar{display:none !important}
 .dot{width:10px;height:10px;border-radius:50%;background:#e5e5ea}
 .dot.active{background:var(--blue)}
 .keygrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px}
-.key{padding:16px 0;background:#f8f8f9;border:1px solid var(--border);border-radius:12px;cursor:pointer;font-weight:800;text-align:center;font-size:18px;user-select:none}
+.key{padding:16px 0;background:#f8f8f9;border:1px solid var(--border);border-radius:16px;cursor:pointer;font-weight:800;text-align:center;font-size:18px;user-select:none}
 .key:active{background:#f1f1f4}
 .key.icon{font-size:16px}
 .key.primary{background:var(--blue);border-color:transparent;color:#fff}
@@ -159,7 +159,7 @@ body.visitor .leaflet-pm-toolbar{display:none !important}
 .kpi{background:#f8f8f9;border:1px solid var(--border);border-radius:12px;padding:10px}
 .kpi .v{font-weight:800;font-size:18px}
 .kpi .l{font-size:12px;color:#3a3a3c}
-.kpi .subl{font-size:10.5px;color:var(--muted)}
+.kpi .subl{font-size:11px;color:var(--muted)}
 .grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:10px}
 .card{background:#fff; border:1px solid var(--border); border-radius:12px; padding:10px}
 .card h5{margin:0 0 6px 0; font-size:13px}
@@ -246,13 +246,13 @@ canvas{width:100%; height:200px}
 .table{margin-top:8px;max-height:200px;overflow:auto;border:1px solid var(--border);border-radius:12px}
 .table table{width:100%;border-collapse:collapse;font-size:12px}
 .table th,.table td{padding:6px 8px;border-bottom:1px solid #eee;text-align:left}
-.badge{display:inline-block; padding:2px 8px; border-radius:999px; font-size:10.5px; border:1px solid var(--border); background:#f8f8f9}
-.rowlist{display:grid; grid-template-columns:1fr auto auto; gap:4px; align-items:center; font-size:12px; padding:4px 0; border-bottom:1px dashed #eee}
+.badge{display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; border:1px solid var(--border); background:#f8f8f9}
+.rowlist{display:grid; grid-template-columns:1fr auto auto; gap:6px; align-items:center; font-size:12px; padding:4px 0; border-bottom:1px dashed #eee}
 .rowlist:last-child{border-bottom:0}
 
 /* Legend */
 .legend{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px}
-.legend .item{display:flex; align-items:center; gap:4px; font-size:12px; background:#f8f8f9; border:1px solid var(--border); border-radius:999px; padding:4px 8px}
+.legend .item{display:flex; align-items:center; gap:6px; font-size:12px; background:#f8f8f9; border:1px solid var(--border); border-radius:999px; padding:4px 8px}
 .legend .dot{width:10px; height:10px; border-radius:50%}
 
 /* Color picker — v177 style */
@@ -266,7 +266,7 @@ canvas{width:100%; height:200px}
 @media (max-width:980px){
   .layout{grid-template-columns:1fr}
   .layout.collapsed{grid-template-columns:1fr}
-  aside.panel{position:absolute;z-index:1500;width:min(90vw,380px);inset:70px auto 16px 16px;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.15)}
+  aside.panel{position:absolute;z-index:1500;width:min(90vw,380px);inset:70px auto 16px 16px;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.15)}
   .drawer-toggle{display:none}
   .board{left:16px;right:16px}
 }
@@ -376,77 +376,6 @@ body.board-mode #visitorBoard{
   border-radius: 999px;
 }
 
-
-/* ---- UX Date de sortie (préavis) ---- */
-.input.date{
-  appearance:none; -webkit-appearance:none; -moz-appearance:none;
-  background:#fff; border:1px solid var(--border); border-radius:12px;
-  height:42px; padding:0 40px 0 12px; font:inherit; color:var(--text);
-  transition:border-color .15s ease, box-shadow .2s ease, background .2s ease;
-}
-.input.date:hover{ border-color:#d0d0d5; background:#fcfcfd; }
-.input.date:focus{ outline:none; border-color:transparent; box-shadow:0 0 0 4px rgba(10,132,255,.15); background:#fff; }
-.input.date::-webkit-calendar-picker-indicator{ cursor:pointer; opacity:.85; padding:8px; margin-right:-6px; border-radius:10px; transition: background .15s ease, opacity .15s ease; }
-.input.date::-webkit-calendar-picker-indicator:hover{ background:rgba(10,132,255,.08); opacity:1; }
-#preavisRow .hint{ font-size:11.5px; color:var(--muted); }
-
-/* Badge tooltip alerte */
-.tt-badge{ display:inline-block; padding:1px 6px; border-radius:999px; font-size:10.5px; border:1px solid var(--border); background:#f8f8f9; }
-.tt-badge.alert{ border-color:#ffd0d4; background:#ffe9eb; color:#b00020; font-weight:700; }
-
-
-/* === Custom Apple-like Date Picker (desktop) === */
-.datepicker-popover{
-  position:absolute; z-index:9999;
-  background:#fff; border:1px solid var(--border);
-  border-radius:12px; padding:10px 10px 12px 10px;
-  box-shadow:0 20px 40px rgba(0,0,0,.14), 0 1px 0 rgba(255,255,255,.6) inset;
-  width: 248px;
-  user-select:none;
-}
-.datepicker-popover .dp-header{
-  display:flex; align-items:center; justify-content:space-between;
-  padding:4px 6px 2px 6px;
-}
-.dp-title{ font-weight:700; letter-spacing:0.2px; }
-.dp-nav{ display:flex; gap:4px; }
-.dp-btn{
-  border:1px solid var(--border); background:#fafafc; border-radius:10px;
-  width:24px; height:24px; display:flex; align-items:center; justify-content:center;
-  cursor:pointer;
-}
-.dp-btn:hover{ background:#f2f2f6; }
-.dp-grid{
-  display:grid; grid-template-columns: repeat(7, 1fr);
-  gap:4px; padding:6px 8px 0 8px;
-}
-.dp-weekday{ text-align:center; font-size:10.5px; color:var(--muted); padding:4px 0; }
-.dp-day{
-  text-align:center; padding:6px 0; border-radius:10px; cursor:pointer;
-  border:1px solid transparent; font-weight:600;
-}
-.dp-day:hover{ background:#f6f7fb; }
-.dp-day.today{ outline: 2px solid rgba(10,132,255,.25); outline-offset: 0; border-radius:12px; }
-.dp-day.selected{ background:#0a84ff; color:#fff; }
-.dp-day.disabled{ color:#c8c8ce; cursor:not-allowed; opacity:.55; }
-.dp-footer{
-  display:flex; justify-content:space-between; padding:10px 12px 0 12px;
-  font-size:12px; color:var(--muted);
-}
-.dp-link{ cursor:pointer; }
-.dp-link:hover{ text-decoration:underline; }
-.input.date.has-button{ padding-right: 36px; position: relative; }
-.date-open{
-  position:absolute; right:8px; top:50%; transform:translateY(-50%);
-  width:24px; height:24px; border-radius:8px; border:1px solid var(--border);
-  background:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer;
-}
-.date-open:hover{ background:#f5f6f8; }
-.date-open svg{ width:14px; height:14px; opacity:.7; }
-@media (hover:none), (pointer:coarse){
-  .date-open{ display:none; } /* Mobile: keep native picker */
-}
-
 </style>
 </head>
 <body class="visitor">
@@ -537,20 +466,7 @@ body.board-mode #visitorBoard{
         </div>
     
 
-        
-<!-- Préavis: visible uniquement si fStatus === "Préavis" et non Événementiel -->
-<div class="row3" id="preavisRow" style="display:none">
-  <div class="field">
-    <label>Date de sortie</label>
-    <input id="fExitDate" class="input date" type="date">
-  </div>
-  <div class="field">
-    <label>&nbsp;</label>
-    <div class="hint"><span id="exitDateHint">Expire le —</span></div>
-  </div>
-  <div class="field"><label>&nbsp;</label><div class="hint"></div></div>
-</div>
-<div class="actions"><button class="btn primary" id="btnApply">Appliquer</button></div>
+        <div class="actions"><button class="btn primary" id="btnApply">Appliquer</button></div>
       </div>
     </aside>
 
@@ -724,19 +640,6 @@ function applyStyle(l){
     if(Number(ep.rent)>0) extra += ` · ${euro(ep.rent)} €/mois`;
   }
   if(ep.area) extra += ` · ${ep.area} m²`;
-    // Badge délai de sortie si Préavis
-  try{
-    const ep = layerProps(l);
-    if (ep.status === "Préavis" && ep.exitDate){
-      const d = new Date(ep.exitDate + "T00:00:00");
-      const t = new Date(); t.setHours(0,0,0,0);
-      const diff = Math.round((d - t)/(1000*60*60*24));
-      if (!isNaN(diff)){
-        if (diff >= 0) extra += ` · <span class="tt-badge">⏳ ${diff} j</span>`;
-        else           extra += ` · <span class="tt-badge alert">⏳ ${Math.abs(diff)} j dépassé</span>`;
-      }
-    }
-  }catch(_){}
   l.bindTooltip(`${(ep.code||"—")} · ${(ep.label||"Bureau")}${ep.tenant ? " — "+ep.tenant : ""}${extra}`, { sticky:true });
   updateGreying();
 }
@@ -830,13 +733,6 @@ function syncEventUI(){
       setColor(layerProps(currentLayer).color || STATUS_STYLES[st].fill);
     }
   }
-  // Affichage du bloc préavis (statut=Préavis, non événementiel)
-  try{
-    const isEvent = (document.getElementById("fLabel").value === "Evenementiel");
-    const showPreavis = !isEvent && (document.getElementById("fStatus").value === "Préavis");
-    const pr = document.getElementById("preavisRow"); if (pr) pr.style.display = showPreavis ? "grid" : "none";
-  }catch(_){}
-
 }
 $("fLabel").addEventListener("change", syncEventUI);
 
@@ -863,15 +759,6 @@ function selectLayer(l, focusFirst=true){
     [{boxShadow:'inset 0 0 0 3px rgba(10,132,255,.12)'},{boxShadow:'inset 0 0 0 8px rgba(10,132,255,.2)'},{boxShadow:'inset 0 0 0 3px rgba(10,132,255,.12)'}],
     {duration:600}
   );
-  // Date de sortie (si présente)
-  try{ const d=document.getElementById("fExitDate"); if(d) d.value = (layerProps(l).exitDate || ""); }catch(_){}
-  // Visibilité bloc préavis
-  try{
-    const isEvent = (document.getElementById("fLabel").value === "Evenementiel");
-    const showPreavis = !isEvent && (document.getElementById("fStatus").value === "Préavis");
-    const pr = document.getElementById("preavisRow"); if (pr) pr.style.display = showPreavis ? "grid" : "none";
-  }catch(_){}
-
 }
 
 // interactions
@@ -916,16 +803,6 @@ colorInput.oninput = ()=> setColor(colorInput.value);
 $("fStatus").addEventListener('change', ()=>{
   if(!currentLayer) return;
   const ep = layerProps(currentLayer);
-
-// toggle preavisRow on status change (non-destructif)
-document.getElementById("fStatus").addEventListener('change', function(){
-  try{
-    const isEvent = (document.getElementById("fLabel").value === "Evenementiel");
-    const showPreavis = !isEvent && (this.value === "Préavis");
-    const pr = document.getElementById("preavisRow"); if (pr) pr.style.display = showPreavis ? "grid" : "none";
-  }catch(_){}
-});
-
   const prevDefault = STATUS_STYLES[ep.status||"Vacant"].fill;
   if(!ep.color || ep.color === prevDefault){
     const hex = STATUS_STYLES[$("fStatus").value].fill;
@@ -944,36 +821,12 @@ $("btnApply").onclick = ()=>{
     paxSit: __isEvent ? (parseInt(($("fPaxSit")?.value||"0"),10)||0) : 0,
     paxStand: __isEvent ? (parseInt(($("fPaxStand")?.value||"0"),10)||0) : 0,
     dayPrice: __isEvent ? (parseFloat(String($("fDayPrice")?.value||"0").replace(",", "."))||0) : 0
-    ,exitDate: ((document.getElementById("fLabel").value === "Evenementiel") ? "" : (document.getElementById("fStatus").value==="Préavis" ? (document.getElementById("fExitDate").value||"") : ""))
-});
+  });
   saveLocal();
   const b=$("btnApply"); const orig=b.textContent;
   b.textContent="Appliqué ✓"; b.classList.add("success","flash");
   setTimeout(()=>{ b.textContent=orig; b.classList.remove("success","flash"); }, 900);
 };
-
-  // Bouton "Enregistrer" -> force une sauvegarde vers la base
-  (function () {
-    function $(id){ return document.getElementById(id); }
-    var saveBtn = $("btnSave");
-    if (saveBtn && !saveBtn.__wired) {
-      saveBtn.__wired = true;
-      saveBtn.onclick = async function () {
-        try {
-          await saveLocal();                 // envoie vers /api/spaces/batch
-          const old = saveBtn.textContent;
-          saveBtn.textContent = "Enregistré ✓";
-          saveBtn.classList.add("success","flash");
-          setTimeout(() => { 
-            saveBtn.textContent = old; 
-            saveBtn.classList.remove("success","flash"); 
-          }, 1000);
-        } catch(e) {
-          // rien de spécial: saveLocal gère déjà le fallback/local + message
-        }
-      };
-    }
-  })();
 
 $("btnDelete").onclick = ()=>{ if(currentLayer){ drawn.removeLayer(currentLayer); currentLayer=null; saveLocal(); } };
 $("btnDup").onclick = ()=>{ if(!currentLayer) return; const p=toPlain(currentLayer); p.latlngs=p.latlngs.map(r=> r.map(ll=> L.latLng(ll.lat+20,ll.lng+20))); fromPlain(p); saveLocal(); };
@@ -2304,413 +2157,8 @@ document.addEventListener("click", (e)=>{
   }
   window.addEventListener('resize', syncTopbarHeight);
   document.addEventListener('DOMContentLoaded', syncTopbarHeight);
-
-/* --- min=today + hint "Expire le …" --- */
-document.addEventListener('DOMContentLoaded', function(){
-  try{
-    var d = document.getElementById('fExitDate');
-    if(d) d.min = '2025-09-02';
-    var hint = document.getElementById('exitDateHint');
-    function fmt(iso){ try{ var p=iso.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }catch(_){ return iso||'—'; }}
-    function sync(){ if(hint) hint.textContent = 'Expire le ' + (d && d.value ? fmt(d.value) : '—'); }
-    if(d){ d.addEventListener('change', sync); requestAnimationFrame(sync); }
-  }catch(_ ){}
-});
-
 </script>
 
-
-<script>
-
-/* === Custom Apple-like Date Picker logic (desktop only) === */
-(function(){
-  const isMobile = matchMedia('(hover:none), (pointer:coarse)').matches;
-  const input = document.getElementById('fExitDate');
-  if(!input) return;
-
-  if(!isMobile){
-    input.setAttribute('readonly','readonly');
-    input.classList.add('has-button');
-    const wrap = input.parentElement || input;
-    const btn = document.createElement('button');
-    btn.type='button'; btn.className='date-open';
-    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="4"></rect><line x1="8" y1="3" x2="8" y2="7"></line><line x1="16" y1="3" x2="16" y2="7"></line><line x1="3" y1="11" x2="21" y2="11"></line></svg>';
-    wrap.style.position='relative';
-    wrap.appendChild(btn);
-
-    let pop = null;
-    let cur = null;
-    const minISO = "2025-09-02";
-    const minDate = new Date(minISO+'T00:00:00');
-
-    function parseISO(iso){
-      try{ if(!iso) return null; const p=iso.split('-'); return new Date(+p[0], p[1]-1, +p[2]); }catch(e){ return null; }
-    }
-    function toISO(d){
-      const y=d.getFullYear();
-      const m=('0'+(d.getMonth()+1)).slice(-2);
-      const day=('0'+d.getDate()).slice(-2);
-      return y+'-'+m+'-'+day;
-    }
-    function sameDay(a,b){ return a && b && a.getFullYear()==b.getFullYear() && a.getMonth()==b.getMonth() && a.getDate()==b.getDate(); }
-
-    function openPicker(){
-      if(pop) return;
-      pop = document.createElement('div');
-      pop.className='datepicker-popover';
-
-      const sel = parseISO(input.value);
-      const today = new Date(); today.setHours(0,0,0,0);
-      cur = sel ? new Date(sel.getFullYear(), sel.getMonth(), 1) : new Date(today.getFullYear(), today.getMonth(), 1);
-
-      render();
-      document.body.appendChild(pop);
-      position();
-
-      setTimeout(()=>{
-        function onDoc(e){
-          if(!pop) return;
-          if(e.target===input || e.target===btn || pop.contains(e.target)) return;
-          closePicker();
-          document.removeEventListener('mousedown', onDoc);
-          document.removeEventListener('focusin', onDoc);
-          window.removeEventListener('resize', position);
-          window.removeEventListener('scroll', position, true);
-        }
-        document.addEventListener('mousedown', onDoc);
-        document.addEventListener('focusin', onDoc);
-        window.addEventListener('resize', position);
-        window.addEventListener('scroll', position, true);
-      },0);
-    }
-    function closePicker(){ if(pop){ pop.remove(); pop=null; } }
-    function position(){
-      if(!pop) return;
-      const r = input.getBoundingClientRect();
-      const above = (window.scrollY + r.top - pop.offsetHeight - 8);
-      const below = (window.scrollY + r.bottom + 8);
-      const useAbove = above >= window.scrollY + 8; // if there is room above
-      pop.style.top = (useAbove ? above : below) + 'px';
-      pop.style.left = (window.scrollX + r.left)+'px';
-    }
-    function render(){
-      if(!pop) return;
-      const sel = parseISO(input.value);
-      const today = new Date(); today.setHours(0,0,0,0);
-      const month = cur.getMonth();
-      const year = cur.getFullYear();
-      const header = `
-        <div class="dp-header">
-          <div class="dp-title">${['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'][month]} ${year}</div>
-          <div class="dp-nav">
-            <div class="dp-btn" data-nav="-1" title="Mois précédent">‹</div>
-            <div class="dp-btn" data-nav="1" title="Mois suivant">›</div>
-          </div>
-        </div>`;
-      const wd = ['L','M','M','J','V','S','D'].map(w=>`<div class="dp-weekday">${w}</div>`).join('');
-      const first = new Date(year, month, 1);
-      const startDay = (first.getDay()+6)%7; // Monday=0
-      const daysInMonth = new Date(year, month+1, 0).getDate();
-      const cells = [];
-      for(let i=0;i<startDay;i++){ cells.push('<div></div>'); }
-      for(let d=1; d<=daysInMonth; d++){
-        const date = new Date(year, month, d); date.setHours(0,0,0,0);
-        const iso = toISO(date);
-        const disabled = (date < minDate);
-        const classes = ['dp-day'];
-        if (sameDay(date, today)) classes.push('today');
-        if (sel && sameDay(date, sel)) classes.push('selected');
-        if (disabled) classes.push('disabled');
-        cells.push(`<div class="${classes.join(' ')}" data-iso="${iso}">${d}</div>`);
-      }
-      const grid = `<div class="dp-grid">${wd}${cells.join('')}</div>`;
-      const footer = `<div class="dp-footer"><span class="dp-link" data-act="clear">Effacer</span><span class="dp-link" data-act="today">Aujourd'hui</span></div>`;
-      pop.innerHTML = header + grid + footer;
-
-      pop.querySelectorAll('.dp-btn').forEach(el=>{
-        el.addEventListener('click',()=>{
-          const step = parseInt(el.getAttribute('data-nav'),10)||0;
-          cur = new Date(year, month+step, 1);
-          render(); position();
-        });
-      });
-      pop.querySelectorAll('.dp-day').forEach(el=>{
-        el.addEventListener('click',()=>{
-          if(el.classList.contains('disabled')) return;
-          const iso = el.getAttribute('data-iso');
-          input.value = iso;
-          input.dispatchEvent(new Event('change',{bubbles:true}));
-          closePicker();
-        });
-      });
-      const clear = pop.querySelector('[data-act="clear"]');
-      const todayBtn = pop.querySelector('[data-act="today"]');
-      if(clear){ clear.addEventListener('click', ()=>{ input.value=''; input.dispatchEvent(new Event('change',{bubbles:true})); closePicker(); });}
-      if(todayBtn){
-        todayBtn.addEventListener('click', ()=>{
-          const tISO = toISO(today);
-          if(today >= minDate){ input.value=tISO; input.dispatchEvent(new Event('change',{bubbles:true})); closePicker(); }
-        });
-      }
-    }
-
-    input.addEventListener('focus', openPicker);
-    btn.addEventListener('click', openPicker);
-  }
-})();
-
-</script>
-
-<style>
-#reservedRow .hint{ font-size:11.5px; color:var(--muted); }
-</style>
-<script>
-(function(){ 
-  function $(id){ return document.getElementById(id); }
-  function ensureReservedRow(){
-    if(document.getElementById('reservedRow')) return;
-    var row = document.createElement('div'); row.id='reservedRow'; row.className='row3'; row.style.display='none';
-    row.innerHTML = `
-      <div class="field">
-        <label>Date d'entrée</label>
-        <input id="fEntryDate" class="input date" type="date">
-      </div>
-      <div class="field">
-        <label>&nbsp;</label>
-        <div class="hint"><span id="entryDateHint">Entrée le —</span></div>
-      </div>
-      <div class="field"><label>&nbsp;</label><div class="hint"></div></div>
-    `;
-    var preavis = document.getElementById('preavisRow');
-    if(preavis && preavis.parentElement) preavis.parentElement.insertBefore(row, preavis);
-    else {
-      var admin = document.getElementById('adminSection');
-      if(admin) admin.appendChild(row);
-    }
-  }
-
-  function fmt(iso){ try{ if(!iso) return '—'; var p=iso.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }catch(_ ){ return iso||'—'; } }
-  function isEvent(){ var l=$('fLabel'); return l && l.value==='Evenementiel'; }
-  function isReserved(){ var s=$('fStatus'); return s && s.value==='Réservé'; }
-
-  function syncReserved(){
-    var row=$('reservedRow'); if(!row) return;
-    row.style.display = (!isEvent() && isReserved()) ? 'grid' : 'none';
-  }
-  function updateHint(){
-    var d=$('fEntryDate'), h=$('entryDateHint');
-    if(h) h.textContent = 'Entrée le ' + (d && d.value ? fmt(d.value) : '—');
-  }
-
-  document.addEventListener('DOMContentLoaded', function(){
-    ensureReservedRow();
-    var d=$('fEntryDate'); if(d) d.min = '2025-09-02';
-    syncReserved(); updateHint();
-
-    var s=$('fStatus'); if(s) s.addEventListener('change', syncReserved);
-    var l=$('fLabel');  if(l) l.addEventListener('change', syncReserved);
-
-    if(d) d.addEventListener('change', function(){
-      updateHint();
-      persistEntry(d.value||'');
-    });
-
-    if(typeof window.selectLayer==='function'){ 
-      var _sl = window.selectLayer;
-      window.selectLayer = function(l, focusFirst){
-        var r=_sl.call(this,l,focusFirst);
-        try{ ensureReservedRow(); var d=$('fEntryDate'); if(d){ d.value=(layerProps(l).entryDate||''); persistEntry(d.value||''); } }catch(_ ){}
-        syncReserved(); updateHint(); return r;
-      };
-    }
-  });
-})();
-</script>
-<script>
-(function(){
-  const isMobile = matchMedia('(hover:none), (pointer:coarse)').matches;
-  function attach(){
-    const input = document.getElementById('fEntryDate');
-    if(!input || isMobile || input.dataset.hasPicker) return;
-    input.dataset.hasPicker = '1';
-    input.setAttribute('readonly','readonly');
-    input.classList.add('has-button');
-    const wrap = input.parentElement || input;
-    const btn = document.createElement('button'); btn.type='button'; btn.className='date-open';
-    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="4"></rect><line x1="8" y1="3" x2="8" y2="7"></line><line x1="16" y1="3" x2="16" y2="7"></line><line x1="3" y1="11" x2="21" y2="11"></line></svg>';
-    wrap.style.position='relative'; wrap.appendChild(btn);
-
-    let pop=null, cur=null; const minDate=new Date('2025-09-02'+'T00:00:00');
-    function parseISO(iso){ try{ if(!iso) return null; const p=iso.split('-'); return new Date(+p[0], p[1]-1, +p[2]); }catch(e){ return null; } }
-    function toISO(d){ const y=d.getFullYear(); const m=('0'+(d.getMonth()+1)).slice(-2); const dd=('0'+d.getDate()).slice(-2); return y+'-'+m+'-'+dd; }
-    function sameDay(a,b){ return a&&b&&a.getFullYear()==b.getFullYear()&&a.getMonth()==b.getMonth()&&a.getDate()==b.getDate(); }
-
-    function position(){
-      if(!pop) return; const r=input.getBoundingClientRect();
-      const above=(window.scrollY + r.top - pop.offsetHeight - 8);
-      const below=(window.scrollY + r.bottom + 8);
-      const useAbove = above >= window.scrollY + 8;
-      pop.style.top=(useAbove?above:below)+'px'; pop.style.left=(window.scrollX + r.left)+'px';
-    }
-    function close(){ if(pop){ pop.remove(); pop=null; } }
-    function render(){
-      const sel=parseISO(input.value); const today=new Date(); today.setHours(0,0,0,0);
-      const month=cur.getMonth(), year=cur.getFullYear();
-      const header=`<div class="dp-header"><div class="dp-title">${['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'][month]} ${year}</div><div class="dp-nav"><div class="dp-btn" data-nav="-1">‹</div><div class="dp-btn" data-nav="1">›</div></div></div>`;
-      const wd=['L','M','M','J','V','S','D'].map(w=>`<div class="dp-weekday">${w}</div>`).join('');
-      const first=new Date(year,month,1); const start=(first.getDay()+6)%7; const days=new Date(year,month+1,0).getDate();
-      const cells=[]; for(let i=0;i<start;i++) cells.push('<div></div>');
-      for(let d=1; d<=days; d++){ const dt=new Date(year,month,d); dt.setHours(0,0,0,0);
-        const iso=toISO(dt); const dis=dt<minDate; const cls=['dp-day']; if(sameDay(dt,today)) cls.push('today'); if(sel&&sameDay(dt,sel)) cls.push('selected'); if(dis) cls.push('disabled');
-        cells.push(`<div class="${cls.join(' ')}" data-iso="${iso}">${d}</div>`);
-      }
-      const grid=`<div class="dp-grid">${wd}${cells.join('')}</div>`;
-      const footer='<div class="dp-footer"><span class="dp-link" data-act="clear">Effacer</span><span class="dp-link" data-act="today">Aujourd\'hui</span></div>';
-      pop.innerHTML=header+grid+footer;
-      pop.querySelectorAll('.dp-btn').forEach(el=>el.addEventListener('click',()=>{ const step=parseInt(el.dataset.nav)||0; cur=new Date(year,month+step,1); render(); position(); }));
-      pop.querySelectorAll('.dp-day').forEach(el=>el.addEventListener('click',()=>{ if(el.classList.contains('disabled')) return; const iso=el.getAttribute('data-iso'); input.value=iso; input.dispatchEvent(new Event('change',{bubbles:true})); close(); }));
-      const clear=pop.querySelector('[data-act="clear"]'); const todayBtn=pop.querySelector('[data-act="today"]');
-      if(clear) clear.addEventListener('click', ()=>{ input.value=''; input.dispatchEvent(new Event('change',{bubbles:true})); close(); });
-      if(todayBtn) todayBtn.addEventListener('click', ()=>{ const t=new Date(); t.setHours(0,0,0,0); if(t>=minDate){ input.value=toISO(t); input.dispatchEvent(new Event('change',{bubbles:true})); close(); } });
-    }
-    function open(){
-      if(pop) return; pop=document.createElement('div'); pop.className='datepicker-popover';
-      const sel=parseISO(input.value); const today=new Date(); today.setHours(0,0,0,0);
-      cur= sel ? new Date(sel.getFullYear(), sel.getMonth(), 1) : new Date(today.getFullYear(), today.getMonth(), 1);
-      render(); document.body.appendChild(pop); position();
-      setTimeout(()=>{ 
-        function onDoc(e){ if(!pop) return; if(e.target===input||e.target===btn||pop.contains(e.target)) return; close(); document.removeEventListener('mousedown', onDoc); document.removeEventListener('focusin', onDoc); window.removeEventListener('resize', position); window.removeEventListener('scroll', position, true); }
-        document.addEventListener('mousedown', onDoc); document.addEventListener('focusin', onDoc);
-        window.addEventListener('resize', position); window.addEventListener('scroll', position, true);
-      },0);
-    }
-    input.addEventListener('focus', open); btn.addEventListener('click', open);
-  }
-  document.addEventListener('DOMContentLoaded', attach);
-})();
-</script>
-
-
-<script>
-// === Tooltip badge for "Réservé" (safe, no core edits) ===
-(function(){
-  function attach(){
-    if(!window.map || typeof window.map.on !== 'function'){ setTimeout(attach, 250); return; }
-    map.on('tooltipopen', function(e){
-      try{
-        var ep = (typeof layerProps==='function') ? layerProps(e.layer) : (e.layer && e.layer.options && e.layer.options.ep) || {};
-        if(ep && ep.status === "Réservé" && ep.entryDate){
-          var d = new Date(ep.entryDate + "T00:00:00");
-          var t = new Date(); t.setHours(0,0,0,0);
-          var diff = Math.round((d - t)/86400000);
-          if(!isNaN(diff)){
-            var el = e.tooltip && e.tooltip.getElement ? e.tooltip.getElement() : null;
-            if(el){
-              var content = el.querySelector('.leaflet-tooltip-content') || el;
-              // Remove previous entry badge to avoid duplicates
-              var prev = content.querySelector('[data-badge="entry"]');
-              if(prev) prev.remove();
-              // Build badge
-              var span = document.createElement('span');
-              span.setAttribute('data-badge','entry');
-              span.className = 'tt-badge' + (diff < 0 ? ' alert' : '');
-              span.textContent = '⏳ ' + (diff < 0 ? Math.abs(diff) + ' j dépassé' : diff + ' j');
-              // Separator " · "
-              content.appendChild(document.createTextNode(' · '));
-              content.appendChild(span);
-            }
-          }
-        }
-      }catch(_){}
-    });
-  }
-  attach();
-})();
-</script>
-
-
-<script>
-// === Patch Leaflet bindTooltip to append ⏳ badge for "Réservé" even if map isn't global ===
-(function(){
-  function normalize(s){
-    try{ return (s||'').toString().normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase().trim(); }catch(e){ return (s||'').toString().toLowerCase().trim(); }
-  }
-  function buildBadge(diff){
-    var cls = 'tt-badge' + (diff < 0 ? ' alert' : '');
-    var label = '⏳ ' + (diff < 0 ? Math.abs(diff) + ' j dépassé' : diff + ' j');
-    return '<span class="'+cls+'" data-badge="entry">'+label+'</span>';
-  }
-
-  function ready(fn){
-    if(window.L && L.Layer && L.Layer.prototype && typeof L.Layer.prototype.bindTooltip === 'function'){ fn(); }
-    else setTimeout(()=>ready(fn), 200);
-  }
-
-  ready(function(){
-    var original = L.Layer.prototype.bindTooltip;
-    L.Layer.prototype.bindTooltip = function(content, options){
-      try{
-        var ep = (typeof layerProps==='function') ? layerProps(this) : (this.options && this.options.ep) || {};
-        var st = normalize(ep.status);
-        if(st === 'reserve' && ep.entryDate){
-          var d = new Date(ep.entryDate + 'T00:00:00');
-          var t = new Date(); t.setHours(0,0,0,0);
-          var diff = Math.round((d - t)/86400000);
-          if(!isNaN(diff) && typeof content === 'string' && !/data-badge="entry"/.test(content)){
-            content += ' · ' + buildBadge(diff);
-          }
-        }
-      }catch(_){}
-      return original.call(this, content, options);
-    };
-  });
-})();
-</script>
-
-
-<script>
-// === Wrapper setLayerProps : garantit qu'entryDate n'est pas perdu par "Appliquer" ===
-(function(){
-  function $(id){ return document.getElementById(id); }
-  function isEvent(){ return $('fLabel') && $('fLabel').value === 'Evenementiel'; }
-  function isReserved(){ return $('fStatus') && $('fStatus').value === 'Réservé'; }
-
-  function ready(fn){
-    if(typeof window.setLayerProps === 'function'){ fn(); }
-    else setTimeout(function(){ ready(fn); }, 200);
-  }
-
-  ready(function(){
-    var _set = window.setLayerProps;
-    window.setLayerProps = function(layer, props){
-      try{
-        props = props || {};
-        var hasEntry = Object.prototype.hasOwnProperty.call(props, 'entryDate');
-        if(!hasEntry){
-          // Préserver/ajouter entryDate selon le statut courant du formulaire
-          var ep = (typeof layerProps==='function') ? layerProps(layer) : (layer && layer.options && layer.options.ep) || {};
-          var formVal = ($('fEntryDate') && $('fEntryDate').value) || '';
-          if(!isEvent() && isReserved()){
-            props.entryDate = formVal || ep.entryDate || '';
-          }else{
-            props.entryDate = ''; // autre statut : on vide
-          }
-        }
-      }catch(e){}
-      var r = _set.apply(this, arguments);
-      try{
-        // Miroir en fallback dans options + refresh visuel
-        if(layer && layer.options){
-          layer.options.ep = layer.options.ep || {};
-          if(typeof props.entryDate !== 'undefined') layer.options.ep.entryDate = props.entryDate;
-        }
-        if(typeof applyStyle==='function'){ try{ applyStyle(layer); }catch(_){ } }
-      }catch(_){}
-      return r;
-    };
-  });
-})();
-</script>
 
 </body>
 </html>
