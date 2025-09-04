@@ -952,6 +952,31 @@ $("btnApply").onclick = ()=>{
   setTimeout(()=>{ b.textContent=orig; b.classList.remove("success","flash"); }, 900);
 };
 
+  <script>
+  // Bouton "Enregistrer" -> force une sauvegarde vers la base
+  (function () {
+    function $(id){ return document.getElementById(id); }
+    var saveBtn = $("btnSave");
+    if (saveBtn && !saveBtn.__wired) {
+      saveBtn.__wired = true;
+      saveBtn.onclick = async function () {
+        try {
+          await saveLocal();                 // envoie vers /api/spaces/batch
+          const old = saveBtn.textContent;
+          saveBtn.textContent = "Enregistré ✓";
+          saveBtn.classList.add("success","flash");
+          setTimeout(() => { 
+            saveBtn.textContent = old; 
+            saveBtn.classList.remove("success","flash"); 
+          }, 1000);
+        } catch(e) {
+          // rien de spécial: saveLocal gère déjà le fallback/local + message
+        }
+      };
+    }
+  })();
+</script>
+
 $("btnDelete").onclick = ()=>{ if(currentLayer){ drawn.removeLayer(currentLayer); currentLayer=null; saveLocal(); } };
 $("btnDup").onclick = ()=>{ if(!currentLayer) return; const p=toPlain(currentLayer); p.latlngs=p.latlngs.map(r=> r.map(ll=> L.latLng(ll.lat+20,ll.lng+20))); fromPlain(p); saveLocal(); };
 
