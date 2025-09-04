@@ -1,51 +1,41 @@
+// netlify/functions/save-floor.js
 import { Pool } from 'pg';
 
 const pool = new Pool({
   connectionString: process.env.NEON_DB_URL,
-  ssl: { rejectUnauthorized: false }
+  ssl: { rejectUnauthorized: false },
 });
 
-const ok = (data) => ({
-  statusCode: 200,
-  headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' },
-  body: JSON.stringify(data)
-});
-const err = (code, msg) => ({ statusCode: code, body: msg });
+const ok  = (data) => ({ statusCode: 200, headers: { 'Cache-Control': 'no-store' }, body: JSON.stringify(data) });
+const err = (c, m)   => ({ statusCode: c, body: m });
 
 export async function handler(event) {
   const url = new URL(event.rawUrl);
-  const qBuilding = url.searchParams.get('building');
-  const qFloor = url.searchParams.get('floor');
+  const building = url.searchParams.get('building');
+  const floor    = url.searchParams.get('floor');
+  if (!building || !floor) return err(400, 'Missing building/floor');
 
-  // ----- READ (public) -----
   if (event.httpMethod === 'GET') {
-    if (!qBuilding || !qFloor) return err(400, 'Missing building/floor');
     const { rows } = await pool.query(
-      `SELECT layout FROM floors WHERE building=$1 AND floor=$2`,
-      [qBuilding, qFloor]
+      'SELECT layout FROM floor_layouts WHERE building=$1 AND floor=$2',
+      [building, floor],
     );
-    return ok({ layout: rows[0]?.layout ?? null });
+    return ok({ layout: rows[0]?.layout ?? {} });
   }
 
-  // ----- SAVE (admin) -----
   if (event.httpMethod === 'POST') {
-    const token = event.headers['x-admin-token']
-      || (event.headers['authorization'] || '').replace(/^Bearer\s+/,'');
+    const token =
+      event.headers['x-admin-token'] ||
+      (event.headers['authorization'] || '').replace(/^Bearer\s+/,'');
     if (!token || token !== process.env.ADMIN_TOKEN) return err(401, 'Unauthorized');
 
-    const body = JSON.parse(event.body || '{}');
-    const building = body.building ?? qBuilding;
-    const floor = body.floor ?? qFloor;
-    const layout = body.layout ?? body; // tolérant
-
-    if (!building || !floor || !layout) return err(400, 'Missing data');
-
+    const { layout = {} } = JSON.parse(event.body || '{}');
     await pool.query(
-      `INSERT INTO floors (building,floor,layout)
+      `INSERT INTO floor_layouts (building,floor,layout)
        VALUES ($1,$2,$3)
-       ON CONFLICT (building,floor)
-       DO UPDATE SET layout=EXCLUDED.layout, updated_at=now()`,
-      [building, floor, layout]
+       ON CONFLICT (building,floor) DO UPDATE
+       SET layout=EXCLUDED.layout, updated_at=now()`,
+      [building, floor, layout],
     );
     return ok({ saved: true });
   }
