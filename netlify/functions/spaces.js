@@ -5,14 +5,28 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
+const commonHeaders = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate',
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Admin-Token'
+};
+
 const ok = (data) => ({
   statusCode: 200,
-  headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' },
+  headers: commonHeaders,
   body: JSON.stringify(data)
 });
-const err = (code, msg) => ({ statusCode: code, body: msg });
+const err = (code, msg) => ({
+  statusCode: code,
+  headers: commonHeaders,
+  body: msg
+});
 
 export async function handler(event) {
+  // Préflight CORS
+  if (event.httpMethod === 'OPTIONS') return ok({});
+
   // ----- LIST (public) -----
   if (event.httpMethod === 'GET') {
     const url = new URL(event.rawUrl);
@@ -33,24 +47,39 @@ export async function handler(event) {
 
   // ----- UPSERT/DELETE BATCH (admin) -----
   if (event.httpMethod === 'POST' && event.path.endsWith('/batch')) {
-    const token = event.headers['x-admin-token']
-      || (event.headers['authorization'] || '').replace(/^Bearer\s+/,'');
-    if (!token || token !== process.env.ADMIN_TOKEN) return err(401, 'Unauthorized');
+    const url = new URL(event.rawUrl);
+    const token =
+      event.headers['x-admin-token'] ||
+      (event.headers['authorization'] || '').replace(/^Bearer\s+/, '') ||
+      url.searchParams.get('token'); // fallback
+
+    if (!token || token !== process.env.ADMIN_TOKEN) {
+      return err(401, 'Unauthorized');
+    }
 
     const { items = [] } = JSON.parse(event.body || '{}');
     const client = await pool.connect();
+
     try {
       await client.query('BEGIN');
-      const text = `
+
+      const upsertSql = `
         INSERT INTO spaces (building,floor,code,label,status,rent,area,posts,color,geom)
         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
         ON CONFLICT (building,floor,code) DO UPDATE SET
-          label=EXCLUDED.label, status=EXCLUDED.status, rent=EXCLUDED.rent,
-          area=EXCLUDED.area, posts=EXCLUDED.posts, color=EXCLUDED.color,
-          geom=EXCLUDED.geom, updated_at=now()
+          label=EXCLUDED.label,
+          status=EXCLUDED.status,
+          rent=EXCLUDED.rent,
+          area=EXCLUDED.area,
+          posts=EXCLUDED.posts,
+          color=EXCLUDED.color,
+          geom=EXCLUDED.geom,
+          updated_at=now()
         RETURNING building,floor,code,updated_at,created_at;
       `;
+
       const results = [];
+
       for (const it of items) {
         if (it.action === 'upsert') {
           const s = it.space || {};
@@ -60,15 +89,19 @@ export async function handler(event) {
             s.rent ?? 0, s.area ?? 0, s.posts ?? 0,
             s.color ?? null, s.geom ?? null
           ];
-          const { rows } = await client.query(text, params);
+          const { rows } = await client.query(upsertSql, params);
           results.push(rows[0]);
         } else if (it.action === 'delete') {
-          await client.query(
+          // Accepte {space:{...}} ou {building,floor,code}
+          const s = it.space || it;
+          const { rowCount } = await client.query(
             'DELETE FROM spaces WHERE building=$1 AND floor=$2 AND code=$3',
-            [it.building, it.floor, it.code]
+            [s.building, s.floor, s.code]
           );
+          results.push({ deleted: s.code, rowCount });
         }
       }
+
       await client.query('COMMIT');
       return ok({ items: results });
     } catch (e) {
@@ -79,6 +112,5 @@ export async function handler(event) {
     }
   }
 
-  if (event.httpMethod === 'OPTIONS') return ok({}); // préflight éventuel
   return err(405, 'Method Not Allowed');
 }
