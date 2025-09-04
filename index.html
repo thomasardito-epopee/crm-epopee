@@ -952,7 +952,6 @@ $("btnApply").onclick = ()=>{
   setTimeout(()=>{ b.textContent=orig; b.classList.remove("success","flash"); }, 900);
 };
 
-  <script>
   // Bouton "Enregistrer" -> force une sauvegarde vers la base
   (function () {
     function $(id){ return document.getElementById(id); }
@@ -975,7 +974,6 @@ $("btnApply").onclick = ()=>{
       };
     }
   })();
-</script>
 
 $("btnDelete").onclick = ()=>{ if(currentLayer){ drawn.removeLayer(currentLayer); currentLayer=null; saveLocal(); } };
 $("btnDup").onclick = ()=>{ if(!currentLayer) return; const p=toPlain(currentLayer); p.latlngs=p.latlngs.map(r=> r.map(ll=> L.latLng(ll.lat+20,ll.lng+20))); fromPlain(p); saveLocal(); };
