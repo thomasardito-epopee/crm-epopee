@@ -1,58 +1,93 @@
 import { Pool } from 'pg';
 
+const connectionString =
+  process.env.NEON_DB_URL ||
+  process.env.NETLIFY_DATABASE_URL ||
+  process.env.DATABASE_URL;
+
 const pool = new Pool({
-  connectionString: process.env.NEON_DB_URL, // URL "pooled"
-  ssl: { rejectUnauthorized: false }
+  connectionString,
+  ssl: { rejectUnauthorized: false },
+  max: 5,
+});
+
+const json = (status, data) => ({
+  statusCode: status,
+  headers: {
+    'Content-Type': 'application/json',
+    'Cache-Control': 'no-store',
+  },
+  body: JSON.stringify(data),
 });
 
 export async function handler(event) {
-  if (event.httpMethod === 'POST' && event.path.endsWith('/batch')) {
-    const { items = [] } = JSON.parse(event.body || '{}');
+  // (utile si un jour il y a un preflight)
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 204 };
+
+  // POST /api/spaces/batch
+  if (event.httpMethod === 'POST' && /\/batch$/.test(event.path)) {
+    let items = [];
+    try {
+      ({ items = [] } = JSON.parse(event.body || '{}'));
+    } catch {
+      return json(400, { error: 'Bad JSON body' });
+    }
 
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
 
-      const text = `
+      const upsertSql = `
         INSERT INTO spaces
           (building, floor, code, label, status, rent, area, posts, color, geom)
         VALUES
           ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-        ON CONFLICT (building, floor, code) DO UPDATE SET
-          label  = EXCLUDED.label,
-          status = EXCLUDED.status,
-          rent   = EXCLUDED.rent,
-          area   = EXCLUDED.area,
-          posts  = EXCLUDED.posts,
-          color  = EXCLUDED.color,
-          geom   = EXCLUDED.geom
-        RETURNING building,floor,code,updated_at,created_at;
+        ON CONFLICT (building, floor, code) DO UPDATE
+        SET label  = EXCLUDED.label,
+            status = EXCLUDED.status,
+            rent   = EXCLUDED.rent,
+            area   = EXCLUDED.area,
+            posts  = EXCLUDED.posts,
+            color  = EXCLUDED.color,
+            geom   = EXCLUDED.geom
+        RETURNING building, floor, code, updated_at, created_at;
       `;
 
       const results = [];
+
       for (const it of items) {
-        if (it.action === 'upsert') {
-          const s = it.space || {};
+        const action = String(it.action || '').toLowerCase();
+        // Supporte {action:'upsert', space:{...}} et {action:'upsert', ...}
+        const s = it.space || it;
+
+        if (action === 'upsert') {
           const params = [
-            s.building, s.floor, s.code,
-            s.label ?? null, s.status ?? null,
-            s.rent ?? 0, s.area ?? 0, s.posts ?? 0,
-            s.color ?? null, s.geom ?? null // texte/JSON si pas de PostGIS
+            s.building,
+            s.floor,
+            s.code,
+            s.label ?? null,
+            s.status ?? null,
+            Number(s.rent) || 0,
+            Number(s.area) || 0,
+            Number(s.posts) || 0,
+            s.color ?? null,
+            s.geom ?? null, // texte/JSON si pas de PostGIS
           ];
-          const { rows } = await client.query(text, params);
+          const { rows } = await client.query(upsertSql, params);
           results.push(rows[0]);
-        } else if (it.action === 'delete') {
+        } else if (action === 'delete') {
           await client.query(
             'DELETE FROM spaces WHERE building=$1 AND floor=$2 AND code=$3',
-            [it.building, it.floor, it.code]
+            [s.building, s.floor, s.code]
           );
         }
       }
+
       await client.query('COMMIT');
-      return { statusCode: 200, body: JSON.stringify({ items: results }) };
+      return json(200, { items: results });
     } catch (e) {
-      await client.query('ROLLBACK');
-      return { statusCode: 500, body: JSON.stringify({ error: e.message }) };
+      try { await client.query('ROLLBACK'); } catch {}
+      return json(500, { error: e.message });
     } finally {
       client.release();
     }
@@ -69,11 +104,11 @@ export async function handler(event) {
        FROM spaces
        WHERE building=$1 AND floor=$2
        ORDER BY updated_at DESC NULLS LAST, created_at DESC
-       LIMIT 200`,
+       LIMIT 500`,
       [building, floor]
     );
-    return { statusCode: 200, body: JSON.stringify({ items: rows }) };
+    return json(200, { items: rows });
   }
 
-  return { statusCode: 405, body: 'Method Not Allowed' };
+  return json(405, { error: 'Method Not Allowed' });
 }
