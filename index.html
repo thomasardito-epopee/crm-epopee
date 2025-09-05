@@ -789,6 +789,7 @@ async function saveLocal(){
     const token = sessionStorage.getItem('ADMIN_TOKEN') || "";
     const data = exportGeo();
     const [building, floor] = currentKey.split("|");
+    __lastChangeAt = Date.now();
     await fetch("/api/spaces/batch", {
       method: "POST",
       headers: { "content-type":"application/json", ...(token ? { "authorization": "Bearer " + token } : {}) },
@@ -796,6 +797,7 @@ async function saveLocal(){
     });
     $("statusText").textContent = "Sauvegardé sur la base ✅";
     setTimeout(()=> $("statusText").textContent = isAdmin ? "Mode admin" : "Mode visiteur", 900);
+    try { __lastSnapSig ||= currentSig(); } catch(_) {}
   }catch(e){
     console.warn("Sync distant KO → local OK", e);
     $("statusText").textContent = "Sauvegardé en local (offline) ☁️";
