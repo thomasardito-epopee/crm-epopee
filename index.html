@@ -672,6 +672,9 @@ let activeStatuses = new Set(ALL_STATUSES);
 let searchText = "";
 let currentKey = "";
 let filterEventOnly = false; // tout afficher par défaut
+let __autoTimer = null;
+let __lastSnapSig = '';   // signature du dernier snapshot stocké côté DB
+let __lastChangeAt = 0;   // timestamp de la dernière modif (après saveLocal)
 
 
 // ===== Helpers
