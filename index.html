@@ -1188,6 +1188,8 @@ async function onKeyChange(){
   importGeo(data || loadFromCache(currentKey) || { features: [] });
   await tryPreload(b,f);
   updateBoard();
+  __lastSnapSig = currentSig();   // changer d'étage ne pousse pas de snapshot immédiat
+
 }
 buildingSelect.onchange = async ()=>{ buildFloorOptions(buildingSelect.value); await onKeyChange(); };
 floorSelect.onchange = onKeyChange;
