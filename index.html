@@ -1195,6 +1195,8 @@ floorSelect.onchange = onKeyChange;
 document.addEventListener('DOMContentLoaded', async () => {
   buildFloorOptions("A"); buildingSelect.value = "A"; floorSelect.value = "RDJ";
   await onKeyChange();
+  __lastSnapSig = currentSig();
+startAutosave();
   rebuildStatusChips(); rebuildTypeChips();
   function fillStatusSelect(){
     const sel = $("fStatus"); sel.innerHTML = "";
