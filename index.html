@@ -2798,7 +2798,7 @@ document.addEventListener('DOMContentLoaded', function(){
       // Si le bouton "Appliquer" existe (== mode Admin), on montre "Historique".
       const applyBtn = document.getElementById('btnApply');
       if (!historyBtn) return;
-      historyBtn.style.display = applyBtn ? '' : 'none';
+     historyBtn.style.display = document.body.classList.contains('admin') ? 'inline-block' : 'none';
     }
 
     // 1) On vérifie maintenant
