@@ -2311,6 +2311,40 @@ document.addEventListener('DOMContentLoaded', function(){
   }catch(_ ){}
 });
 
+    <script>
+  function currentSig() {
+    try { return JSON.stringify(exportGeo().features || []); }
+    catch { return ''; }
+  }
+
+  async function maybeAutosnapshot(reason = 'interval') {
+    if (!isAdmin) return;                        // seulement en mode Admin
+    // laisse 5s d’inactivité après la dernière modif
+    if (Date.now() - __lastChangeAt < 5000) return;
+
+    const sig = currentSig();
+    if (!sig || sig === __lastSnapSig) return;  // rien de nouveau → on ne snapshot pas
+
+    const [building, floor] = (currentKey || '').split('|');
+    if (!building || !floor) return;
+
+    try {
+      await saveSnapshot(building, floor, `auto (${reason})`);
+      __lastSnapSig = sig;
+      // (optionnel) petit feedback discret :
+      // document.getElementById('statusText').textContent = 'Autosave ✓';
+    } catch (e) {
+      console.warn('[autosave] snapshot KO', e);
+    }
+  }
+
+  function startAutosave() {
+    if (__autoTimer) clearInterval(__autoTimer);
+    __autoTimer = setInterval(() => maybeAutosnapshot('interval'), 60000); // toutes les 60s
+  }
+</script>
+
+
 </script>
 
 
