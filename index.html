@@ -456,6 +456,14 @@ body.board-mode #visitorBoard{
     <div class="hint" id="statusText">Mode visiteur</div>
     <div>
     <button id="btnHistory" class="btn primary">💾 Historique</button>
+<!-- Petit panneau d'historique -->
+<div id="historyPanel" style="display:none; position:absolute; top:64px; right:16px; z-index:1000; background:#fff; border:1px solid #ddd; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.08); width:320px; max-height:300px; overflow:auto; padding:8px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+    <strong>Versions</strong>
+    <button id="historyClose" class="btn" aria-label="Fermer">×</button>
+  </div>
+  <div id="historyList">Chargement…</div>
+</div>
 
       <button class="btn" id="btnAdminBoard">📊 Dashboard</button>
     </div>
@@ -2688,6 +2696,96 @@ document.addEventListener('DOMContentLoaded', function(){
     };
   });
 })();
+</script>
+<script>
+  // Helpers pour trouver bâtiment / étage depuis tes <select>
+  function getBuilding() {
+    const el = document.querySelector('#buildingSelect, select[name="building"]');
+    return el ? el.value : 'A';
+  }
+  function getFloor() {
+    const el = document.querySelector('#floorSelect, select[name="floor"]');
+    return el ? el.value : 'RDJ';
+  }
+
+  // Fallback d’URL: on tente /api/history-list puis /api/history/list si 404
+  async function fetchHistoryList(building, floor) {
+    let r = await fetch(`/api/history-list?building=${encodeURIComponent(building)}&floor=${encodeURIComponent(floor)}`);
+    if (r.status === 404) r = await fetch(`/api/history/list?building=${encodeURIComponent(building)}&floor=${encodeURIComponent(floor)}`);
+    if (!r.ok) throw new Error('Impossible de charger la liste');
+    const json = await r.json();
+    return Array.isArray(json) ? json : (json.items || []);
+  }
+
+  async function restoreSnapshot(building, floor, at) {
+    // On tente en POST sur /api/history-restore, sinon /api/history/restore
+    let r = await fetch(`/api/history-restore?building=${encodeURIComponent(building)}&floor=${encodeURIComponent(floor)}&at=${encodeURIComponent(at)}`, { method: 'POST' });
+    if (r.status === 404) r = await fetch(`/api/history/restore?building=${encodeURIComponent(building)}&floor=${encodeURIComponent(floor)}&at=${encodeURIComponent(at)}`, { method: 'POST' });
+    if (!r.ok) throw new Error('Restauration impossible');
+    // Recharge la page pour voir l’état restauré
+    location.reload();
+  }
+
+  function formatWhen(v) {
+    try {
+      const d = new Date(v || Date.now());
+      return d.toLocaleString();
+    } catch { return String(v); }
+  }
+
+  // Ouverture / fermeture du panneau + rendu de la liste
+  (function wireHistoryUI(){
+    const btn = document.getElementById('btnHistory');
+    const panel = document.getElementById('historyPanel');
+    const list = document.getElementById('historyList');
+    const closeBtn = document.getElementById('historyClose');
+    if (!btn || !panel || !list || !closeBtn) return;
+
+    async function openPanel() {
+      panel.style.display = 'block';
+      list.textContent = 'Chargement…';
+      const b = getBuilding();
+      const f = getFloor();
+      try {
+        const items = await fetchHistoryList(b, f);
+        if (!items.length) {
+          list.innerHTML = '<div style="padding:6px; color:#666;">Aucune version pour ce niveau.</div>';
+          return;
+        }
+        list.innerHTML = items.map(it => {
+          const label = formatWhen(it.created_at || it.at || it.timestamp || it.date);
+          const note = it.note ? ` — ${it.note}` : '';
+          const at = it.at || it.created_at || it.timestamp || '';
+          return `
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 0; border-bottom:1px solid #f0f0f0;">
+              <div style="font-size:14px; line-height:1.2;">
+                <div><strong>${label}</strong></div>
+                <div style="color:#666; font-size:12px;">${note}</div>
+              </div>
+              <button class="btn" data-at="${at}">Restaurer</button>
+            </div>
+          `;
+        }).join('');
+        // brancher les boutons "Restaurer"
+        list.querySelectorAll('button[data-at]').forEach(btnR => {
+          btnR.addEventListener('click', (e) => {
+            const at = e.currentTarget.getAttribute('data-at');
+            if (!at) return;
+            const b = getBuilding(), f = getFloor();
+            restoreSnapshot(b, f, at);
+          });
+        });
+      } catch (e) {
+        list.innerHTML = `<div style="padding:6px; color:#b00020;">${e.message}</div>`;
+      }
+    }
+
+    btn.addEventListener('click', openPanel);
+    closeBtn.addEventListener('click', () => { panel.style.display = 'none'; });
+    document.addEventListener('click', (e) => {
+      if (!panel.contains(e.target) && e.target !== btn) panel.style.display = 'none';
+    });
+  })();
 </script>
 
 </body>
