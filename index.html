@@ -2785,7 +2785,17 @@ document.addEventListener('DOMContentLoaded', function(){
       }
     }
 
-    btn.addEventListener('click', openPanel);
+    btn.addEventListener('click', () => {
+  if (panel.style.display === 'block') {
+    panel.style.display = 'none';        // toggle: ferme si déjà ouvert
+  } else {
+    openPanel();                           // sinon, ouvre + recharge la liste
+  }
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') panel.style.display = 'none';
+});
+
     closeBtn.addEventListener('click', () => { panel.style.display = 'none'; });
     document.addEventListener('click', (e) => {
       if (!panel.contains(e.target) && e.target !== btn) panel.style.display = 'none';
