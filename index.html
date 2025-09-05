@@ -2730,6 +2730,18 @@ document.addEventListener('DOMContentLoaded', function(){
     // Recharge la page pour voir l’état restauré
     location.reload();
   }
+  
+  async function saveSnapshot(building, floor, note = '') {
+    // tente /api/history-save puis /api/history/save (fallback)
+    const call = async (path) => {
+      const url = `${path}?building=${encodeURIComponent(building)}&floor=${encodeURIComponent(floor)}${note ? `&note=${encodeURIComponent(note)}` : ''}`;
+      return fetch(url, { method: 'POST' });
+    };
+    let r = await call('/api/history-save');
+    if (r.status === 404) r = await call('/api/history/save');
+    if (!r.ok) throw new Error('Autosave: échec snapshot');
+    return r.json().catch(() => ({}));
+  }
 
   function formatWhen(v) {
     try {
