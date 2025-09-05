@@ -2268,6 +2268,28 @@ tnInput.addEventListener("focus", ()=>{ showSuggest(suggestionsFor(tnInput.value
 document.addEventListener("click", (e)=>{
   if(e.target!==tnInput && !suggest.contains(e.target)){ suggest.style.display="none"; }
 });
+
+// --- Fermer les suggestions quand on sort du champ ou qu’on clique ailleurs
+tnInput.addEventListener('blur', () => {
+  // petit délai pour laisser fonctionner le clic sur une suggestion
+  setTimeout(() => { suggest.style.display = 'none'; }, 0);
+});
+
+// Fermer au mousedown partout sauf dans le champ ou sur un item de suggestion
+document.addEventListener('mousedown', (e) => {
+  if (e.target === tnInput) return;
+  if (e.target.closest('#tenantSuggest .item')) return; // on laisse le clic sélectionner l’item
+  suggest.style.display = 'none';
+});
+
+// Fermer aussi dès qu’on focus un autre contrôle (ex. “Statut”)
+[
+  'fLabel','fStatus','fColor','fArea','fPosts','fRent',
+  'fPaxSit','fPaxStand','fDayPrice','fExitDate','fEntryDate'
+].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('focus', () => { suggest.style.display = 'none'; }, true);
+});
 </script>
   
 
