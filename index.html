@@ -2788,6 +2788,26 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   })();
 </script>
+  <script>
+  (function(){
+    const historyBtn = document.getElementById('btnHistory');
+
+    function syncHistoryVisibility(){
+      // Si le bouton "Appliquer" existe (== mode Admin), on montre "Historique".
+      const applyBtn = document.getElementById('btnApply');
+      if (!historyBtn) return;
+      historyBtn.style.display = applyBtn ? '' : 'none';
+    }
+
+    // 1) On vérifie maintenant
+    syncHistoryVisibility();
+
+    // 2) On revérifie si le DOM change (par ex. quand le panneau Admin apparaît)
+    const obs = new MutationObserver(syncHistoryVisibility);
+    obs.observe(document.body, { childList: true, subtree: true });
+  })();
+</script>
+
 
 </body>
 </html>
