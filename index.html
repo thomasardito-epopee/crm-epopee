@@ -3568,6 +3568,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try { await renderHistoryPanel(); } catch (_) {}
       }
     } finally {
+      btn.classList.remove('loading');
       btn.disabled = false;
     }
   };
