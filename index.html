@@ -804,6 +804,7 @@ async function saveLocal(){
     console.warn("Sync distant KO → local OK", e);
     $("statusText").textContent = "Sauvegardé en local (offline) ☁️";
     setTimeout(()=> $("statusText").textContent = isAdmin ? "Mode admin" : "Mode visiteur", 1200);
+    try { renderHistorySidebar(); } catch(_) {}
   }
   updateBoard && updateBoard();
 }
