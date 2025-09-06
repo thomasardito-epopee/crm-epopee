@@ -2383,11 +2383,18 @@ document.addEventListener('mousedown', (e) => {
   window.addEventListener('resize', syncTopbarHeight);
   document.addEventListener('DOMContentLoaded', syncTopbarHeight);
 
-/* --- min=today + hint "Expire le …" --- */
+function todayISO(){
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 document.addEventListener('DOMContentLoaded', function(){
   try{
     var d = document.getElementById('fExitDate');
-    if(d) d.min = '2025-09-02';
+    if (d) d.min = todayISO();       // ← plus de "2025-09-02" en dur
     var hint = document.getElementById('exitDateHint');
     function fmt(iso){ try{ var p=iso.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }catch(_){ return iso||'—'; }}
     function sync(){ if(hint) hint.textContent = 'Expire le ' + (d && d.value ? fmt(d.value) : '—'); }
