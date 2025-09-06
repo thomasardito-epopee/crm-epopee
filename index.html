@@ -1008,42 +1008,39 @@ function buildPalette(){
 }
 buildPalette();
 colorInput.oninput = ()=> setColor(colorInput.value);
-
 const fStatus = document.getElementById("fStatus");
 if (fStatus) {
-  fStatus.addEventListener('change', function(){
-    // toggle Préavis
-    try{
+  fStatus.addEventListener("change", function (e) {
+    // --- afficher/masquer le bloc "Préavis"
+    try {
       const isEvent = (document.getElementById("fLabel").value === "Evenementiel");
-      const showPreavis = !isEvent && (this.value === "Préavis");
+      const showPreavis = !isEvent && (e.target.value === "Préavis");
       const pr = document.getElementById("preavisRow");
       if (pr) pr.style.display = showPreavis ? "grid" : "none";
-    }catch(_){}  });           // ferme fStatus.addEventListener('change', …)
-}               // ferme if (fStatus)
+    } catch (_) {}
 
+    // --- appliquer la couleur par défaut du nouveau statut
+    try {
+      if (!window.currentLayer) return;
 
+      const ep = layerProps(currentLayer) || {};
+      const prevDefault = (STATUS_STYLES[ep.status || "Vacant"] || {}).fill;
 
-    // couleur : si l’utilisateur n’a PAS choisi une couleur perso, on met la couleur par défaut du nouveau statut
-try{
-  if(!window.currentLayer) return;
-  const ep = layerProps(currentLayer) || {};
-  const prevDefault = (STATUS_STYLES[ep.status || "Vacant"] || {}).fill;
+      // si l'utilisateur a choisi une couleur perso ET qu'elle diffère de l'ancienne couleur par défaut,
+      // on la respecte. Sinon on passe à la nouvelle couleur par défaut du statut.
+      const keepUser = ep.customColor && ep.color && ep.color !== prevDefault;
+      const next = (STATUS_STYLES[e.target.value] || {}).fill;
 
-  // si pas de customColor OU si la couleur actuelle est encore l'ancienne couleur par défaut,
-  // on passe à la nouvelle couleur par défaut
-  const keepUser = ep.customColor && ep.color && ep.color !== prevDefault;
-  const next = (STATUS_STYLES[this.value] || {}).fill;
-
-  if (!keepUser && next) {
-    setLayerProps(currentLayer, { color: next, customColor: false });
-    setColor(next);
-  } else {
-    // on respecte la couleur choisie par l'utilisateur
-    setColor(ep.color || next || "#0a84ff");
-  }
-}catch(_){}
-
-
+      if (!keepUser && next) {
+        setLayerProps(currentLayer, { color: next, customColor: false });
+        setColor(next); // met aussi à jour la pastille sélectionnée
+      } else {
+        setColor(ep.color || next || "#0a84ff");
+      }
+    } catch (_) {}
+  });
+}
+  
 $("btnApply").onclick = ()=>{
   if(!currentLayer) return;
   const __isEvent = ($("fLabel").value === "Evenementiel");
