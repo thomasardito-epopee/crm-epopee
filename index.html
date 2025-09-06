@@ -3607,7 +3607,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const host = document.querySelector('#historyPanel') || document.querySelector('[data-history-panel]') || document.body;
     const html = Array.isArray(list) && list.length
       ? ('<ul style="padding:8px 14px;margin:0;">' + list.map(r=>(
-          `<li>${new Date(Number(r.at||r.created_at||Date.now())).toLocaleString()} — ${r.note||''}</li>`
+          `<li>${
+  (r.at ? new Date(Number(r.at)) :
+   r.created_at ? new Date(r.created_at) :
+   new Date()
+  ).toLocaleString()
+} — ${r.note||''}</li>`
+
         )).join('') + '</ul>')
       : '<div style="padding:10px 14px;">Aucune version encore.</div>';
     host.insertAdjacentHTML('afterbegin',
