@@ -3040,6 +3040,7 @@ async function renderHistoryPanel(){
       box.innerHTML = '<div class="hint">Aucune version encore.</div>';
       return;
     }
+    window.renderHistoryPanel = renderHistoryPanel;
 
     box.innerHTML = `
       <table style="width:100%; border-collapse:collapse; font-size:12px">
