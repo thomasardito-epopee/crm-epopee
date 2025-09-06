@@ -2804,9 +2804,60 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
  async function restoreSnapshot(building, floor, at) {
-  const token = sessionStorage.getItem('ADMIN_TOKEN') || '';
+  const token   = sessionStorage.getItem('ADMIN_TOKEN') || '';
   const headers = { ...(token ? { authorization: 'Bearer ' + token } : {}) };
 
+  // 1) Essai "lecture d’un snapshot" (sans mutation serveur)
+  async function tryFetchSnapshot() {
+    const qs = `?building=${encodeURIComponent(building)}&floor=${encodeURIComponent(floor)}&at=${encodeURIComponent(at)}`;
+    const urls = [
+      '/api/history-get' + qs,
+      '/api/history/get' + qs,
+      // beaucoup d’APIs exposent la lecture versionnée via ?at=
+      '/api/spaces'      + qs
+    ];
+    for (const url of urls) {
+      try {
+        const r = await fetch(url, { headers });
+        if (!r.ok) continue;
+        const j = await r.json().catch(()=>null);
+        if (!j) continue;
+
+        // formats acceptés : {features: [...] } ou {items:[{geom:...}, ...]}
+        if (Array.isArray(j.features)) return j.features;
+        if (Array.isArray(j.items))    return j.items.map(x => x.geom || x).filter(Boolean);
+      } catch (_) {}
+    }
+    return null;
+  }
+
+  // 2) Si on récupère les features => on restaure localement, sans reload
+  const features = await tryFetchSnapshot();
+  if (features && features.length >= 0) {
+    const key = `${building}|${floor}`;
+    // met à jour cache + carte
+    localStorage.setItem(`epopee_plans_v177_${key}`, JSON.stringify({ key, features }));
+    importGeo({ features });
+    // marque la nouvelle "signature" pour l’autosave
+    try { __lastSnapSig = currentSig(); } catch(_) {}
+
+    // petit feedback + incitation à cliquer "Enregistrer"
+    const s = document.getElementById('statusText');
+    if (s) { s.textContent = 'Version chargée — pense à “Enregistrer” ✓'; setTimeout(()=> {
+      s.textContent = document.body.classList.contains('admin') ? 'Mode admin' : 'Mode visiteur';
+    }, 1500); }
+
+    // si la liste d’historique est visible, on la rafraîchit
+    if (typeof renderHistoryPanel   === 'function') renderHistoryPanel();
+    if (typeof renderHistorySidebar === 'function') renderHistorySidebar();
+
+    // met en évidence le bouton Enregistrer s’il existe
+    const saveBtn = document.getElementById('btnSaveTop');
+    if (saveBtn) { saveBtn.classList.add('primary','flash'); setTimeout(()=> saveBtn.classList.remove('flash'), 1200); }
+    return;
+  }
+
+  // 3) Sinon, dernier recours : on tente les endpoints "restore" serveur, puis reload
   const qs = `?building=${encodeURIComponent(building)}&floor=${encodeURIComponent(floor)}&at=${encodeURIComponent(at)}`;
   const tries = [
     ['/api/history-restore' + qs, { method: 'POST', headers }],
@@ -2814,43 +2865,15 @@ document.addEventListener('DOMContentLoaded', function(){
     ['/api/history/restore'  + qs, { method: 'POST', headers }],
     ['/api/history/restore'  + qs, { method: 'GET',  headers }],
   ];
-
-  let res = null;
   for (const [url, opt] of tries) {
     try {
-      res = await fetch(url, opt);
-      if (res.ok) break;
+      const r = await fetch(url, opt);
+      if (r.ok) { location.reload(); return; }
     } catch (_) {}
   }
-  if (!res || !res.ok) {
-    alert('Restauration impossible (endpoint non joignable).');
-    return;
-  }
 
-  // 1) si l’API renvoie les features, on applique sans recharger
-  try {
-    const json = await res.clone().json();
-    if (json && json.features) {
-      const key = `${building}|${floor}`;
-      localStorage.setItem(`epopee_plans_v177_${key}`, JSON.stringify({ key, features: json.features }));
-      importGeo({ features: json.features });
-      __lastSnapSig = currentSig && currentSig();
-      // feedback léger
-      const s = document.getElementById('statusText');
-      if (s) { s.textContent = 'Version restaurée ✓'; setTimeout(()=> s.textContent = (document.body.classList.contains('admin')?'Mode admin':'Mode visiteur'), 1000); }
-      // si le panneau historique est ouvert, on raffraîchit la liste
-      if (typeof renderHistoryPanel === 'function') renderHistoryPanel();
-      if (typeof renderHistorySidebar === 'function') renderHistorySidebar();
-      return;
-    }
-  } catch (_) { /* pas de JSON → on force le reload */ }
-
-  // 2) sinon on purge le cache local et on recharge pour forcer la lecture serveur
-  const key = `${building}|${floor}`;
-  localStorage.removeItem(`epopee_plans_v177_${key}`);
-  location.reload();
+  alert('Restauration impossible (endpoint non joignable).');
 }
-  
   async function saveSnapshot(building, floor, note = '') {
     // tente /api/history-save puis /api/history/save (fallback)
     const call = async (path) => {
