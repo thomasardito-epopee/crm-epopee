@@ -1,0 +1,17 @@
+[build]
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/api/spaces"
+  to   = "/.netlify/functions/spaces"
+  status = 200
+
+[[redirects]]
+  from = "/api/spaces/batch"
+  to   = "/.netlify/functions/spaces"
+  status = 200
+[[redirects]]
+  from = "/api/save-floor"
+  to = "/.netlify/functions/save-floor"
+  status = 200
+  force = true
