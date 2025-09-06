@@ -2832,6 +2832,115 @@ document.addEventListener('DOMContentLoaded', function(){
     if (!r.ok) throw new Error('Autosave: échec snapshot');
     return r.json().catch(() => ({}));
   }
+<script>
+  function renderHistoryPanel(){
+    const b = getBuilding();
+    const f = getFloor();
+    const box = document.getElementById('historyListSide');
+    if (!box) return;
+
+    box.innerHTML = '<div class="hint">Chargement…</div>';
+
+    fetchHistoryList(b, f)
+      .then(items => {
+        if (!items.length){
+          box.innerHTML = '<div class="hint">Aucune version encore.</div>';
+          return;
+        }
+        box.innerHTML = `
+          <table style="width:100%; border-collapse:collapse; font-size:12px">
+            <thead>
+              <tr>
+                <th style="text-align:left; padding:6px 8px;">Date</th>
+                <th style="text-align:left; padding:6px 8px;">Note</th>
+                <th style="text-align:right; padding:6px 8px;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.map(it=>{
+                const at   = it.at || it.created_at || it.timestamp || '';
+                const date = formatWhen(it.created_at || it.at || it.timestamp || it.date);
+                const note = it.note ? String(it.note) : '';
+                return `
+                  <tr>
+                    <td style="padding:6px 8px; white-space:nowrap;">${date}</td>
+                    <td style="padding:6px 8px; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${note}</td>
+                    <td style="padding:6px 8px; text-align:right;">
+                      <button class="btn" data-restore="${at}">Restaurer</button>
+                    </td>
+                  </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        `;
+        box.querySelectorAll('button[data-restore]').forEach(btn=>{
+          btn.onclick = () => restoreSnapshot(b, f, btn.dataset.restore);
+        });
+      })
+      .catch(err=>{
+        box.innerHTML = `<div class="hint" style="color:#b00020">${err.message || 'Erreur de chargement'}</div>`;
+      });
+  }
+
+  // Ouverture/fermeture via le bouton "Historique" de la topbar
+  document.addEventListener('DOMContentLoaded', () => {
+    const pane   = document.getElementById('historyPane');
+    const left   = document.getElementById('leftPanel');
+    const btnTop = document.getElementById('btnHistory');
+    const back   = document.getElementById('historyBack');
+    const save   = document.getElementById('historySave');
+    const ref    = document.getElementById('historyRefresh');
+
+    if (btnTop){
+      btnTop.onclick = () => {
+        const activating = !document.body.classList.contains('history-mode');
+        document.body.classList.toggle('history-mode', activating);
+
+        // Quitter le mode dashboard réduit si actif
+        if (activating){
+          document.body.classList.remove('board-mode');
+          // montrer le panneau historique dans la colonne gauche
+          if (pane && pane.parentElement !== left) left.appendChild(pane);
+          pane.style.display = 'block';
+          renderHistoryPanel();
+          // masquer l’édition pendant l’historique
+          document.getElementById('adminSection').style.display = 'none';
+        } else {
+          pane.style.display = 'none';
+          // ré-afficher l’édition si Admin et pas en board-mode
+          const showEdition = (typeof isAdmin!=='undefined' && isAdmin) && !document.body.classList.contains('board-mode');
+          document.getElementById('adminSection').style.display = showEdition ? 'block' : 'none';
+        }
+      };
+    }
+
+    if (back){
+      back.onclick = () => {
+        document.body.classList.remove('history-mode');
+        if (pane) pane.style.display = 'none';
+        const showEdition = (typeof isAdmin!=='undefined' && isAdmin) && !document.body.classList.contains('board-mode');
+        document.getElementById('adminSection').style.display = showEdition ? 'block' : 'none';
+      };
+    }
+
+    if (ref)  ref.onclick  = renderHistoryPanel;
+    if (save) save.onclick = async () => {
+      const b = getBuilding(), f = getFloor();
+      try { await saveSnapshot(b, f, 'manuel'); renderHistoryPanel(); }
+      catch { alert('Échec de la sauvegarde'); }
+    };
+  });
+
+  // Rafraîchir la liste si on sauvegarde depuis le formulaire
+  (function patchSaveLocal(){
+    if (typeof window.saveLocal !== 'function') return;
+    const _save = window.saveLocal;
+    window.saveLocal = async function(){
+      const r = await _save.apply(this, arguments);
+      try { if (document.body.classList.contains('history-mode')) renderHistoryPanel(); } catch(_){}
+      return r;
+    };
+  })();
 
   function formatWhen(v) {
     try {
