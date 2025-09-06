@@ -15,3 +15,40 @@
   to = "/.netlify/functions/save-floor"
   status = 200
   force = true
+  # --- History API
+[[redirects]]
+  from = "/api/history-list"
+  to   = "/.netlify/functions/history"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/history/list"
+  to   = "/.netlify/functions/history"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/history-save"
+  to   = "/.netlify/functions/history-save"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/history/save"
+  to   = "/.netlify/functions/history-save"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/history-restore"
+  to   = "/.netlify/functions/history-restore"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/history/restore"
+  to   = "/.netlify/functions/history-restore"
+  status = 200
+  force = true
+
