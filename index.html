@@ -2654,7 +2654,7 @@ document.addEventListener('DOMContentLoaded', function(){
     btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="4"></rect><line x1="8" y1="3" x2="8" y2="7"></line><line x1="16" y1="3" x2="16" y2="7"></line><line x1="3" y1="11" x2="21" y2="11"></line></svg>';
     wrap.style.position='relative'; wrap.appendChild(btn);
 
-    let pop=null, cur=null; const minDate=new Date('2025-09-02'+'T00:00:00');
+    let pop=null, cur=null; const minDate = new Date(todayISO() + 'T00:00:00');
     function parseISO(iso){ try{ if(!iso) return null; const p=iso.split('-'); return new Date(+p[0], p[1]-1, +p[2]); }catch(e){ return null; } }
     function toISO(d){ const y=d.getFullYear(); const m=('0'+(d.getMonth()+1)).slice(-2); const dd=('0'+d.getDate()).slice(-2); return y+'-'+m+'-'+dd; }
     function sameDay(a,b){ return a&&b&&a.getFullYear()==b.getFullYear()&&a.getMonth()==b.getMonth()&&a.getDate()==b.getDate(); }
