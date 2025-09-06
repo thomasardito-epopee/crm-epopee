@@ -847,7 +847,8 @@ async function saveLocal(){
   }
 
   try {
-    const token = sessionStorage.getItem('ADMIN_TOKEN') || "";
+    let token = "";
+try { token = sessionStorage.getItem('ADMIN_TOKEN') || ""; } catch(_) {}
     const data = exportGeo();
     const [building, floor] = currentKey.split("|");
     __lastChangeAt = Date.now();
