@@ -2995,65 +2995,61 @@ async function renderHistoryPanel(){
     box.innerHTML = `<div class="hint" style="color:#b00020">${err.message || 'Erreur de chargement'}</div>`;
   }
 }
-  // Ouverture/fermeture via le bouton "Historique" de la topbar
-  document.addEventListener('DOMContentLoaded', () => {
-    const pane   = document.getElementById('historyPane');
-    const left   = document.getElementById('leftPanel');
-    const btnTop = document.getElementById('btnHistory');
-    const back   = document.getElementById('historyBack');
-    const save   = document.getElementById('historySave');
-    const ref    = document.getElementById('historyRefresh');
 
-    if (btnTop){
-      btnTop.onclick = () => {
-        const activating = !document.body.classList.contains('history-mode');
-        document.body.classList.toggle('history-mode', activating);
+// Ouverture/fermeture via le bouton "Historique" + refresh animé
+document.addEventListener('DOMContentLoaded', () => {
+  const pane   = document.getElementById('historyPane');
+  const left   = document.getElementById('leftPanel');
+  const btnTop = document.getElementById('btnHistory');
+  const back   = document.getElementById('historyBack');
+  const save   = document.getElementById('historySave');
+  const ref    = document.getElementById('historyRefresh');
 
-        // Quitter le mode dashboard réduit si actif
-        if (activating){
-          document.body.classList.remove('board-mode');
-          // montrer le panneau historique dans la colonne gauche
-          if (pane && pane.parentElement !== left) left.appendChild(pane);
-          pane.style.display = 'block';
-          renderHistoryPanel();
-          // masquer l’édition pendant l’historique
-          document.getElementById('adminSection').style.display = 'none';
-        } else {
-          pane.style.display = 'none';
-          // ré-afficher l’édition si Admin et pas en board-mode
-          const showEdition = (typeof isAdmin!=='undefined' && isAdmin) && !document.body.classList.contains('board-mode');
-          document.getElementById('adminSection').style.display = showEdition ? 'block' : 'none';
-        }
-      };
-    }
+  if (btnTop){
+    btnTop.onclick = () => {
+      const activating = !document.body.classList.contains('history-mode');
+      document.body.classList.toggle('history-mode', activating);
 
-    if (back){
-      back.onclick = () => {
-        document.body.classList.remove('history-mode');
-        if (pane) pane.style.display = 'none';
+      if (activating){
+        document.body.classList.remove('board-mode');
+        if (pane && pane.parentElement !== left) left.appendChild(pane);
+        pane.style.display = 'block';
+        renderHistoryPanel();
+        document.getElementById('adminSection').style.display = 'none';
+      } else {
+        pane.style.display = 'none';
         const showEdition = (typeof isAdmin!=='undefined' && isAdmin) && !document.body.classList.contains('board-mode');
         document.getElementById('adminSection').style.display = showEdition ? 'block' : 'none';
-      };
-    }
+      }
+    };
+  }
 
-    if (ref)  ref.onclick  = renderHistoryPanel;
-    if (save) save.onclick = async () => {
+  if (back){
+    back.onclick = () => {
+      document.body.classList.remove('history-mode');
+      if (pane) pane.style.display = 'none';
+      const showEdition = (typeof isAdmin!=='undefined' && isAdmin) && !document.body.classList.contains('board-mode');
+      document.getElementById('adminSection').style.display = showEdition ? 'block' : 'none';
+    };
+  }
+
+  // Refresh qui tourne
+  if (ref){
+    ref.onclick = async () => {
+      ref.setAttribute('aria-busy','true');  // fait tourner l’icône (CSS déjà présent)
+      await renderHistoryPanel();
+      ref.removeAttribute('aria-busy');
+    };
+  }
+
+  if (save){
+    save.onclick = async () => {
       const b = getBuilding(), f = getFloor();
-      try { await saveSnapshot(b, f, 'manuel'); renderHistoryPanel(); }
+      try { await saveSnapshot(b, f, 'manuel'); await renderHistoryPanel(); }
       catch { alert('Échec de la sauvegarde'); }
     };
-  });
-
-  // Rafraîchir la liste si on sauvegarde depuis le formulaire
-  (function patchSaveLocal(){
-    if (typeof window.saveLocal !== 'function') return;
-    const _save = window.saveLocal;
-    window.saveLocal = async function(){
-      const r = await _save.apply(this, arguments);
-      try { if (document.body.classList.contains('history-mode')) renderHistoryPanel(); } catch(_){}
-      return r;
-    };
-  })();
+  }
+});
 
   function formatWhen(v) {
     try {
