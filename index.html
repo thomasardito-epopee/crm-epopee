@@ -988,25 +988,30 @@ function buildPalette(){
 buildPalette();
 colorInput.oninput = ()=> setColor(colorInput.value);
 
-$("fStatus").addEventListener('change', ()=>{
-  if(!currentLayer) return;
-  const ep = layerProps(currentLayer);
+const fStatus = document.getElementById("fStatus");
+if (fStatus) {
+  fStatus.addEventListener('change', function(){
+    // toggle Préavis
+    try{
+      const isEvent = (document.getElementById("fLabel").value === "Evenementiel");
+      const showPreavis = !isEvent && (this.value === "Préavis");
+      const pr = document.getElementById("preavisRow");
+      if (pr) pr.style.display = showPreavis ? "grid" : "none";
+    }catch(_){}
 
-// toggle preavisRow on status change (non-destructif)
-document.getElementById("fStatus").addEventListener('change', function(){
-  try{
-    const isEvent = (document.getElementById("fLabel").value === "Evenementiel");
-    const showPreavis = !isEvent && (this.value === "Préavis");
-    const pr = document.getElementById("preavisRow"); if (pr) pr.style.display = showPreavis ? "grid" : "none";
-  }catch(_){}
-});
-
-  const prevDefault = STATUS_STYLES[ep.status||"Vacant"].fill;
-  if(!ep.color || ep.color === prevDefault){
-    const hex = STATUS_STYLES[$("fStatus").value].fill;
-    setColor(hex);
-  } else { setColor(ep.color); }
-});
+    // couleur
+    try{
+      if(!window.currentLayer) return;
+      const ep = layerProps(currentLayer);
+      const prevDefault = STATUS_STYLES[ep.status || "Vacant"].fill;
+      if(!ep.color || ep.color === prevDefault){
+        setColor(STATUS_STYLES[this.value].fill);
+      } else {
+        setColor(ep.color);
+      }
+    }catch(_){}
+  });
+}
 
 $("btnApply").onclick = ()=>{
   if(!currentLayer) return;
