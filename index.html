@@ -1566,12 +1566,6 @@ function floorsStats(scope){
 
 // --- CSV export helper
 function exportCSV(rows, headers, filename){
-  // …
-}
-
-
-// --- CSV export helper
-function exportCSV(rows, headers, filename){
   const head = headers.join(',');
   const lines = rows.map(r => headers
     .map(h => String(r[h] ?? '').replace(/"/g,'""'))
