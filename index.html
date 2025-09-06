@@ -1020,19 +1020,26 @@ if (fStatus) {
       if (pr) pr.style.display = showPreavis ? "grid" : "none";
     }catch(_){}
 
-    // couleur
-    try{
-      if(!window.currentLayer) return;
-      const ep = layerProps(currentLayer);
-      const prevDefault = STATUS_STYLES[ep.status || "Vacant"].fill;
-      if(!ep.color || ep.color === prevDefault){
-        setColor(STATUS_STYLES[this.value].fill);
-      } else {
-        setColor(ep.color);
-      }
-    }catch(_){}
-  });
-}
+    // couleur : si l’utilisateur n’a PAS choisi une couleur perso, on met la couleur par défaut du nouveau statut
+try{
+  if(!window.currentLayer) return;
+  const ep = layerProps(currentLayer) || {};
+  const prevDefault = (STATUS_STYLES[ep.status || "Vacant"] || {}).fill;
+
+  // si pas de customColor OU si la couleur actuelle est encore l'ancienne couleur par défaut,
+  // on passe à la nouvelle couleur par défaut
+  const keepUser = ep.customColor && ep.color && ep.color !== prevDefault;
+  const next = (STATUS_STYLES[this.value] || {}).fill;
+
+  if (!keepUser && next) {
+    setLayerProps(currentLayer, { color: next, customColor: false });
+    setColor(next);
+  } else {
+    // on respecte la couleur choisie par l'utilisateur
+    setColor(ep.color || next || "#0a84ff");
+  }
+}catch(_){}
+
 
 $("btnApply").onclick = ()=>{
   if(!currentLayer) return;
