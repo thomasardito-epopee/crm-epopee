@@ -3238,20 +3238,16 @@ document.addEventListener('DOMContentLoaded', () => {
     })
 
   // Boutons de la section
-  document.addEventListener('DOMContentLoaded', () => {
-    const btnSave = document.getElementById('historySave');
-    const btnRef  = document.getElementById('historyRefreshPane');
-
-    if (btnSave) btnSave.onclick = async () => {
+document.addEventListener('DOMContentLoaded', () => {
+  const savePane = document.getElementById('historySavePane');
+  if (savePane){
+    savePane.onclick = async () => {
       const b = getBuilding(), f = getFloor();
-      try {
-        await saveSnapshot(b, f, 'manuel');
-        renderHistorySidebar();
-      } catch (e) {
-        alert('Échec de la sauvegarde');
-      }
+      try { await saveSnapshot(b, f, 'manuel'); await renderHistoryPanel(); }
+      catch { alert('Échec de la sauvegarde'); }
     };
-
+  }
+});
     if (btnRef) btnRef.onclick = renderHistorySidebar;
 
     // 1er rendu à l’ouverture
