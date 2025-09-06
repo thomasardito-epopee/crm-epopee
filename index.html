@@ -2622,7 +2622,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
   document.addEventListener('DOMContentLoaded', function(){
     ensureReservedRow();
-    var d=$('fEntryDate'); if(d) d.min = '2025-09-02';
+    var d=$('fEntryDate'); if (d) d.min = todayISO();
     syncReserved(); updateHint();
 
     var s=$('fStatus'); if(s) s.addEventListener('change', syncReserved);
