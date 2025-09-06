@@ -2369,7 +2369,7 @@ async function pingHistoryApi(){
   try{
     const b = (window.buildingSelect && buildingSelect.value) || 'A';
     const f = (window.floorSelect && floorSelect.value) || 'RDC';
-   const urls = [
+    const urls = [
       `/api/history-list?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f)}`,
       `/api/history/list?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f)}`
     ];
@@ -2382,17 +2382,19 @@ async function pingHistoryApi(){
   }catch(_){}
   return false;
 }
-+document.addEventListener('DOMContentLoaded', async ()=>{
- const ok = await pingHistoryApi();
+
+document.addEventListener('DOMContentLoaded', async ()=>{
+  const ok = await pingHistoryApi();
   ['historySave','historySavePane'].forEach(id=>{
     const el = document.getElementById(id);
     if (el && !ok){
       el.disabled = true;
-     el.title = 'Endpoints /api/history-* indisponibles côté serveur.';
+      el.title = 'Endpoints /api/history-* indisponibles côté serveur.';
     }
   });
 });
 </script>
+
   
 <!-- 🚨 MODALE LISTE STATUT — en dehors de <script> et avant </body> -->
 <div class="modal" id="statusModal" aria-hidden="true">
