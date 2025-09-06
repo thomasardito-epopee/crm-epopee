@@ -1017,7 +1017,9 @@ if (fStatus) {
       const showPreavis = !isEvent && (e.target.value === "Préavis");
       const pr = document.getElementById("preavisRow");
       if (pr) pr.style.display = showPreavis ? "grid" : "none";
-    } catch (_) {}
+    } catch (_) {}  }); // <-- FIN du handler 'change'
+}     // <-- FIN du if (fStatus)
+
 
     // --- appliquer la couleur par défaut du nouveau statut
     try {
