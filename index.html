@@ -3127,16 +3127,6 @@ async function renderHistoryPanel(){
         };
       });
     })
-    .catch(err=>{
-      box.innerHTML = `<div class="hint" style="color:#b00020">${err.message || 'Erreur de chargement'}</div>`;
-    });
-}
-
-      })
-      .catch(err => {
-        box.innerHTML = `<div class="hint" style="color:#b00020">${err.message || 'Erreur de chargement'}</div>`;
-      });
-  }
 
   // Boutons de la section
   document.addEventListener('DOMContentLoaded', () => {
