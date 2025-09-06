@@ -2932,8 +2932,9 @@ function persistEntry(iso) {
   }
 
  async function restoreSnapshot(building, floor, at) {
-  const token   = sessionStorage.getItem('ADMIN_TOKEN') || '';
-  const headers = { ...(token ? { authorization: 'Bearer ' + token } : {}) };
+ let token = "";
+try { token = sessionStorage.getItem('ADMIN_TOKEN') || ""; } catch(_) {}
+const headers = { ...(token ? { authorization: 'Bearer ' + token } : {}) };
 
   // 1) Essai "lecture d’un snapshot" (sans mutation serveur)
   async function tryFetchSnapshot() {
