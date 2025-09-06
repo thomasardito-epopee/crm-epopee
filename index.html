@@ -3092,64 +3092,76 @@ document.addEventListener('DOMContentLoaded', function(){
       return d.toLocaleString();
     } catch { return String(v); }
   }
-  function renderHistorySidebar() {
-    const b = getBuilding();
-    const f = getFloor();
-    const box = document.getElementById('historyListSide');
-    if (!box) return;
+ function renderHistorySidebar(){
+  const b = getBuilding();
+  const f = getFloor();
+  const box = document.getElementById('historyListSide');
+  if (!box) return Promise.resolve();
 
-    box.innerHTML = '<div class="hint">Chargement…</div>';
+  box.innerHTML = '<div class="hint">Chargement…</div>';
 
-    fetchHistoryList(b, f)
-      .then(items => {
-        if (!items.length) {
-          box.innerHTML = '<div class="hint">Aucune version encore.</div>';
-          return;
-        }
-        box.innerHTML = `
-          <table style="width:100%; border-collapse:collapse; font-size:12px">
-            <thead>
-              <tr>
-                <th style="text-align:left; padding:6px 8px;">Date</th>
-                <th style="text-align:left; padding:6px 8px;">Note</th>
-                <th style="text-align:right; padding:6px 8px;">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${items.map(it => {
-                const at   = it.at || it.created_at || it.timestamp || '';
-                const date = formatWhen(it.created_at || it.at || it.timestamp || it.date);
-                const note = it.note ? String(it.note) : '';
-                return `
-                  <tr>
-                    <td style="padding:6px 8px; white-space:nowrap;">${date}</td>
-                    <td style="padding:6px 8px; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${note}</td>
-                    <td style="padding:6px 8px; text-align:right;">
-                     <button class="btn pill restore" data-restore="${at}">Restaurer</button>
-                    </td>
-                  </tr>`;
-              }).join('')}
-            </tbody>
-          </table>
-        `;
+  return fetchHistoryList(b, f)
+    .then(items => {
+      if (!items.length) {
+        box.innerHTML = '<div class="hint">Aucune version encore.</div>';
+        return;
+      }
+      box.innerHTML = `
+        <table style="width:100%; border-collapse:collapse; font-size:12px">
+          <thead>
+            <tr>
+              <th style="text-align:left; padding:6px 8px;">Date</th>
+              <th style="text-align:left; padding:6px 8px;">Note</th>
+              <th style="text-align:right; padding:6px 8px;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${items.map(it=>{
+              const at   = it.at || it.created_at || it.timestamp || '';
+              const date = formatWhen(it.created_at || it.at || it.timestamp || it.date);
+              const note = it.note ? String(it.note) : '';
+              return `
+                <tr>
+                  <td style="padding:6px 8px; white-space:nowrap;">${date}</td>
+                  <td style="padding:6px 8px; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${note}</td>
+                  <td style="padding:6px 8px; text-align:right;">
+                    <button class="btn pill restore" data-restore="${at}">Restaurer</button>
+                  </td>
+                </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
 
-        box.querySelectorAll('button[data-restore]').forEach(btn=>{
-  btn.onclick = async () => {
-    const b = getBuilding(), f = getFloor(); // lit bâtiment/étage au moment du clic
-    const t = btn.textContent;               // mémorise le libellé actuel
-
-    btn.disabled = true;                     // empêche les doubles clics
-    btn.textContent = '…';                   // petit feedback visuel (loader)
-
-    try {
-      await restoreSnapshot(b, f, btn.dataset.restore);  // lance la resto
-    } finally {
-      // se déclenche même en cas d’erreur → on remet le bouton comme avant
-      btn.disabled = false;
-      btn.textContent = t;
-    }
-  };
-});
+      // ⬇️ même handler qu’au-dessus
+      box.querySelectorAll('button[data-restore]').forEach(btn=>{
+        btn.onclick = async () => {
+          const label = btn.textContent;
+          btn.disabled = true;
+          btn.classList.add('loading');
+          try {
+            await restoreSnapshot(b, f, btn.dataset.restore);
+            btn.classList.remove('loading');
+            btn.classList.add('success','flash');
+            btn.textContent = 'OK';
+            setTimeout(()=>{
+              btn.classList.remove('success','flash');
+              btn.textContent = label;
+              btn.disabled = false;
+            }, 800);
+          } catch(e){
+            btn.classList.remove('loading');
+            btn.disabled = false;
+            btn.textContent = label;
+            alert('Restauration impossible (endpoint non joignable).');
+          }
+        };
+      });
+    })
+    .catch(err=>{
+      box.innerHTML = `<div class="hint" style="color:#b00020">${err.message || 'Erreur de chargement'}</div>`;
+    });
+}
 
       })
       .catch(err => {
