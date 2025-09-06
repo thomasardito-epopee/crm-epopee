@@ -458,6 +458,59 @@ body.history-mode #historyPane{
 @media (hover:none), (pointer:coarse){
   .date-open{ display:none; } /* Mobile: keep native picker */
 }
+/* ==== Historique – polish ==== */
+
+/* Bouton "Sauvegarder maintenant" en bleu + effet */
+#historyPane #historySave,
+#historySection #historySave{
+  background: var(--blue);
+  color:#fff;
+  border-color: transparent;
+}
+
+/* Bouton Restaurer en pilule, hover/active */
+.btn.pill.restore{
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background:#fff;
+}
+.btn.pill.restore:hover{ box-shadow:0 6px 18px rgba(0,0,0,.06) }
+.btn.pill.restore:active{ transform: translateY(1px) }
+
+/* État "loading" (spinner simple) */
+.btn.loading{ position:relative; color:transparent !important }
+.btn.loading::after{
+  content:"";
+  position:absolute; inset:auto;
+  top:50%; left:50%; width:14px; height:14px;
+  transform:translate(-50%,-50%);
+  border:2px solid currentColor; border-right-color:transparent;
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{ to{ transform:translate(-50%,-50%) rotate(360deg) } }
+
+/* Icône refresh homogène + rotation pendant chargement */
+.board .iconbtn.refresh{ font-size:15px }
+.board .iconbtn.refresh[aria-busy="true"]{
+  animation:btnspin .8s linear infinite;
+}
+@keyframes btnspin{ to{ transform:rotate(360deg) } }
+
+/* Table de l'historique pleine largeur, sans max-height */
+#historyPane .table{
+  max-height:none !important;
+  overflow:visible !important;
+}
+#historyPane .table table{ font-size:13px }
+#historyPane .table tbody tr:hover{
+  background:#f8f8f9;
+}
+#historyPane .table td, 
+#historyPane .table th{
+  padding:10px 12px !important;
+}
 
 </style>
 </head>
