@@ -2918,85 +2918,83 @@ document.addEventListener('DOMContentLoaded', function(){
     if (!r.ok) throw new Error('Autosave: échec snapshot');
     return r.json().catch(() => ({}));
   }
- function renderHistoryPanel(){
-  const b = getBuilding();
-  const f = getFloor();
+
+function formatWhen(v){
+  try{ const d = new Date(v||Date.now()); return d.toLocaleString(); }
+  catch{ return String(v||''); }
+}
+
+async function renderHistoryPanel(){
+  const b = getBuilding(), f = getFloor();
   const box = document.getElementById('historyListSide');
-  if (!box) return Promise.resolve();
+  if(!box) return;
 
   box.innerHTML = '<div class="hint">Chargement…</div>';
 
-  // ⬇️ on retourne la Promise pour pouvoir "await" ailleurs
-  return fetchHistoryList(b, f)
-    .then(items => {
-      if (!items.length){
-        box.innerHTML = '<div class="hint">Aucune version encore.</div>';
-        return;
-      }
-      box.innerHTML = `
-        <table style="width:100%; border-collapse:collapse; font-size:12px">
-          <thead>
-            <tr>
-              <th style="text-align:left; padding:6px 8px;">Date</th>
-              <th style="text-align:left; padding:6px 8px;">Note</th>
-              <th style="text-align:right; padding:6px 8px;">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${items.map(it=>{
-              const at   = it.at || it.created_at || it.timestamp || '';
-              const date = formatWhen(it.created_at || it.at || it.timestamp || it.date);
-              const note = it.note ? String(it.note) : '';
-              return `
-                <tr>
-                  <td style="padding:6px 8px; white-space:nowrap;">${date}</td>
-                  <td style="padding:6px 8px; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${note}</td>
-                  <td style="padding:6px 8px; text-align:right;">
-                    <button class="btn pill restore" data-restore="${at}">Restaurer</button>
-                  </td>
-                </tr>`;
-            }).join('')}
-          </tbody>
-        </table>
-      `;
+  try{
+    const items = await fetchHistoryList(b,f); // essaie /api/history-list puis /api/history/list
+    if (!items.length){
+      box.innerHTML = '<div class="hint">Aucune version encore.</div>';
+      return;
+    }
 
-      // ⬇️ handler avec désactivation + spinner + feedback
-      box.querySelectorAll('button[data-restore]').forEach(btn=>{
-        btn.onclick = async () => {
-          const label = btn.textContent;
-          btn.disabled = true;
-          btn.classList.add('loading');   // spinner CSS
-          try {
-            await restoreSnapshot(b, f, btn.dataset.restore); // (peut recharger la page)
-            // Si pas de reload, petit feedback succès
-            btn.classList.remove('loading');
-            btn.classList.add('success','flash');
-            btn.textContent = 'OK';
-            setTimeout(()=>{
-              btn.classList.remove('success','flash');
-              btn.textContent = label;
-              btn.disabled = false;
-            }, 800);
-          } catch(e){
-            btn.classList.remove('loading');
-            btn.disabled = false;
+    box.innerHTML = `
+      <table style="width:100%; border-collapse:collapse; font-size:12px">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:6px 8px;">Date</th>
+            <th style="text-align:left; padding:6px 8px;">Note</th>
+            <th style="text-align:right; padding:6px 8px;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${items.map(it=>{
+            const at   = it.at || it.created_at || it.timestamp || '';
+            const date = formatWhen(it.created_at || it.at || it.timestamp || it.date);
+            const note = it.note ? String(it.note) : '';
+            return `
+              <tr>
+                <td style="padding:6px 8px; white-space:nowrap;">${date}</td>
+                <td style="padding:6px 8px; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${note}</td>
+                <td style="padding:6px 8px; text-align:right;">
+                  <button class="btn pill restore" data-restore="${at}">Restaurer</button>
+                </td>
+              </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+
+    // Handler "Restaurer" (désactive + spinner + feedback)
+    box.querySelectorAll('button[data-restore]').forEach(btn=>{
+      btn.onclick = async () => {
+        const label = btn.textContent;
+        btn.disabled = true;
+        btn.classList.add('loading');
+        try {
+          await restoreSnapshot(b, f, btn.dataset.restore); // peut recharger la page
+          // si pas de reload : feedback
+          btn.classList.remove('loading');
+          btn.classList.add('success','flash');
+          btn.textContent = 'OK';
+          setTimeout(()=>{
+            btn.classList.remove('success','flash');
             btn.textContent = label;
-            alert('Restauration impossible (endpoint non joignable).');
-          }
-        };
-      });
-    })
-    .catch(err=>{
-      box.innerHTML = `<div class="hint" style="color:#b00020">${err.message || 'Erreur de chargement'}</div>`;
+            btn.disabled = false;
+          }, 800);
+        } catch(e){
+          btn.classList.remove('loading');
+          btn.disabled = false;
+          btn.textContent = label;
+          alert('Restauration impossible (endpoint non joignable).');
+        }
+      };
     });
-}
 
-      })
-      .catch(err=>{
-        box.innerHTML = `<div class="hint" style="color:#b00020">${err.message || 'Erreur de chargement'}</div>`;
-      });
+  }catch(err){
+    box.innerHTML = `<div class="hint" style="color:#b00020">${err.message || 'Erreur de chargement'}</div>`;
   }
-
+}
   // Ouverture/fermeture via le bouton "Historique" de la topbar
   document.addEventListener('DOMContentLoaded', () => {
     const pane   = document.getElementById('historyPane');
