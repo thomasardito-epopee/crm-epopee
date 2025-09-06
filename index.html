@@ -3230,7 +3230,221 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
 </script>
+<script>
+/* Utilitaires déjà présents dans ton fichier */
+function formatWhen(v){ try{ const d=new Date(v||Date.now()); return d.toLocaleString(); } catch{ return String(v); } }
 
+/* ===== Rendu Historique (panneau gauche) ===== */
+function renderHistoryPanel(){
+  const b = (typeof getBuilding==='function') ? getBuilding() : document.getElementById('buildingSelect').value;
+  const f = (typeof getFloor==='function')    ? getFloor()    : document.getElementById('floorSelect').value;
+  const box = document.getElementById('historyListPane');
+  if (!box) return Promise.resolve();
+
+  box.innerHTML = '<div class="hint">Chargement…</div>';
+
+  return fetchHistoryList(b, f).then(items=>{
+    if (!items.length){
+      box.innerHTML = '<div class="hint">Aucune version encore.</div>';
+      return;
+    }
+    box.innerHTML = `
+      <table style="width:100%; border-collapse:collapse; font-size:12px">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:6px 8px;">Date</th>
+            <th style="text-align:left; padding:6px 8px;">Note</th>
+            <th style="text-align:right; padding:6px 8px;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${items.map(it=>{
+            const at   = it.at || it.created_at || it.timestamp || '';
+            const date = formatWhen(it.created_at || it.at || it.timestamp || it.date);
+            const note = it.note ? String(it.note) : '';
+            return `
+              <tr>
+                <td style="padding:6px 8px; white-space:nowrap;">${date}</td>
+                <td style="padding:6px 8px; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${note}</td>
+                <td style="padding:6px 8px; text-align:right;">
+                  <button class="btn pill restore" data-restore="${at}">Restaurer</button>
+                </td>
+              </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+
+    // Handler "Restaurer" : désactive + spinner + flash vert
+    box.querySelectorAll('button[data-restore]').forEach(btn=>{
+      btn.onclick = async () => {
+        const label = btn.textContent;
+        btn.disabled = true;
+        btn.classList.add('loading');
+        try{
+          await restoreSnapshot(b, f, btn.dataset.restore); // peut recharger la page
+          // si pas de reload :
+          btn.classList.remove('loading');
+          btn.classList.add('success','flash');
+          btn.textContent = 'OK';
+          setTimeout(()=>{
+            btn.classList.remove('success','flash');
+            btn.textContent = label;
+            btn.disabled = false;
+          }, 800);
+        }catch(e){
+          btn.classList.remove('loading');
+          btn.disabled = false;
+          btn.textContent = label;
+          alert('Restauration impossible (endpoint non joignable).');
+        }
+      };
+    });
+  }).catch(err=>{
+    box.innerHTML = `<div class="hint" style="color:#b00020">${err.message || 'Erreur de chargement'}</div>`;
+  });
+}
+
+/* ===== Rendu Historique "compact" (si jamais tu le réaffiches ailleurs) ===== */
+function renderHistorySidebar(){
+  const b = (typeof getBuilding==='function') ? getBuilding() : document.getElementById('buildingSelect').value;
+  const f = (typeof getFloor==='function')    ? getFloor()    : document.getElementById('floorSelect').value;
+  const box = document.getElementById('historyListSide');
+  if (!box) return Promise.resolve(); // rien à faire si la section n’existe pas
+
+  box.innerHTML = '<div class="hint">Chargement…</div>';
+
+  return fetchHistoryList(b, f).then(items=>{
+    if (!items.length){
+      box.innerHTML = '<div class="hint">Aucune version encore.</div>';
+      return;
+    }
+    box.innerHTML = `
+      <table style="width:100%; border-collapse:collapse; font-size:12px">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:6px 8px;">Date</th>
+            <th style="text-align:left; padding:6px 8px;">Note</th>
+            <th style="text-align:right; padding:6px 8px;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${items.map(it=>{
+            const at   = it.at || it.created_at || it.timestamp || '';
+            const date = formatWhen(it.created_at || it.at || it.timestamp || it.date);
+            const note = it.note ? String(it.note) : '';
+            return `
+              <tr>
+                <td style="padding:6px 8px; white-space:nowrap;">${date}</td>
+                <td style="padding:6px 8px; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${note}</td>
+                <td style="padding:6px 8px; text-align:right;">
+                  <button class="btn pill restore" data-restore="${at}">Restaurer</button>
+                </td>
+              </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+
+    box.querySelectorAll('button[data-restore]').forEach(btn=>{
+      btn.onclick = async () => {
+        const label = btn.textContent;
+        btn.disabled = true;
+        btn.classList.add('loading');
+        try{
+          await restoreSnapshot(b, f, btn.dataset.restore);
+          btn.classList.remove('loading');
+          btn.classList.add('success','flash');
+          btn.textContent = 'OK';
+          setTimeout(()=>{
+            btn.classList.remove('success','flash');
+            btn.textContent = label;
+            btn.disabled = false;
+          }, 800);
+        }catch(e){
+          btn.classList.remove('loading');
+          btn.disabled = false;
+          btn.textContent = label;
+          alert('Restauration impossible (endpoint non joignable).');
+        }
+      };
+    });
+  }).catch(err=>{
+    box.innerHTML = `<div class="hint" style="color:#b00020">${err.message || 'Erreur de chargement'}</div>`;
+  });
+}
+
+/* ===== Wiring des boutons (ouvrir/fermer/refresh/save) ===== */
+document.addEventListener('DOMContentLoaded', () => {
+  const pane   = document.getElementById('historyPane');
+  const left   = document.getElementById('leftPanel');
+  const btnTop = document.getElementById('btnHistory');
+
+  const back   = document.getElementById('historyBackPane');
+  const save   = document.getElementById('historySavePane');
+  const ref    = document.getElementById('historyRefreshPane');
+
+  if (btnTop){
+    btnTop.onclick = () => {
+      const activating = !document.body.classList.contains('history-mode');
+      document.body.classList.toggle('history-mode', activating);
+
+      if (activating){
+        document.body.classList.remove('board-mode'); // quitte le dashboard réduit si ouvert
+        if (pane && pane.parentElement !== left) left.appendChild(pane);
+        pane.style.display = 'block';
+        renderHistoryPanel();
+        // masque l’édition pendant l’historique
+        const adminSection = document.getElementById('adminSection');
+        if (adminSection) adminSection.style.display = 'none';
+      } else {
+        pane.style.display = 'none';
+        const adminSection = document.getElementById('adminSection');
+        if (adminSection){
+          const showEdition = (typeof isAdmin!=='undefined' && isAdmin) && !document.body.classList.contains('board-mode');
+          adminSection.style.display = showEdition ? 'block' : 'none';
+        }
+      }
+    };
+  }
+
+  if (back){
+    back.onclick = () => {
+      document.body.classList.remove('history-mode');
+      if (pane) pane.style.display = 'none';
+      const adminSection = document.getElementById('adminSection');
+      if (adminSection){
+        const showEdition = (typeof isAdmin!=='undefined' && isAdmin) && !document.body.classList.contains('board-mode');
+        adminSection.style.display = showEdition ? 'block' : 'none';
+      }
+    };
+  }
+
+  if (ref){
+    ref.onclick = async () => {
+      ref.setAttribute('aria-busy','true');        // l’icône tourne
+      await renderHistoryPanel();
+      ref.removeAttribute('aria-busy');
+    };
+  }
+
+  if (save){
+    save.onclick = async () => {
+      const b = (typeof getBuilding==='function') ? getBuilding() : document.getElementById('buildingSelect').value;
+      const f = (typeof getFloor==='function')    ? getFloor()    : document.getElementById('floorSelect').value;
+      save.classList.add('loading');
+      try{
+        await saveSnapshot(b, f, 'manuel');
+        await renderHistoryPanel();
+      }catch{
+        alert('Échec de la sauvegarde');
+      }finally{
+        save.classList.remove('loading');
+      }
+    };
+  }
+});
+</script>
 
 </body>
 </html>
