@@ -1522,24 +1522,27 @@ function renderDashboardFull(){
   ].join('');
 
   board.innerHTML = `
-    <div class="board-actions">
-      <button class="iconbtn" id="boardMin"   title="Réduire">⤢</button>
-      <button class="iconbtn" id="boardClose" title="Fermer">✕</button>
-    </div>
-    <div class="fs-toolbar">
-      <div class="fs-left">
-        <strong style="font-size:14px">Dashboard</strong>
-        <label>Vue :</label>
-        <select id="kpiScopeFS" class="select">${scopeOptions}</select>
+    <h4>Dashboard</h4>
+    <div class="sub">
+      <div class="scope" style="gap:12px; flex-wrap:wrap">
+        <span>Vue :</span>
+        <select id="kpiScope">
+          ${Object.keys(BUILDING_FLOORS).map(b => `<option value="${b}"${currentScope===b?' selected':''}>Bâtiment ${b}</option>`).join('')}
+          <option value="all"${currentScope==='all'?' selected':''}>Statistiques du village</option>
+        </select>
+
+        <span>Résident :</span>
+        <select id="tenantFilter">${tenantOptions}</select>
       </div>
-    <div class="fs-right">
-  <label style="font-size:12px">Cible occupation</label>
-  <input type="range" id="fsOccTarget" min="50" max="100" step="1" value="85">
-  <span class="hint" id="fsOccLabel">85%</span>
-  <button class="btn" id="fsExport">Exporter CSV</button>
-</div>
     </div>
-    <div class="grid-kpis-4" id="kpisFS"></div>
+    <div class="board-actions inpanel">
+      <button class="iconbtn" id="boardBack" title="Revenir à l’édition">←</button>
+      <button class="iconbtn" id="boardPop"  title="Ouvrir le dashboard complet">↗</button>
+    </div>
+
+    <div class="kpis" id="kpis"></div>
+    <!-- (le reste de ton HTML du board reste inchangé) -->
+
 
     <div class="grid2" style="margin-top:10px">
       <div class="card">
