@@ -995,7 +995,14 @@ function buildPalette(){
   PALETTE.forEach(hex=>{
     const d=document.createElement('button');
     d.type="button"; d.className="swatch"; d.style.background=hex; d.dataset.color=hex; d.title=hex;
-    d.onclick=()=> setColor(hex);
+    d.onclick=()=> {
+      setColor(hex);
+      // ← marque la couleur comme personnalisée par l'utilisateur
+      if (currentLayer) {
+        const ep = layerProps(currentLayer) || {};
+        setLayerProps(currentLayer, { color: hex, customColor: true });
+      }
+    };
     paletteEl.appendChild(d);
   });
 }
