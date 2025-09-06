@@ -499,18 +499,23 @@ body.history-mode #historyPane{
 @keyframes btnspin{ to{ transform:rotate(360deg) } }
 
 /* Table de l'historique pleine largeur, sans max-height */
-#historyPane .table{
-  max-height:none !important;
-  overflow:visible !important;
-}
-#historyPane .table table{ font-size:13px }
-#historyPane .table tbody tr:hover{
-  background:#f8f8f9;
-}
-#historyPane .table td, 
-#historyPane .table th{
-  padding:10px 12px !important;
-}
+<!-- Panneau Historique (affiché à la demande) -->
+<div id="historyPane" class="board in-panel" style="display:none">
+  <div class="board-actions inpanel">
+    <button class="iconbtn" id="historyBackPane" title="Revenir à l’édition">←</button>
+    <button class="iconbtn refresh" id="historyRefreshPane" title="Rafraîchir" aria-label="Rafraîchir">↻</button>
+  </div>
+
+  <h4>Historique</h4>
+  <div class="actions" style="margin:6px 0 8px 0;">
+    <button class="btn" id="historySavePane">Sauvegarder maintenant</button>
+  </div>
+
+  <!-- ⚠️ ID unique côté panneau -->
+  <div id="historyListPane" class="table tight">
+    <div class="hint">Aucune donnée pour le moment…</div>
+  </div>
+</div>
 
 </style>
 </head>
