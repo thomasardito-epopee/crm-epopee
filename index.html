@@ -3617,11 +3617,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         )).join('') + '</ul>')
       : '<div style="padding:10px 14px;">Aucune version encore.</div>';
-    host.insertAdjacentHTML('afterbegin',
-      `<div id="__history_fallback" style="border:1px solid #dde3ee;border-radius:10px;margin:10px;background:#fff">
-         <div style="font-weight:600;padding:10px 14px;border-bottom:1px solid #eef2f7">Historique (fallback minimal)</div>
-         ${html}
-       </div>`);
+   const old = document.getElementById('__history_fallback');
+if (old) old.remove();
+host.insertAdjacentHTML('afterbegin',
+  `<div id="__history_fallback" ...>...</div>`);
     console.log('[History] Fallback rendu.');
   }
 
