@@ -859,8 +859,8 @@ try{
     $("statusText").textContent = "Sauvegardé sur la base ✅";
     setTimeout(()=> $("statusText").textContent = isAdmin ? "Mode admin" : "Mode visiteur", 900);
     try { __lastSnapSig ||= currentSig(); } catch(_) {}
-  }catch(e){
-    console.warn("Sync distant KO → local OK", e);
+ }catch(e){
+ console.warn("Sync distant KO → local éventuel OK", e);
     $("statusText").textContent = "Sauvegardé en local (offline) ☁️";
     setTimeout(()=> $("statusText").textContent = isAdmin ? "Mode admin" : "Mode visiteur", 1200);
     try { renderHistorySidebar(); } catch(_) {}
