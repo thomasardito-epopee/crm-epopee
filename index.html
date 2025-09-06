@@ -608,7 +608,7 @@ body.history-mode #historyPane{
 <div id="historyPane" class="board in-panel" style="display:none">
   <div class="board-actions inpanel">
     <button class="iconbtn" id="historyBackPane" title="Revenir à l’édition">←</button>
-    <button class="iconbtn refresh" id="historyRefreshPane" title="Rafraîchir" aria-label="Rafraîchir">↻</button>
+    <button class="iconbtn refresh" id="historyRefreshPanePane" title="Rafraîchir" aria-label="Rafraîchir">↻</button>
   </div>
 
   <h4>Historique</h4>
@@ -3009,7 +3009,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnTop = document.getElementById('btnHistory');
   const back   = document.getElementById('historyBackPane');
   const save   = document.getElementById('historySave');
-  const ref    = document.getElementById('historyRefresh');
+  const ref    = document.getElementById('historyRefreshPane');
 
   if (btnTop){
     btnTop.onclick = () => {
@@ -3133,7 +3133,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Boutons de la section
   document.addEventListener('DOMContentLoaded', () => {
     const btnSave = document.getElementById('historySave');
-    const btnRef  = document.getElementById('historyRefresh');
+    const btnRef  = document.getElementById('historyRefreshPane');
 
     if (btnSave) btnSave.onclick = async () => {
       const b = getBuilding(), f = getFloor();
@@ -3364,7 +3364,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const back   = document.getElementById('historyBackPane');
   const save   = document.getElementById('historySavePane');
-  const ref    = document.getElementById('historyRefreshPane');
+  const ref    = document.getElementById('historyRefreshPanePane');
 
   if (btnTop){
     btnTop.onclick = () => {
