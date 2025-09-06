@@ -16,6 +16,7 @@
   status = 200
   force = true
   # --- History API
+
 [[redirects]]
   from = "/api/history-list"
   to   = "/.netlify/functions/history"
