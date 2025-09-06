@@ -2778,6 +2778,19 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 
+<script>
+function persistEntry(iso) {
+  try {
+    if (!window.currentLayer) return;
+    // On délègue à setLayerProps (déjà patchée pour n'ajouter entryDate
+    // que si statut === "Réservé" et label !== "Evenementiel")
+    window.setLayerProps(currentLayer, { entryDate: iso || '' });
+    // Feedback visuel + sauvegarde
+    if (typeof applyStyle === 'function') try { applyStyle(currentLayer); } catch (_) {}
+    if (typeof saveLocal === 'function')  try { saveLocal(); } catch (_) {}
+  } catch (_) {}
+}
+</script>
 
 <script>
 // === Wrapper setLayerProps : garantit qu'entryDate n'est pas perdu par "Appliquer" ===
