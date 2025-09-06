@@ -675,6 +675,26 @@ let filterEventOnly = false; // tout afficher par défaut
 let __autoTimer = null;
 let __lastSnapSig = '';   // signature du dernier snapshot stocké côté DB
 let __lastChangeAt = 0;   // timestamp de la dernière modif (après saveLocal)
+// === Filtre Résident (global)
+window.TENANT_FILTER = "";  // "" = Tous
+
+// Normalisation déjà dispo plus bas, mais on se protège
+function __norm(s){
+  try{ return (s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim(); }
+  catch(_){ return (s||"").toLowerCase().trim(); }
+}
+function tenantMatch(ep){
+  return !window.TENANT_FILTER || __norm(ep?.tenant||"") === __norm(window.TENANT_FILTER);
+}
+
+// Retourne la liste triée des résidents connus (hors "Vacant")
+function allTenants(){
+  const stats = collectTenantStats(); // déjà existant dans ton code
+  return [...stats.values()]
+    .map(v => v.name)
+    .filter(name => __norm(name) && __norm(name) !== "vacant")
+    .sort((a,b)=> a.localeCompare(b, 'fr', {sensitivity:"base"}));
+}
 
 
 // ===== Helpers
