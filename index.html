@@ -1276,6 +1276,8 @@ startAutosave();
 
 // Dashboard dans le panneau de gauche (visiteur & admin)
 $("btnAdminBoard").onclick = ()=>{
+ // si l'historique était ouvert, on le ferme pour afficher le dashboard
+document.body.classList.remove("history-mode");
   const b = $("visitorBoard");
   const left = $("leftPanel");
 
