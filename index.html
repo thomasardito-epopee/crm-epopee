@@ -3028,6 +3028,38 @@ document.addEventListener('DOMContentLoaded', function(){
     const obs = new MutationObserver(syncHistoryVisibility);
     obs.observe(document.body, { childList: true, subtree: true });
   })();
+ 
+  // Enregistrement manuel : push des formes + snapshot "manuel"
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('btnSaveNow');
+    if (!btn) return;
+
+    btn.onclick = async () => {
+      try {
+        // 1) sauvegarde des formes (local + Neon via /api/spaces/batch)
+        await saveLocal();
+
+        // 2) snapshot pour la liste d'historique
+        const b = (typeof getBuilding === 'function') ? getBuilding() : document.getElementById('buildingSelect').value;
+        const f = (typeof getFloor === 'function') ? getFloor() : document.getElementById('floorSelect').value;
+        await saveSnapshot(b, f, 'manuel');
+
+        // 3) feedback + rafraîchit la liste si l’historique est ouvert
+        const t = btn.textContent;
+        btn.textContent = 'Enregistré ✓';
+        btn.classList.add('success','flash');
+        setTimeout(() => { btn.textContent = t; btn.classList.remove('success','flash'); }, 900);
+
+        if (document.body.classList.contains('history-mode')) {
+          (typeof renderHistoryPanel === 'function') && renderHistoryPanel();
+        }
+      } catch (e) {
+        alert("Échec de l’enregistrement");
+        console.error(e);
+      }
+    };
+  });
+
 </script>
 
 
