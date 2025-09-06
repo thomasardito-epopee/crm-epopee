@@ -3272,47 +3272,43 @@ document.addEventListener('DOMContentLoaded', () => {
     obs.observe(document.body, { childList: true, subtree: true });
   })();
  
- // Enregistrement manuel robuste (local OK, snapshot tenté)
 document.addEventListener('DOMContentLoaded', () => {
   const btn = document.getElementById('btnSaveNow');
   if (!btn) return;
 
   btn.onclick = async () => {
-    const t = btn.textContent;
+    const label = btn.textContent;
     btn.disabled = true;
-    btn.classList.add('loading'); // petit spinner CSS sur .btn.loading
+    btn.classList.add('loading');
 
     try {
-      // 1) formes => local + /api/spaces/batch (saveLocal ne jette pas d’erreur)
+      // 1) Toujours sauver localement + tenter la sync /api/spaces/batch (déjà géré par saveLocal)
       await saveLocal();
 
-      // 2) snapshot serveur (meilleur effort)
+      // 2) Essayer le snapshot d'historique (silencieux si l'API n'existe pas)
       const b = getBuilding(), f = getFloor();
-      try { await saveSnapshot(b, f, 'manuel'); } catch(e){ console.warn('snapshot KO', e); }
+      try { await saveSnapshot(b, f, 'manuel'); } catch (_) {}
 
-      // 3) feedback
+      // 3) Feedback UX
       btn.classList.remove('loading');
-      btn.classList.add('success','flash');
+      btn.classList.add('success', 'flash');
       btn.textContent = 'Enregistré ✓';
-      setTimeout(() => { btn.textContent = t; btn.classList.remove('success','flash'); }, 900);
+      setTimeout(() => {
+        btn.textContent = label;
+        btn.classList.remove('success', 'flash');
+      }, 900);
 
-      // 4) si l’historique est ouvert, on rafraîchit la liste
-      if (document.body.classList.contains('history-mode')) await renderHistoryPanel();
-
-      // 5) message discret
-      const s = document.getElementById('statusText');
-      if (s){ s.textContent = 'Sauvegardé (local + distant si dispo)'; setTimeout(()=> s.textContent = (document.body.classList.contains('admin')?'Mode admin':'Mode visiteur'), 1500); }
-
-    } catch (e) {
-      btn.classList.remove('loading');
-      alert("Échec de l’enregistrement local");
+      // 4) Rafraîchir l’historique si ouvert
+      if (document.body.classList.contains('history-mode')) {
+        try { await renderHistoryPanel(); } catch (_) {}
+      }
     } finally {
       btn.disabled = false;
     }
   };
 });
-
 </script>
+  
 <script>
 /* Utilitaires déjà présents dans ton fichier */
 function formatWhen(v){ try{ const d=new Date(v||Date.now()); return d.toLocaleString(); } catch{ return String(v); } }
