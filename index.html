@@ -3165,36 +3165,45 @@ document.addEventListener('DOMContentLoaded', () => {
     obs.observe(document.body, { childList: true, subtree: true });
   })();
  
-  // Enregistrement manuel : push des formes + snapshot "manuel"
-  document.addEventListener('DOMContentLoaded', () => {
-    const btn = document.getElementById('btnSaveNow');
-    if (!btn) return;
+ // Enregistrement manuel robuste (local OK, snapshot tenté)
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('btnSaveNow');
+  if (!btn) return;
 
-    btn.onclick = async () => {
-      try {
-        // 1) sauvegarde des formes (local + Neon via /api/spaces/batch)
-        await saveLocal();
+  btn.onclick = async () => {
+    const t = btn.textContent;
+    btn.disabled = true;
+    btn.classList.add('loading'); // petit spinner CSS sur .btn.loading
 
-        // 2) snapshot pour la liste d'historique
-        const b = (typeof getBuilding === 'function') ? getBuilding() : document.getElementById('buildingSelect').value;
-        const f = (typeof getFloor === 'function') ? getFloor() : document.getElementById('floorSelect').value;
-        await saveSnapshot(b, f, 'manuel');
+    try {
+      // 1) formes => local + /api/spaces/batch (saveLocal ne jette pas d’erreur)
+      await saveLocal();
 
-        // 3) feedback + rafraîchit la liste si l’historique est ouvert
-        const t = btn.textContent;
-        btn.textContent = 'Enregistré ✓';
-        btn.classList.add('success','flash');
-        setTimeout(() => { btn.textContent = t; btn.classList.remove('success','flash'); }, 900);
+      // 2) snapshot serveur (meilleur effort)
+      const b = getBuilding(), f = getFloor();
+      try { await saveSnapshot(b, f, 'manuel'); } catch(e){ console.warn('snapshot KO', e); }
 
-        if (document.body.classList.contains('history-mode')) {
-          (typeof renderHistoryPanel === 'function') && renderHistoryPanel();
-        }
-      } catch (e) {
-        alert("Échec de l’enregistrement");
-        console.error(e);
-      }
-    };
-  });
+      // 3) feedback
+      btn.classList.remove('loading');
+      btn.classList.add('success','flash');
+      btn.textContent = 'Enregistré ✓';
+      setTimeout(() => { btn.textContent = t; btn.classList.remove('success','flash'); }, 900);
+
+      // 4) si l’historique est ouvert, on rafraîchit la liste
+      if (document.body.classList.contains('history-mode')) await renderHistoryPanel();
+
+      // 5) message discret
+      const s = document.getElementById('statusText');
+      if (s){ s.textContent = 'Sauvegardé (local + distant si dispo)'; setTimeout(()=> s.textContent = (document.body.classList.contains('admin')?'Mode admin':'Mode visiteur'), 1500); }
+
+    } catch (e) {
+      btn.classList.remove('loading');
+      alert("Échec de l’enregistrement local");
+    } finally {
+      btn.disabled = false;
+    }
+  };
+});
 
 </script>
 <script>
