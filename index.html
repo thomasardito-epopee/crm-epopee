@@ -839,14 +839,14 @@ function exportGeo(){ return { key: currentKey, features: drawn.getLayers().map(
 function importGeo(data){ drawn.clearLayers(); (data?.features||[]).forEach(fromPlain); }
 
 async function saveLocal(){
- // 1) LocalStorage tolérant au quota
+  // Sécurise localStorage même en Private/Quota
   try {
     localStorage.setItem(storageKey(currentKey), JSON.stringify(exportGeo()));
   } catch (e) {
-    console.warn("LocalStorage KO (quota ?), on continue en distant seulement", e);
+    console.warn('localStorage indisponible (quota / private mode ?)', e);
   }
-  // 2) Sync distante (meilleur effort)
-try{
+
+  try {
     const token = sessionStorage.getItem('ADMIN_TOKEN') || "";
     const data = exportGeo();
     const [building, floor] = currentKey.split("|");
@@ -859,8 +859,8 @@ try{
     $("statusText").textContent = "Sauvegardé sur la base ✅";
     setTimeout(()=> $("statusText").textContent = isAdmin ? "Mode admin" : "Mode visiteur", 900);
     try { __lastSnapSig ||= currentSig(); } catch(_) {}
- }catch(e){
- console.warn("Sync distant KO → local éventuel OK", e);
+  } catch (e) {
+    console.warn("Sync distant KO → local OK", e);
     $("statusText").textContent = "Sauvegardé en local (offline) ☁️";
     setTimeout(()=> $("statusText").textContent = isAdmin ? "Mode admin" : "Mode visiteur", 1200);
     try { renderHistorySidebar(); } catch(_) {}
