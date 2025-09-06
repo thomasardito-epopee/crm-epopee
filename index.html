@@ -3136,13 +3136,30 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (save){
-    save.onclick = async () => {
-      const b = getBuilding(), f = getFloor();
-      try { await saveSnapshot(b, f, 'manuel'); await renderHistoryPanel(); }
-      catch { alert('Échec de la sauvegarde'); }
-    };
-  }
-});
+    if (save){
+  save.onclick = async () => {
+    const b = getBuilding(), f = getFloor();
+
+    // 1) Toujours sauver localement d'abord
+    try { await saveLocal(); } catch(_) {}
+
+    // 2) Essayer le snapshot serveur (best effort)
+    try {
+      await saveSnapshot(b, f, 'manuel');
+      await renderHistoryPanel && renderHistoryPanel();
+    } catch (e) {
+      console.warn('Snapshot indisponible sur cette instance', e);
+      const s = document.getElementById('statusText');
+      if (s) {
+        const old = s.textContent;
+        s.textContent = 'Snapshot indisponible — données enregistrées localement';
+        setTimeout(()=> s.textContent = old, 1800);
+      }
+      // pas d’alert bloquante
+    }
+  };
+}
+
 
   function formatWhen(v) {
     try {
