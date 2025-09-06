@@ -850,11 +850,20 @@ try { token = sessionStorage.getItem('ADMIN_TOKEN') || ""; } catch(_) {}
     const data = exportGeo();
     const [building, floor] = currentKey.split("|");
     __lastChangeAt = Date.now();
-    await fetch("/api/spaces/batch", {
+       // Timeout 8s + vérification du code HTTP
+    const controller = new AbortController();
+    const __t = setTimeout(() => controller.abort(), 8000);
+
+    const res = await fetch("/api/spaces/batch", {
       method: "POST",
       headers: { "content-type":"application/json", ...(token ? { "authorization": "Bearer " + token } : {}) },
-      body: JSON.stringify({ building, floor, features: data.features })
+      body: JSON.stringify({ building, floor, features: data.features }),
+      signal: controller.signal
     });
+
+    clearTimeout(__t);
+    if (!res.ok) throw new Error("HTTP " + res.status);
+
     $("statusText").textContent = "Sauvegardé sur la base ✅";
     setTimeout(()=> $("statusText").textContent = isAdmin ? "Mode admin" : "Mode visiteur", 900);
     try { __lastSnapSig ||= currentSig(); } catch(_) {}
