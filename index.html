@@ -1521,6 +1521,12 @@ function renderDashboardFull(){
     `<option value="all"${currentScope==='all'?' selected':''}>Village (tous)</option>`
   ].join('');
 
+    const tenants = allTenants();
+  const tenantOptions = [
+    `<option value="">Tous les résidents</option>`,
+    ...tenants.map(n => `<option value="${n.replace(/"/g,'&quot;')}" ${window.TENANT_FILTER===n?'selected':''}>${n}</option>`)
+  ].join('');
+
   board.innerHTML = `
     <h4>Dashboard</h4>
     <div class="sub">
