@@ -3533,6 +3533,38 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 });
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('btnSaveNow');
+  if (!btn) return;
+
+  btn.onclick = async () => {
+    const label = btn.textContent;
+    btn.disabled = true;
+    btn.classList.add('loading');
+
+    try {
+      await saveLocal(); // local + /api/spaces/batch (géré dans saveLocal)
+      const b = getBuilding(), f = getFloor();
+      try { await saveSnapshot(b, f, 'manuel'); } catch (_) {}
+
+      btn.classList.remove('loading');
+      btn.classList.add('success', 'flash');
+      btn.textContent = 'Enregistré ✓';
+      setTimeout(() => {
+        btn.textContent = label;
+        btn.classList.remove('success', 'flash');
+      }, 900);
+
+      if (document.body.classList.contains('history-mode')) {
+        try { await renderHistoryPanel(); } catch (_) {}
+      }
+    } finally {
+      btn.disabled = false;
+    }
+  };
+});
+</script>
 
 </body>
 </html>
