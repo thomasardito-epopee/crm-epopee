@@ -2932,7 +2932,7 @@ function formatWhen(v){
 
 async function renderHistoryPanel(){
   const b = getBuilding(), f = getFloor();
-  const box = document.getElementById('historyListSide');
+  const box = document.getElementById('historyListPane');
   if(!box) return;
 
   box.innerHTML = '<div class="hint">Chargement…</div>';
@@ -3007,7 +3007,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const pane   = document.getElementById('historyPane');
   const left   = document.getElementById('leftPanel');
   const btnTop = document.getElementById('btnHistory');
-  const back   = document.getElementById('historyBack');
+  const back   = document.getElementById('historyBackPanePanePanePanePanePanePanePanePanePane');
   const save   = document.getElementById('historySave');
   const ref    = document.getElementById('historyRefresh');
 
@@ -3066,7 +3066,7 @@ document.addEventListener('DOMContentLoaded', () => {
  function renderHistorySidebar(){
   const b = getBuilding();
   const f = getFloor();
-  const box = document.getElementById('historyListSide');
+  const box = document.getElementById('historyListPane');
   if (!box) return Promise.resolve();
 
   box.innerHTML = '<div class="hint">Chargement…</div>';
@@ -3291,7 +3291,7 @@ function renderHistoryPanel(){
 function renderHistorySidebar(){
   const b = (typeof getBuilding==='function') ? getBuilding() : document.getElementById('buildingSelect').value;
   const f = (typeof getFloor==='function')    ? getFloor()    : document.getElementById('floorSelect').value;
-  const box = document.getElementById('historyListSide');
+  const box = document.getElementById('historyListPane');
   if (!box) return Promise.resolve(); // rien à faire si la section n’existe pas
 
   box.innerHTML = '<div class="hint">Chargement…</div>';
@@ -3362,7 +3362,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const left   = document.getElementById('leftPanel');
   const btnTop = document.getElementById('btnHistory');
 
-  const back   = document.getElementById('historyBackPane');
+  const back   = document.getElementById('historyBackPanePanePanePanePanePanePanePanePanePanePanePane');
   const save   = document.getElementById('historySavePane');
   const ref    = document.getElementById('historyRefreshPane');
 
