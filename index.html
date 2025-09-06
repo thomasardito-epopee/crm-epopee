@@ -3574,6 +3574,84 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 });
 </script>
+<script>
+/** WIRE HISTORY BUTTON — hardening layer **/
+(function(){
+  function getB(){ 
+    try { return (window.getBuilding ? getBuilding() : document.querySelector('#buildingSelect')?.value) || 'A'; }
+    catch(_){ return 'A'; }
+  }
+  function getF(){ 
+    try { return (window.getFloor ? getFloor() : document.querySelector('#floorSelect')?.value) || 'RDC'; }
+    catch(_){ return 'RDC'; }
+  }
+
+  async function fetchHistoryList(){
+    const building = getB(), floor = getF();
+    const url = `/api/history-list?building=${encodeURIComponent(building)}&floor=${encodeURIComponent(floor)}`;
+    console.log('[History] GET', url);
+    const res = await fetch(url, { headers:{ 'cache-control':'no-cache' }});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    return res.json();
+  }
+
+  async function safeRenderHistoryPanel(){
+    // 1) Si ta vraie fonction existe, on l'utilise
+    if (typeof window.renderHistoryPanel === 'function') {
+      console.log('[History] renderHistoryPanel() via app');
+      await window.renderHistoryPanel();
+      return;
+    }
+    // 2) Sinon, on fait un fallback minimal pour confirmer le câblage + réseau
+    const list = await fetchHistoryList();
+    const host = document.querySelector('#historyPanel') || document.querySelector('[data-history-panel]') || document.body;
+    const html = Array.isArray(list) && list.length
+      ? ('<ul style="padding:8px 14px;margin:0;">' + list.map(r=>(
+          `<li>${new Date(Number(r.at||r.created_at||Date.now())).toLocaleString()} — ${r.note||''}</li>`
+        )).join('') + '</ul>')
+      : '<div style="padding:10px 14px;">Aucune version encore.</div>';
+    host.insertAdjacentHTML('afterbegin',
+      `<div id="__history_fallback" style="border:1px solid #dde3ee;border-radius:10px;margin:10px;background:#fff">
+         <div style="font-weight:600;padding:10px 14px;border-bottom:1px solid #eef2f7">Historique (fallback minimal)</div>
+         ${html}
+       </div>`);
+    console.log('[History] Fallback rendu.');
+  }
+
+  function wire(){
+    const btn = document.getElementById('btnHistory') 
+             || document.querySelector('[data-action="history"]') 
+             || document.querySelector('button.history, .btn-history');
+    if(!btn){ console.warn('[History] Bouton non trouvé'); return; }
+    if(btn.__wired_history) return;
+    btn.__wired_history = true;
+
+    btn.addEventListener('click', async (ev)=>{
+      console.log('[History] click');
+      // on montre visuellement le mode
+      document.body.classList.add('history-mode');
+      btn.classList.add('loading');
+      try{
+        await safeRenderHistoryPanel();
+      }catch(err){
+        console.error('[History] error', err);
+        alert('Erreur Historique : ' + err.message);
+      }finally{
+        btn.classList.remove('loading');
+      }
+    }, { passive:true });
+
+    console.log('[History] bouton câblé');
+  }
+
+  // Attendre que le DOM soit prêt
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', wire);
+  } else {
+    wire();
+  }
+})();
+</script>
 
 </body>
 </html>
