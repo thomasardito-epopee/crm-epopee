@@ -604,6 +604,23 @@ body.history-mode #historyPane{
 </div>
 <div class="actions"><button id="btnApply" class="btn primary">Appliquer</button>
       </div>
+        <!-- Historique (panneau gauche) -->
+<div id="historyPane" class="board in-panel" style="display:none">
+  <div class="board-actions inpanel">
+    <button class="iconbtn" id="historyBackPane" title="Revenir à l’édition">←</button>
+    <button class="iconbtn refresh" id="historyRefreshPane" title="Rafraîchir" aria-label="Rafraîchir">↻</button>
+  </div>
+
+  <h4>Historique</h4>
+  <div class="actions" style="margin:6px 0 8px 0;">
+    <button class="btn" id="historySavePane">Sauvegarder maintenant</button>
+  </div>
+
+  <div id="historyListPane" class="table tight">
+    <div class="hint">Aucune donnée pour le moment…</div>
+  </div>
+</div>
+
     </aside>
 
     <div id="map"></div>
