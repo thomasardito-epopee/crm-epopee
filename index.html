@@ -2361,7 +2361,39 @@ document.addEventListener('mousedown', (e) => {
 });
 </script>
   
-
+!-- === Détection des endpoints d'historique & désactivation douce des boutons === -->
+<script>
+// Désactive les boutons "Sauvegarder maintenant" si /api/history-* n'est pas exposé côté serveur
+let __HAS_HISTORY_API = false;
+async function pingHistoryApi(){
+  try{
+    const b = (window.buildingSelect && buildingSelect.value) || 'A';
+    const f = (window.floorSelect && floorSelect.value) || 'RDC';
+   const urls = [
+      `/api/history-list?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f)}`,
+      `/api/history/list?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f)}`
+    ];
+    for (const url of urls){
+      try{
+        const r = await fetch(url, { method:'GET' });
+        if (r && (r.ok || r.status === 200)) { __HAS_HISTORY_API = true; return true; }
+      }catch(_){}
+    }
+  }catch(_){}
+  return false;
+}
++document.addEventListener('DOMContentLoaded', async ()=>{
+ const ok = await pingHistoryApi();
+  ['historySave','historySavePane'].forEach(id=>{
+    const el = document.getElementById(id);
+    if (el && !ok){
+      el.disabled = true;
+     el.title = 'Endpoints /api/history-* indisponibles côté serveur.';
+    }
+  });
+});
+</script>
+  
 <!-- 🚨 MODALE LISTE STATUT — en dehors de <script> et avant </body> -->
 <div class="modal" id="statusModal" aria-hidden="true">
   <div class="pad" role="dialog" aria-modal="true" style="max-width:600px;width:90%">
