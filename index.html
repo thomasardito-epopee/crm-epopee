@@ -1863,8 +1863,9 @@ function renderDashboard(){
   `;
 
   $("kpiScope").onchange = () => renderDashboard();
+  $("tenantFilter").onchange = (e)=>{ window.TENANT_FILTER = e.target.value || ""; renderDashboard(); };
   wireBoardActions();
-
+ 
   // Données selon la portée + filtres identiques à la carte
   const feats = getFeaturesForScope($("kpiScope").value);
   const featsFiltered = feats.filter(fe => {
