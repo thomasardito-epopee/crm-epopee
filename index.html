@@ -2794,7 +2794,17 @@ function persistEntry(iso) {
   } catch (_) {}
 }
 </script>
-
+<script>
+function persistEntry(iso) {
+  try {
+    if (!window.currentLayer) return;
+    // setLayerProps est déjà patchée pour ne garder entryDate que si statut = "Réservé"
+    window.setLayerProps(currentLayer, { entryDate: iso || '' });
+    if (typeof applyStyle === 'function') try { applyStyle(currentLayer); } catch (_) {}
+    if (typeof saveLocal === 'function')  try { saveLocal(); } catch (_) {}
+  } catch (_) {}
+}
+</script>
 <script>
 // === Wrapper setLayerProps : garantit qu'entryDate n'est pas perdu par "Appliquer" ===
 (function(){
