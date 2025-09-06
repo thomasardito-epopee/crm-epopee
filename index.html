@@ -2815,6 +2815,77 @@ document.addEventListener('DOMContentLoaded', function(){
       return d.toLocaleString();
     } catch { return String(v); }
   }
+  function renderHistorySidebar() {
+    const b = getBuilding();
+    const f = getFloor();
+    const box = document.getElementById('historyListSide');
+    if (!box) return;
+
+    box.innerHTML = '<div class="hint">Chargement…</div>';
+
+    fetchHistoryList(b, f)
+      .then(items => {
+        if (!items.length) {
+          box.innerHTML = '<div class="hint">Aucune version encore.</div>';
+          return;
+        }
+        box.innerHTML = `
+          <table style="width:100%; border-collapse:collapse; font-size:12px">
+            <thead>
+              <tr>
+                <th style="text-align:left; padding:6px 8px;">Date</th>
+                <th style="text-align:left; padding:6px 8px;">Note</th>
+                <th style="text-align:right; padding:6px 8px;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.map(it => {
+                const at   = it.at || it.created_at || it.timestamp || '';
+                const date = formatWhen(it.created_at || it.at || it.timestamp || it.date);
+                const note = it.note ? String(it.note) : '';
+                return `
+                  <tr>
+                    <td style="padding:6px 8px; white-space:nowrap;">${date}</td>
+                    <td style="padding:6px 8px; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${note}</td>
+                    <td style="padding:6px 8px; text-align:right;">
+                      <button class="btn" data-restore="${at}">Restaurer</button>
+                    </td>
+                  </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        `;
+
+        box.querySelectorAll('button[data-restore]').forEach(btn => {
+          btn.onclick = () => restoreSnapshot(b, f, btn.dataset.restore);
+        });
+      })
+      .catch(err => {
+        box.innerHTML = `<div class="hint" style="color:#b00020">${err.message || 'Erreur de chargement'}</div>`;
+      });
+  }
+
+  // Boutons de la section
+  document.addEventListener('DOMContentLoaded', () => {
+    const btnSave = document.getElementById('historySave');
+    const btnRef  = document.getElementById('historyRefresh');
+
+    if (btnSave) btnSave.onclick = async () => {
+      const b = getBuilding(), f = getFloor();
+      try {
+        await saveSnapshot(b, f, 'manuel');
+        renderHistorySidebar();
+      } catch (e) {
+        alert('Échec de la sauvegarde');
+      }
+    };
+
+    if (btnRef) btnRef.onclick = renderHistorySidebar;
+
+    // 1er rendu à l’ouverture
+    renderHistorySidebar();
+  });
+
 </script>
   <script>
   (function(){
