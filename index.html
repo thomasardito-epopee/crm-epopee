@@ -1593,6 +1593,9 @@ function renderDashboardFull(){
   $("kpiScopeFS").onchange = ()=> renderDashboardFull();
   $("fsOccTarget").oninput = (e)=>{ $("fsOccLabel").textContent = e.target.value + "%"; renderDashboardFull(); };
   wireBoardActions();
+  
+  $("tenantFilterFS").onchange = (e)=>{ window.TENANT_FILTER = e.target.value || ""; renderDashboardFull(); };
+  $("fsOccTarget").oninput = (e)=>{ $("fsOccLabel").textContent = e.target.value + "%"; renderDashboardFull(); };
 
   // --- données & calculs
   const feats = getFeaturesForScope($("kpiScopeFS").value);
