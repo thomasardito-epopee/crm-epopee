@@ -3658,6 +3658,119 @@ host.insertAdjacentHTML('afterbegin',
   }
 })();
 </script>
+<script>
+/* ===== Auto-couleur en fonction du statut (Loué -> vert, etc.) ===== */
+
+/* 1) Table de correspondance statut -> couleur (hex des pastilles) */
+const STATUS_TO_COLOR = {
+  "Libre":    "#93c5fd",   // bleu clair (exemple)
+  "Préavis":  "#f59e0b",   // orange
+  "Réservé":  "#f59e0b",   // orange
+  "Loué":     "#16a34a",   // vert
+  "Travaux":  "#ef4444",   // rouge
+  "Bloqué":   "#6b7280"    // gris
+};
+
+/* 2) Sélecteurs robustes pour trouver le select Statut et les pastilles */
+function $statutSelect(){
+  // essaie plusieurs IDs/names possibles, dans le panneau latéral
+  return document.querySelector('#sidebar select#status')
+      || document.querySelector('#sidebar select[name="status"]')
+      || document.querySelector('#sidebar select[id*="statut"]')
+      || document.querySelector('#sidebar select[id*="status"]');
+}
+function $colorSwatches(){
+  // boutons de couleur avec data-color="#hex" ou style --color
+  const sw1 = Array.from(document.querySelectorAll('#sidebar [data-color]'));
+  const sw2 = Array.from(document.querySelectorAll('#sidebar .color, #sidebar .swatch'))
+    .filter(el => el.dataset && !el.dataset.color && getComputedStyle(el).getPropertyValue('--color'));
+  // normalise vers {el, hex}
+  const norm1 = sw1.map(el => ({ el, hex: (el.dataset.color||'').trim().toLowerCase() }));
+  const norm2 = sw2.map(el => {
+    const css = getComputedStyle(el).getPropertyValue('--color').trim();
+    // convert rgb(...) éventuel en hex
+    let hex = css.startsWith('#') ? css : rgbToHex(css);
+    return { el, hex: (hex||'').toLowerCase() };
+  });
+  return [...norm1, ...norm2].filter(x => x.hex);
+}
+function rgbToHex(rgb){
+  const m = rgb.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+  if(!m) return null;
+  const to2 = n => ('0'+(parseInt(n,10).toString(16))).slice(-2);
+  return '#'+to2(m[1])+to2(m[2])+to2(m[3]);
+}
+
+/* 3) Sélectionne visuellement la pastille ET met à jour la valeur */
+function selectColorHex(hex){
+  const swatches = $colorSwatches();
+  // 3.1 essaie de cliquer la pastille correspondante
+  const match = swatches.find(s => s.hex === hex.toLowerCase());
+  if (match){
+    match.el.click(); // utilise ta logique existante (active + mise à jour du style)
+    return true;
+  }
+  // 3.2 sinon, tente un input caché "color" si présent
+  const input = document.querySelector('#sidebar input[name="color"], #sidebar input#color');
+  if (input){
+    input.value = hex;
+    input.dispatchEvent(new Event('input', {bubbles:true}));
+    input.dispatchEvent(new Event('change', {bubbles:true}));
+    return true;
+  }
+  // 3.3 sinon, si une fonction globale existe (ex: setCurrentColor)
+  if (typeof window.setCurrentColor === 'function'){
+    window.setCurrentColor(hex);
+    return true;
+  }
+  return false;
+}
+
+/* 4) Wiring : au changement de statut, applique la couleur si l’utilisateur n’a pas choisi manuellement */
+(function wireAutoColor(){
+  let userPickedColor = false;
+
+  // marquer quand l’utilisateur choisit une couleur à la main (un seul time)
+  document.addEventListener('click', (e)=>{
+    const t = e.target;
+    if (!t) return;
+    if (t.closest('#sidebar [data-color]') || t.closest('#sidebar .color') || t.closest('#sidebar .swatch')){
+      userPickedColor = true;
+    }
+  }, {capture:true});
+
+  function applyAutoColorFromStatus(){
+    const sel = $statutSelect();
+    if(!sel) return;
+    const label = sel.value || sel.options[sel.selectedIndex]?.textContent || '';
+    const hex = STATUS_TO_COLOR[label.trim()] || null;
+    if (!hex) return;
+    if (userPickedColor) return; // on ne force pas si l'utilisateur a cliqué une couleur
+    selectColorHex(hex);
+  }
+
+  // écoute le changement de statut
+  function tryWire(){
+    const sel = $statutSelect();
+    if (!sel) return;
+    if (sel.__wired_autocolor) return;
+    sel.__wired_autocolor = true;
+    sel.addEventListener('change', applyAutoColorFromStatus);
+    // appliquer une première fois à l’ouverture du panneau
+    setTimeout(applyAutoColorFromStatus, 0);
+  }
+
+  // dès que le DOM est prêt + à chaque ouverture potentielle du panneau
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', tryWire);
+  } else {
+    tryWire();
+  }
+  // au cas où le sidebar est recréé dynamiquement
+  const mo = new MutationObserver(tryWire);
+  mo.observe(document.body, { childList:true, subtree:true });
+})();
+</script>
 
 </body>
 </html>
