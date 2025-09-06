@@ -478,17 +478,15 @@ body.history-mode #historyPane{
 .btn.pill.restore:hover{ box-shadow:0 6px 18px rgba(0,0,0,.06) }
 .btn.pill.restore:active{ transform: translateY(1px) }
 
-/* État "loading" (spinner simple) */
-.btn.loading{ position:relative; color:transparent !important }
+/* remplace le bloc existant */
+.btn.loading{ position:relative; color:inherit !important; }       /* <- ne pas mettre transparent */
 .btn.loading::after{
-  content:"";
-  position:absolute; inset:auto;
-  top:50%; left:50%; width:14px; height:14px;
+  content:""; position:absolute; top:50%; left:50%; width:14px; height:14px;
   transform:translate(-50%,-50%);
-  border:2px solid currentColor; border-right-color:transparent;
-  border-radius:50%;
-  animation:spin .8s linear infinite;
+  border:2px solid var(--blue); border-right-color:transparent;   /* <- couleur visible */
+  border-radius:50%; animation:spin .8s linear infinite;
 }
+  
 @keyframes spin{ to{ transform:translate(-50%,-50%) rotate(360deg) } }
 
 /* Icône refresh homogène + rotation pendant chargement */
