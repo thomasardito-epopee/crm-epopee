@@ -2925,9 +2925,24 @@ document.addEventListener('DOMContentLoaded', function(){
             </tbody>
           </table>
         `;
-        box.querySelectorAll('button[data-restore]').forEach(btn=>{
-          btn.onclick = () => restoreSnapshot(b, f, btn.dataset.restore);
-        });
+      box.querySelectorAll('button[data-restore]').forEach(btn=>{
+  btn.onclick = async () => {
+    const b = getBuilding(), f = getFloor(); // lit bâtiment/étage au moment du clic
+    const t = btn.textContent;               // mémorise le libellé actuel
+
+    btn.disabled = true;                     // empêche les doubles clics
+    btn.textContent = '…';                   // petit feedback visuel (loader)
+
+    try {
+      await restoreSnapshot(b, f, btn.dataset.restore);  // lance la resto
+    } finally {
+      // se déclenche même en cas d’erreur → on remet le bouton comme avant
+      btn.disabled = false;
+      btn.textContent = t;
+    }
+  };
+});
+
       })
       .catch(err=>{
         box.innerHTML = `<div class="hint" style="color:#b00020">${err.message || 'Erreur de chargement'}</div>`;
