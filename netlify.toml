@@ -53,3 +53,10 @@
   status = 200
   force = true
 
+  [[redirects]]
+  from = "/api/history-get"
+  to   = "/.netlify/functions/history-get"
+  status = 200
+  force = true
+
+
