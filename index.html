@@ -1010,14 +1010,37 @@ buildPalette();
 colorInput.oninput = ()=> setColor(colorInput.value);
 const fStatus = document.getElementById("fStatus");
 if (fStatus) {
-  fStatus.addEventListener("change", function (e) {
-    // --- afficher/masquer le bloc "Préavis"
-    try {
-      const isEvent = (document.getElementById("fLabel").value === "Evenementiel");
-      const showPreavis = !isEvent && (e.target.value === "Préavis");
-      const pr = document.getElementById("preavisRow");
-      if (pr) pr.style.display = showPreavis ? "grid" : "none";
-    } catch (_) {}  }); // <-- FIN du handler 'change'
+ // Affiche/masque le bloc "Préavis"
+try{
+  const isEvent = (document.getElementById("fLabel").value === "Evenementiel");
+  const showPreavis = !isEvent && (this.value === "Préavis");
+  const pr = document.getElementById("preavisRow");
+  if (pr) pr.style.display = showPreavis ? "grid" : "none";
+}catch(_){}
+
+// Couleur par défaut du statut si l'utilisateur n'a pas choisi manuellement
+try{
+  if (!window.currentLayer) return;
+
+  const ep = layerProps(currentLayer) || {};
+  const prevDefault = (STATUS_STYLES[ep.status || "Vacant"] || {}).fill;
+  const next = (STATUS_STYLES[this.value] || {}).fill;
+
+  // L'utilisateur a-t-il choisi une couleur perso ?
+  const keepUser = ep.customColor && ep.color && ep.color !== prevDefault;
+
+  if (!keepUser && next){
+    // on bascule sur la couleur par défaut du nouveau statut
+    setLayerProps(currentLayer, { status: this.value, color: next, customColor: false });
+    setColor(next); // sélectionne visuellement la pastille
+  } else {
+    // on respecte le choix manuel de l'utilisateur
+    setLayerProps(currentLayer, { status: this.value });
+    setColor(ep.color || next || "#0a84ff");
+  }
+
+  saveLocal();
+}catch(_){} }); // <-- FIN du handler 'change'
 }     // <-- FIN du if (fStatus)
 
 
