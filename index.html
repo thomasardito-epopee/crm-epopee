@@ -1018,9 +1018,9 @@ if (fStatus) {
       const showPreavis = !isEvent && (this.value === "Préavis");
       const pr = document.getElementById("preavisRow");
       if (pr) pr.style.display = showPreavis ? "grid" : "none";
-    }catch(_){}
-  }); // ← ferme l'event listener 'change'
-}      // ← ferme le if (fStatus)
+    }catch(_){}  });           // ferme fStatus.addEventListener('change', …)
+}               // ferme if (fStatus)
+
 
 
     // couleur : si l’utilisateur n’a PAS choisi une couleur perso, on met la couleur par défaut du nouveau statut
