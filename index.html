@@ -2832,7 +2832,6 @@ document.addEventListener('DOMContentLoaded', function(){
     if (!r.ok) throw new Error('Autosave: échec snapshot');
     return r.json().catch(() => ({}));
   }
-<script>
   function renderHistoryPanel(){
     const b = getBuilding();
     const f = getFloor();
